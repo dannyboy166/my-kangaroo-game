@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kangaroo Game</title>
+    <title>Kangaroo Hop - Phaser Version</title>
     <style>
         body { 
             margin: 0; 
@@ -11,12 +11,35 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            font-family: Arial, sans-serif;
         }
-        canvas { border: 2px solid #3498db; }
+        canvas { 
+            border: 2px solid #3498db;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #loading {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <div id="game-container">
+        <div id="loading">Loading Kangaroo Hop...</div>
+    </div>
+    
     <script src="./node_modules/phaser/dist/phaser.min.js"></script>
-    <script src="./src/game.js"></script>
+    <script type="module" src="./src/game.js"></script>
+    
+    <script>
+        // Hide loading text once game starts
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loading = document.getElementById('loading');
+                if (loading) loading.style.display = 'none';
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
