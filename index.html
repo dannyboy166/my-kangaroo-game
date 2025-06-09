@@ -13,32 +13,71 @@
             min-height: 100vh;
             font-family: Arial, sans-serif;
         }
+        #game-container {
+            text-align: center;
+        }
         canvas { 
             border: 2px solid #3498db;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: none; /* Hidden until game loads */
         }
         #loading {
             color: white;
             font-size: 24px;
             text-align: center;
         }
+        .loading-bar {
+            width: 300px;
+            height: 20px;
+            background: #34495e;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        .loading-bar-fill {
+            height: 100%;
+            background: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="loading">Loading Kangaroo Hop...</div>
+        <div id="loading">
+            <div>Loading Kangaroo Hop...</div>
+            <div class="loading-bar">
+                <div class="loading-bar-fill" id="loading-progress"></div>
+            </div>
+        </div>
     </div>
     
+    <!-- Load Phaser from node_modules -->
     <script src="./node_modules/phaser/dist/phaser.min.js"></script>
-    <script type="module" src="./src/game.js"></script>
+    
+    <!-- Load the main game module -->
+    <script type="module" src="./src/main.js"></script>
     
     <script>
-        // Hide loading text once game starts
+        // Show canvas and hide loading when game starts
         window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loading = document.getElementById('loading');
-                if (loading) loading.style.display = 'none';
-            }, 1000);
+            // Update loading progress
+            const progressBar = document.getElementById('loading-progress');
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        const loading = document.getElementById('loading');
+                        const canvas = document.querySelector('canvas');
+                        if (loading) loading.style.display = 'none';
+                        if (canvas) canvas.style.display = 'block';
+                    }, 500);
+                }
+            }, 100);
         });
     </script>
 </body>

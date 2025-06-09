@@ -4,6 +4,7 @@ export default class AudioManager {
         this.musicEnabled = true;
         this.sounds = {};
         this.currentMusic = null;
+        this.scene = null;
         
         // Throttling for frequently played sounds
         this.lastPlayTimes = {
@@ -16,6 +17,11 @@ export default class AudioManager {
             land: 100,
             coin: 40
         };
+    }
+    
+    init(scene) {
+        this.scene = scene;
+        console.log('🔊 AudioManager initialized with scene');
     }
     
     preloadSounds(scene) {

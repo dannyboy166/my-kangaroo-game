@@ -3,6 +3,14 @@ export default class StoreScene extends Phaser.Scene {
         super({ key: 'StoreScene' });
     }
 
+    preload() {
+        // Preload store assets
+        this.load.image('coin', 'assets/images/coin.png');
+        this.load.image('shield', 'assets/images/shield.png');
+        this.load.image('magnet', 'assets/images/magnet.png');
+        this.load.image('double', 'assets/images/double.png');
+    }
+
     create() {
         console.log('🏪 STORE SCENE LOADED!');
         
@@ -20,8 +28,13 @@ export default class StoreScene extends Phaser.Scene {
             fontWeight: 'bold'
         }).setOrigin(0.5);
         
-        // Coin display
-        this.add.image(320, 120, 'coin').setScale(0.7);
+        // Coin display - use image if available, otherwise circle
+        if (this.textures.exists('coin')) {
+            this.add.image(320, 120, 'coin').setScale(0.7);
+        } else {
+            this.add.circle(320, 120, 15, 0xFFD700);
+        }
+        
         this.coinText = this.add.text(350, 120, window.GameData.storeManager.totalCoins.toString(), {
             fontSize: '28px',
             fill: '#F7B027',
@@ -83,8 +96,28 @@ export default class StoreScene extends Phaser.Scene {
         const itemBg = this.add.rectangle(x, y, 180, 250, 0x16213E);
         itemBg.setStrokeStyle(2, 0x4F9DFF);
         
-        // Power-up image
-        this.add.image(x, y - 60, type).setScale(0.8);
+        // Power-up image or fallback
+        const imageMap = {
+            doubleJump: 'double',
+            shield: 'shield',
+            magnet: 'magnet'
+        };
+        
+        const imageName = imageMap[type];
+        
+        if (this.textures.exists(imageName)) {
+            this.add.image(x, y - 60, imageName).setScale(0.8);
+        } else {
+            // Fallback icons
+            const colors = {
+                doubleJump: 0x9370DB,
+                shield: 0x4169E1,
+                magnet: 0xFF1493
+            };
+            
+            const icon = this.add.rectangle(x, y - 60, 40, 40, colors[type]);
+            icon.setStrokeStyle(2, 0xffffff);
+        }
         
         // Name
         this.add.text(x, y - 10, storeManager.getPowerUpName(type), {
@@ -100,8 +133,15 @@ export default class StoreScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
         
-        // Price
-        this.add.text(x, y + 60, `$ ${storeManager.getPowerUpPrice(type)}`, {
+        // Price with coin icon
+        const priceY = y + 60;
+        if (this.textures.exists('coin')) {
+            this.add.image(x - 20, priceY, 'coin').setScale(0.5);
+        } else {
+            this.add.circle(x - 20, priceY, 8, 0xFFD700);
+        }
+        
+        this.add.text(x + 5, priceY, storeManager.getPowerUpPrice(type).toString(), {
             fontSize: '20px',
             fill: '#FFD700',
             fontWeight: 'bold'
@@ -142,20 +182,19 @@ export default class StoreScene extends Phaser.Scene {
                 }
             });
             
-            buyButton.on('pointerover', () => buyButton.setScale(1.05));
-            buyButton.on('pointerout', () => buyButton.setScale(1.0));
+            buyButton.on('pointerover', () => {
+                buyButton.setScale(1.05);
+                buyButtonText.setScale(1.05);
+            });
+            buyButton.on('pointerout', () => {
+                buyButton.setScale(1.0);
+                buyButtonText.setScale(1.0);
+            });
         }
     }
     
     updateStoreDisplay() {
-        // Clear and recreate store items
-        this.children.list.forEach(child => {
-            if (child.x >= 150 && child.x <= 650 && child.y >= 200 && child.y <= 350) {
-                child.destroy();
-            }
-        });
-        
-        this.createStoreItems();
-        this.coinText.setText(window.GameData.storeManager.totalCoins.toString());
+        // Refresh the entire scene to update the display
+        this.scene.restart();
     }
 }
