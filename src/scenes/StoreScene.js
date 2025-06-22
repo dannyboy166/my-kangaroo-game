@@ -18,7 +18,7 @@ export default class StoreScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#1A1A2E');
         
         // Store Panel
-        const panel = this.add.rectangle(400, 300, 700, 500, 0x1A1A2E);
+        const panel = this.add.rectangle(400, 300, 700, 500, 0x16213E);
         panel.setStrokeStyle(3, 0x4F9DFF);
         
         // Title
@@ -28,14 +28,17 @@ export default class StoreScene extends Phaser.Scene {
             fontWeight: 'bold'
         }).setOrigin(0.5);
         
-        // Coin display - use image if available, otherwise circle
+        // Coin display
+        const coinBg = this.add.rectangle(400, 120, 200, 40, 0x000000, 0.5);
+        coinBg.setStrokeStyle(2, 0xF7B027);
+        
         if (this.textures.exists('coin')) {
-            this.add.image(320, 120, 'coin').setScale(0.7);
+            this.add.image(340, 120, 'coin').setScale(0.4);
         } else {
-            this.add.circle(320, 120, 15, 0xFFD700);
+            this.add.circle(340, 120, 15, 0xFFD700);
         }
         
-        this.coinText = this.add.text(350, 120, window.GameData.storeManager.totalCoins.toString(), {
+        this.coinText = this.add.text(370, 120, window.GameData.storeManager.totalCoins.toString(), {
             fontSize: '28px',
             fill: '#F7B027',
             fontWeight: 'bold'
@@ -93,10 +96,10 @@ export default class StoreScene extends Phaser.Scene {
         const storeManager = window.GameData.storeManager;
         
         // Item background
-        const itemBg = this.add.rectangle(x, y, 180, 250, 0x16213E);
+        const itemBg = this.add.rectangle(x, y, 180, 250, 0x1A1A2E);
         itemBg.setStrokeStyle(2, 0x4F9DFF);
         
-        // Power-up image or fallback
+        // Power-up icon
         const imageMap = {
             doubleJump: 'double',
             shield: 'shield',
@@ -106,17 +109,33 @@ export default class StoreScene extends Phaser.Scene {
         const imageName = imageMap[type];
         
         if (this.textures.exists(imageName)) {
-            this.add.image(x, y - 60, imageName).setScale(0.8);
+            this.add.image(x, y - 60, imageName).setScale(0.6);
         } else {
-            // Fallback icons
+            // Fallback icons - create visual representations
             const colors = {
                 doubleJump: 0x9370DB,
                 shield: 0x4169E1,
                 magnet: 0xFF1493
             };
             
-            const icon = this.add.rectangle(x, y - 60, 40, 40, colors[type]);
-            icon.setStrokeStyle(2, 0xffffff);
+            if (type === 'shield') {
+                // Create shield shape
+                const shield = this.add.graphics();
+                shield.fillStyle(colors[type]);
+                shield.fillRect(x - 20, y - 70, 40, 45);
+                shield.fillTriangle(x - 20, y - 25, x + 20, y - 25, x, y - 10);
+            } else if (type === 'magnet') {
+                // Create magnet shape (U-shape)
+                const magnet = this.add.graphics();
+                magnet.lineStyle(8, colors[type]);
+                magnet.strokeRect(x - 20, y - 70, 40, 30);
+                magnet.fillStyle(colors[type]);
+                magnet.fillRect(x - 20, y - 70, 40, 10);
+            } else {
+                // Double jump - two arrows
+                const arrow1 = this.add.triangle(x, y - 70, 0, 20, 10, 0, -10, 0, colors[type]);
+                const arrow2 = this.add.triangle(x, y - 50, 0, 20, 10, 0, -10, 0, colors[type], 0.6);
+            }
         }
         
         // Name
@@ -130,13 +149,14 @@ export default class StoreScene extends Phaser.Scene {
         this.add.text(x, y + 20, storeManager.getPowerUpDescription(type), {
             fontSize: '12px',
             fill: '#ffffff70',
-            align: 'center'
+            align: 'center',
+            wordWrap: { width: 150 }
         }).setOrigin(0.5);
         
         // Price with coin icon
         const priceY = y + 60;
         if (this.textures.exists('coin')) {
-            this.add.image(x - 20, priceY, 'coin').setScale(0.5);
+            this.add.image(x - 20, priceY, 'coin').setScale(0.3);
         } else {
             this.add.circle(x - 20, priceY, 8, 0xFFD700);
         }
@@ -165,7 +185,7 @@ export default class StoreScene extends Phaser.Scene {
         }
         
         const buyButton = this.add.rectangle(x, y + 110, 120, 35, buttonColor);
-        buyButton.setStrokeStyle(2, 0x4F9DFF);
+        buyButton.setStrokeStyle(2, 0xffffff);
         
         const buyButtonText = this.add.text(x, y + 110, buttonText, {
             fontSize: '16px',

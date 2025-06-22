@@ -5,7 +5,7 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, hasSprite ? 'kangaroo_anim' : null);
         
         this.scene = scene;
-        this.jumpSpeed = -600;
+        this.jumpSpeed = -700;
         this.isOnGround = true;
         this.jumpCount = 0;
         this.hasDoubleJump = false;
@@ -14,19 +14,25 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
         
         // Set up physics
         scene.physics.add.existing(this);
-        this.body.setBounce(0.3);
+        this.body.setBounce(0);
         this.body.setCollideWorldBounds(true);
-        this.body.setSize(60, 30); // Collision box
         
         if (hasSprite) {
-            this.setScale(1.1);
+            this.setScale(0.6);
+            this.body.setSize(80, 100);
+            this.body.setOffset(24, 28);
             this.createAnimations();
             this.anims.play('kangaroo_run');
         } else {
             // Fallback to blue rectangle
-            this.setDisplaySize(60, 60);
+            this.setDisplaySize(60, 80);
             this.setTint(0x3498db);
+            this.body.setSize(60, 80);
         }
+        
+        // Set proper mass and drag
+        this.body.setMass(1);
+        this.body.setDragX(0);
     }
     
     createAnimations() {
@@ -49,7 +55,7 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
     }
     
     jump() {
-        if (this.isOnGround) {
+        if (this.body.touching.down || this.body.blocked.down) {
             this.body.setVelocityY(this.jumpSpeed);
             this.isOnGround = false;
             this.jumpCount = 1;
@@ -66,8 +72,8 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
             
             window.GameData.audioManager.playJump();
             console.log('🚀 Jump!');
-        } else if (this.hasDoubleJump && this.jumpCount === 1) {
-            this.body.setVelocityY(this.jumpSpeed * 0.75);
+        } else if (this.hasDoubleJump && this.jumpCount === 1 && this.body.velocity.y > -200) {
+            this.body.setVelocityY(this.jumpSpeed * 0.85);
             this.jumpCount = 2;
             window.GameData.audioManager.playDoubleJump();
             console.log('🚀 Double Jump!');
@@ -99,13 +105,20 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
     
     addShield() {
         this.shieldCount++;
-        // Visual shield effect would go here
+        // Add visual shield effect
+        if (!this.shieldVisual) {
+            this.shieldVisual = this.scene.add.circle(this.x, this.y, 50, 0x4169E1, 0.3);
+        }
         console.log('🛡️ Shield added! Count:', this.shieldCount);
     }
     
     removeShield() {
         if (this.shieldCount > 0) {
             this.shieldCount--;
+            if (this.shieldCount === 0 && this.shieldVisual) {
+                this.shieldVisual.destroy();
+                this.shieldVisual = null;
+            }
             console.log('🛡️ Shield removed! Count:', this.shieldCount);
             return true;
         }
@@ -114,5 +127,22 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
     
     hasShield() {
         return this.shieldCount > 0;
+    }
+    
+    preUpdate(time, delta) {
+        super.preUpdate(time, delta);
+        
+        // Update shield position
+        if (this.shieldVisual) {
+            this.shieldVisual.x = this.x;
+            this.shieldVisual.y = this.y;
+        }
+        
+        // Check if landed
+        if (this.body.touching.down || this.body.blocked.down) {
+            if (!this.isOnGround) {
+                this.land();
+            }
+        }
     }
 }

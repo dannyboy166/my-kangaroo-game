@@ -82,12 +82,12 @@ export default class GameScene extends Phaser.Scene {
         // Background
         this.cameras.main.setBackgroundColor('#87CEEB');
         
-        // Create ground
+        // Create ground - positioned at bottom of screen
         this.ground = this.add.rectangle(400, 550, 800, 100, 0xD2691E);
         this.physics.add.existing(this.ground, true);
         
-        // Create kangaroo
-        this.kangaroo = new Kangaroo(this, 150, 400);
+        // Create kangaroo - position above ground
+        this.kangaroo = new Kangaroo(this, 150, 450);
         this.add.existing(this.kangaroo);
         
         // Physics collision between kangaroo and ground
@@ -98,7 +98,7 @@ export default class GameScene extends Phaser.Scene {
         this.coins = this.physics.add.group();
         this.powerUps = this.physics.add.group();
         
-        // Collision detection
+        // Collision detection - IMPORTANT: Add ground collision for obstacles
         this.physics.add.collider(this.obstacles, this.ground);
         this.physics.add.overlap(this.kangaroo, this.obstacles, this.hitObstacle, null, this);
         this.physics.add.overlap(this.kangaroo, this.coins, this.collectCoin, null, this);
@@ -137,13 +137,13 @@ export default class GameScene extends Phaser.Scene {
 
     createPowerUpIndicators() {
         // Shield indicator
-        this.shieldIndicator = this.add.image(750, 30, 'shield').setScale(0.5).setAlpha(0.3);
+        this.shieldIndicator = this.add.circle(750, 30, 15, 0x4169E1).setAlpha(0.3);
         
         // Double jump indicator
-        this.doubleJumpIndicator = this.add.image(750, 70, 'double').setScale(0.5).setAlpha(0.3);
+        this.doubleJumpIndicator = this.add.circle(750, 70, 15, 0x9370DB).setAlpha(0.3);
         
         // Magnet indicator
-        this.magnetIndicator = this.add.image(750, 110, 'magnet').setScale(0.5).setAlpha(0.3);
+        this.magnetIndicator = this.add.circle(750, 110, 15, 0xFF1493).setAlpha(0.3);
     }
 
     update(time, delta) {
@@ -222,31 +222,43 @@ export default class GameScene extends Phaser.Scene {
     }
     
     startObstacleSpawning() {
+        // Initial spawn
+        this.time.delayedCall(1500, () => this.spawnObstacle());
+        
         this.obstacleTimer = this.time.addEvent({
             delay: 2500,
             callback: () => {
                 if (!this.gameActive) return;
-                
-                const types = ['rock', 'cactus', 'log', 'croc', 'emu', 'camel'];
-                const type = types[Math.floor(Math.random() * types.length)];
-                const obstacle = new Obstacle(this, 850, 480, type);
-                this.add.existing(obstacle);
-                this.obstacles.add(obstacle);
-                console.log('🚫 Obstacle spawned:', type);
+                this.spawnObstacle();
             },
             loop: true
         });
     }
     
+    spawnObstacle() {
+        const types = ['rock', 'cactus', 'log', 'croc', 'emu', 'camel'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        // Spawn higher so it falls to ground
+        const obstacle = new Obstacle(this, 850, 450, type);
+        this.add.existing(obstacle);
+        this.obstacles.add(obstacle);
+        
+        console.log('🚫 Obstacle spawned:', type);
+    }
+    
     startCoinSpawning() {
         this.coinTimer = this.time.addEvent({
-            delay: 2000,
+            delay: 1800,
             callback: () => {
                 if (!this.gameActive) return;
                 
-                const coin = new Coin(this, 850, 300 + Math.random() * 150);
+                // Spawn coins at various heights
+                const yPos = 320 + Math.random() * 120;
+                const coin = new Coin(this, 850, yPos);
                 this.add.existing(coin);
                 this.coins.add(coin);
+                
                 console.log('💰 Coin spawned!');
             },
             loop: true
@@ -261,9 +273,11 @@ export default class GameScene extends Phaser.Scene {
                 
                 const types = ['shield', 'magnet', 'double'];
                 const type = types[Math.floor(Math.random() * types.length)];
-                const powerUp = new PowerUp(this, 850, 250 + Math.random() * 100, type);
+                const yPos = 280 + Math.random() * 80;
+                const powerUp = new PowerUp(this, 850, yPos, type);
                 this.add.existing(powerUp);
                 this.powerUps.add(powerUp);
+                
                 console.log('⚡ Power-up spawned:', type);
             },
             loop: true

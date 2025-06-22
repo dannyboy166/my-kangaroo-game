@@ -2,45 +2,48 @@ export default class Obstacle extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, type) {
         // Check if texture exists
         const hasTexture = scene.textures.exists(type);
-        super(scene, x, y, hasTexture ? type : '__DEFAULT');
+        super(scene, x, y, hasTexture ? type : null);
         
         this.obstacleType = type;
         
         // Set up physics
         scene.physics.add.existing(this);
         this.body.setImmovable(true);
-        this.body.setVelocity(0, 0);
+        this.body.setAllowGravity(true); // Let gravity affect obstacles
+        
+        // Adjust Y position to be above ground for proper collision
+        this.y = y - 50; // Start higher so it can fall to ground
         
         if (hasTexture) {
-            // Set size based on type
+            // Set size based on type with smaller scales
             switch (type) {
                 case 'rock':
-                    this.setScale(0.8);
-                    this.body.setSize(60, 70);
+                    this.setScale(0.3);
+                    this.body.setSize(50, 50);
                     break;
                 case 'cactus':
-                    this.setScale(0.9);
-                    this.body.setSize(50, 90);
+                    this.setScale(0.4);
+                    this.body.setSize(35, 70);
                     break;
                 case 'log':
-                    this.setScale(0.8);
-                    this.body.setSize(100, 50);
+                    this.setScale(0.4);
+                    this.body.setSize(80, 30);
                     break;
                 case 'croc':
-                    this.setScale(0.8);
-                    this.body.setSize(80, 60);
+                    this.setScale(0.35);
+                    this.body.setSize(70, 40);
                     break;
                 case 'emu':
-                    this.setScale(0.9);
-                    this.body.setSize(50, 80);
+                    this.setScale(0.4);
+                    this.body.setSize(35, 65);
                     break;
                 case 'camel':
-                    this.setScale(0.8);
-                    this.body.setSize(70, 70);
+                    this.setScale(0.35);
+                    this.body.setSize(60, 55);
                     break;
                 default:
-                    this.setScale(0.8);
-                    this.body.setSize(60, 70);
+                    this.setScale(0.3);
+                    this.body.setSize(50, 50);
             }
         } else {
             // Fallback to colored rectangles
@@ -54,20 +57,26 @@ export default class Obstacle extends Phaser.Physics.Arcade.Sprite {
             };
             
             const sizes = {
-                rock: { w: 50, h: 70 },
-                cactus: { w: 40, h: 90 },
-                log: { w: 100, h: 40 },
-                croc: { w: 80, h: 50 },
-                emu: { w: 40, h: 80 },
-                camel: { w: 60, h: 70 }
+                rock: { w: 40, h: 50 },
+                cactus: { w: 30, h: 70 },
+                log: { w: 80, h: 30 },
+                croc: { w: 70, h: 40 },
+                emu: { w: 30, h: 65 },
+                camel: { w: 55, h: 55 }
             };
             
-            const size = sizes[type] || { w: 50, h: 70 };
+            const size = sizes[type] || { w: 40, h: 50 };
             const color = colors[type] || 0xFF0000;
             
             this.setDisplaySize(size.w, size.h);
             this.setTint(color);
             this.body.setSize(size.w, size.h);
         }
+        
+        // Center the physics body
+        this.body.setOffset(
+            (this.width * this.scaleX - this.body.width) / 2,
+            (this.height * this.scaleY - this.body.height) / 2
+        );
     }
 }

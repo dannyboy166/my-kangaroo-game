@@ -22,12 +22,22 @@ export default class MenuScene extends Phaser.Scene {
 
         // Initialize audio manager
         window.GameData.audioManager.init(this);
+        
+        // Add button click sound if it exists
+        if (this.cache.audio.exists('button_click')) {
+            window.GameData.audioManager.setSounds({
+                button_click: this.sound.add('button_click')
+            });
+        }
 
         // Background
         this.cameras.main.setBackgroundColor('#87CEEB');
 
         // Add some clouds for visual interest
         this.createClouds();
+
+        // Add ground decoration
+        this.add.rectangle(400, 550, 800, 100, 0xD2691E);
 
         // Title
         this.add.text(400, 150, 'KANGAROO HOP', {
@@ -44,6 +54,9 @@ export default class MenuScene extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
+
+        // Create animated kangaroo on menu
+        this.createMenuKangaroo();
 
         // Start button
         const startButton = this.add.text(400, 300, 'CLICK TO START!', {
@@ -71,9 +84,12 @@ export default class MenuScene extends Phaser.Scene {
             this.scene.start('StoreScene');
         });
 
-        // Coin display - use image if available, otherwise circle
+        // Coin display
+        const coinBg = this.add.rectangle(100, 50, 150, 40, 0x000000, 0.5);
+        coinBg.setStrokeStyle(2, 0xF7B027);
+        
         if (this.textures.exists('coin')) {
-            this.add.image(50, 50, 'coin').setScale(0.8);
+            this.add.image(50, 50, 'coin').setScale(0.4);
         } else {
             this.add.circle(50, 50, 15, 0xFFD700);
         }
@@ -101,41 +117,54 @@ export default class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Hover effects
-        startButton.on('pointerover', () => {
-            startButton.setScale(1.1);
+        this.addButtonHoverEffects(startButton, 300);
+        this.addButtonHoverEffects(storeButton, 370);
+    }
+
+    createMenuKangaroo() {
+        // Create a hopping kangaroo on the menu
+        const kangaroo = this.add.rectangle(100, 480, 50, 70, 0x3498db);
+        
+        // Make it hop
+        this.tweens.add({
+            targets: kangaroo,
+            y: 420,
+            duration: 500,
+            ease: 'Power2',
+            yoyo: true,
+            repeat: -1,
+            repeatDelay: 1000
+        });
+        
+        // Move across screen
+        this.tweens.add({
+            targets: kangaroo,
+            x: 700,
+            duration: 8000,
+            ease: 'Linear',
+            repeat: -1,
+            onRepeat: () => {
+                kangaroo.x = 100;
+            }
+        });
+    }
+
+    addButtonHoverEffects(button, originalY) {
+        button.on('pointerover', () => {
+            button.setScale(1.1);
             this.tweens.add({
-                targets: startButton,
-                y: 295,
+                targets: button,
+                y: originalY - 5,
                 duration: 100,
                 ease: 'Power2'
             });
         });
 
-        startButton.on('pointerout', () => {
-            startButton.setScale(1.0);
+        button.on('pointerout', () => {
+            button.setScale(1.0);
             this.tweens.add({
-                targets: startButton,
-                y: 300,
-                duration: 100,
-                ease: 'Power2'
-            });
-        });
-
-        storeButton.on('pointerover', () => {
-            storeButton.setScale(1.1);
-            this.tweens.add({
-                targets: storeButton,
-                y: 365,
-                duration: 100,
-                ease: 'Power2'
-            });
-        });
-
-        storeButton.on('pointerout', () => {
-            storeButton.setScale(1.0);
-            this.tweens.add({
-                targets: storeButton,
-                y: 370,
+                targets: button,
+                y: originalY,
                 duration: 100,
                 ease: 'Power2'
             });
