@@ -54,7 +54,8 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo = this.physics.add.sprite(150, this.groundY, 'kangaroo');
         this.kangaroo.setScale(1);
         this.kangaroo.setCollideWorldBounds(true);
-        this.kangaroo.body.setSize(80, 80); // Adjust hitbox
+        this.kangaroo.body.setSize(80, 40); // Adjust hitbox
+        this.kangaroo.body.setOffset(30, 70);
         
         // IMPORTANT: Set kangaroo physics properly
         this.kangaroo.body.setGravityY(800); // Add gravity to kangaroo only
@@ -66,7 +67,7 @@ export default class GameScene extends Phaser.Scene {
         // Create invisible ground for physics collision
         this.groundBody = this.physics.add.staticGroup();
         const groundCollider = this.groundBody.create(400, 550, null);
-        groundCollider.setSize(800, 100);
+        groundCollider.setSize(1500, 100);
         groundCollider.setVisible(false);
         
         // Add collision between kangaroo and ground
@@ -219,8 +220,8 @@ export default class GameScene extends Phaser.Scene {
         const randomType = Phaser.Utils.Array.GetRandom(obstacleTypes);
         
         // Create obstacle as physics sprite but make it IMMOVABLE
-        const obstacle = this.physics.add.sprite(850, this.groundY, randomType);
-        obstacle.setScale(0.3);
+        const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
+        obstacle.setScale(0.5);
         obstacle.setOrigin(0.5, 1); // Bottom-center origin for ground positioning
         
         // CRITICAL: Make obstacle immovable so it doesn't fall
