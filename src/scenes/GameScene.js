@@ -149,13 +149,13 @@ export default class GameScene extends Phaser.Scene {
             }
         }
 
-        // Update score based on time
-        this.score += 1;
-        this.scoreText.setText('Score: ' + this.score);
+        // Update score based on time (slower)
+        this.score += 0.5;
+        this.scoreText.setText('Score: ' + Math.floor(this.score));
 
         // Gradually increase game speed
-        if (this.score % 500 === 0) {
-            this.gameSpeed += 25;
+        if (this.score % 50 === 0) {
+            this.gameSpeed += 5;
         }
 
         // Move obstacles and coins
@@ -163,6 +163,7 @@ export default class GameScene extends Phaser.Scene {
             obstacle.x -= this.gameSpeed * this.game.loop.delta / 1000;
             
             if (obstacle.x < -100) {
+                console.log('Destroying obstacle at x:', obstacle.x);
                 obstacle.destroy();
             }
         });
@@ -343,7 +344,9 @@ export default class GameScene extends Phaser.Scene {
 
         // Stop all existing obstacles and coins from moving
         this.obstacles.children.entries.forEach(obs => {
-            obs.body.setVelocity(0, 0);
+            if (obs.body) {
+                obs.body.setVelocity(0, 0);
+            }
         });
         
         this.coins.children.entries.forEach(coin => {
