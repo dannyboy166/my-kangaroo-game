@@ -18,7 +18,7 @@ export default class Kangaroo extends Phaser.Physics.Arcade.Sprite {
         this.body.setCollideWorldBounds(true);
         
         if (hasSprite) {
-            this.setScale(0.6);
+            this.setScale(0.8);
             this.body.setSize(80, 100);
             this.body.setOffset(24, 28);
             this.createAnimations();

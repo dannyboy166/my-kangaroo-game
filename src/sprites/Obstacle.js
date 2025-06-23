@@ -9,20 +9,17 @@ export default class Obstacle extends Phaser.Physics.Arcade.Sprite {
         // Set up physics
         scene.physics.add.existing(this);
         this.body.setImmovable(true);
-        this.body.setAllowGravity(true); // Let gravity affect obstacles
-        
-        // Adjust Y position to be above ground for proper collision
-        this.y = y - 50; // Start higher so it can fall to ground
+        this.body.setAllowGravity(true); // Let obstacles fall to ground naturally
         
         if (hasTexture) {
             // Set size based on type with smaller scales
             switch (type) {
                 case 'rock':
-                    this.setScale(0.3);
+                    this.setScale(0.6);
                     this.body.setSize(50, 50);
                     break;
                 case 'cactus':
-                    this.setScale(0.4);
+                    this.setScale(0.6);
                     this.body.setSize(35, 70);
                     break;
                 case 'log':
@@ -30,19 +27,19 @@ export default class Obstacle extends Phaser.Physics.Arcade.Sprite {
                     this.body.setSize(80, 30);
                     break;
                 case 'croc':
-                    this.setScale(0.35);
+                    this.setScale(0.6);
                     this.body.setSize(70, 40);
                     break;
                 case 'emu':
-                    this.setScale(0.4);
+                    this.setScale(0.6);
                     this.body.setSize(35, 65);
                     break;
                 case 'camel':
-                    this.setScale(0.35);
+                    this.setScale(0.6);
                     this.body.setSize(60, 55);
                     break;
                 default:
-                    this.setScale(0.3);
+                    this.setScale(0.6);
                     this.body.setSize(50, 50);
             }
         } else {

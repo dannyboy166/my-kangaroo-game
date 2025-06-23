@@ -167,7 +167,7 @@ export default class GameScene extends Phaser.Scene {
         // Update moving objects
         this.obstacles.children.entries.forEach(obstacle => {
             obstacle.x -= this.gameSpeed * delta / 1000;
-            if (obstacle.x < -50) {
+            if (obstacle.x < 100) {
                 obstacle.destroy();
             }
         });
@@ -239,7 +239,7 @@ export default class GameScene extends Phaser.Scene {
         const types = ['rock', 'cactus', 'log', 'croc', 'emu', 'camel'];
         const type = types[Math.floor(Math.random() * types.length)];
         
-        // Spawn higher so it falls to ground
+        // Spawn off-screen, let them fall naturally to ground
         const obstacle = new Obstacle(this, 850, 450, type);
         this.add.existing(obstacle);
         this.obstacles.add(obstacle);

@@ -32,33 +32,6 @@ export default class Coin extends Phaser.Physics.Arcade.Sprite {
         // Disable gravity for coins
         this.body.setAllowGravity(false);
         
-        // Add rotation animation
-        scene.tweens.add({
-            targets: this,
-            angle: 360,
-            duration: 2000,
-            repeat: -1,
-            ease: 'Linear'
-        });
-        
-        // Add floating animation
-        scene.tweens.add({
-            targets: this,
-            y: y - 10,
-            duration: 1500,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        
-        // Add subtle pulse effect
-        scene.tweens.add({
-            targets: this,
-            scale: this.scale * 1.1,
-            duration: 800,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+        // No animations - just static coins
     }
 }

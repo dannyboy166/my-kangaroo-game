@@ -11,18 +11,18 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {
         this.body.setAllowGravity(false);
         this.body.setImmovable(true);
         
+        // Define colors for power-ups
+        const colors = {
+            shield: 0x4169E1,    // Royal Blue
+            magnet: 0xFF1493,    // Deep Pink
+            double: 0x9370DB     // Medium Purple
+        };
+        
         if (hasTexture) {
             this.setScale(0.6);
             this.body.setSize(50, 50);
             this.body.setOffset(39, 39);
         } else {
-            // Fallback to colored shapes
-            const colors = {
-                shield: 0x4169E1,    // Royal Blue
-                magnet: 0xFF1493,    // Deep Pink
-                double: 0x9370DB     // Medium Purple
-            };
-            
             // Create a star shape for power-ups
             const graphics = scene.add.graphics();
             const color = colors[type] || 0x9370DB;
@@ -90,24 +90,13 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {
             ease: 'Sine.easeInOut'
         });
         
-        // Add particle effect
-        const particles = scene.add.particles(x, y);
-        const emitter = particles.createEmitter({
-            x: 0,
-            y: 0,
-            speed: { min: 20, max: 50 },
-            scale: { start: 0.3, end: 0 },
-            blendMode: 'ADD',
-            lifespan: 1000,
-            quantity: 1,
-            frequency: 200,
-            tint: colors[type] || 0x9370DB
-        });
+        // Add a simple glow circle behind the power-up instead of particles
+        this.glowCircle = scene.add.circle(x, y, 35, colors[type] || 0x9370DB, 0.2);
+        this.glowCircle.setBlendMode(Phaser.BlendModes.ADD);
         
-        // Make particles follow the power-up
+        // Make glow follow the power-up
         scene.tweens.add({
-            targets: particles,
-            x: x,
+            targets: this.glowCircle,
             y: y - 8,
             duration: 1800,
             yoyo: true,
@@ -115,13 +104,30 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {
             ease: 'Sine.easeInOut'
         });
         
-        // Store reference to destroy particles when collected
-        this.particleEmitter = particles;
+        // Pulse the glow
+        scene.tweens.add({
+            targets: this.glowCircle,
+            scale: 1.3,
+            alpha: 0.1,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+    
+    preUpdate(time, delta) {
+        super.preUpdate(time, delta);
+        
+        // Keep glow circle aligned with power-up
+        if (this.glowCircle) {
+            this.glowCircle.x = this.x;
+        }
     }
     
     destroy() {
-        if (this.particleEmitter) {
-            this.particleEmitter.destroy();
+        if (this.glowCircle) {
+            this.glowCircle.destroy();
         }
         super.destroy();
     }
