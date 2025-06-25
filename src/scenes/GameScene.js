@@ -46,6 +46,9 @@ export default class GameScene extends Phaser.Scene {
         graphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
         graphics.fillRect(0, 0, 800, 600);
 
+        // Add atmospheric elements (sun and clouds)
+        this.createBackgroundElements();
+
         // Create ground
         this.ground = this.add.graphics();
         this.ground.fillStyle(0x8B4513);
@@ -477,6 +480,71 @@ export default class GameScene extends Phaser.Scene {
         // Reset game state
         this.isGameOver = false;
         this.collisionCooldown = false;
+    }
+
+    createBackgroundElements() {
+        // Add a sun
+        const sun = this.add.graphics();
+        sun.fillStyle(0xFFD700, 0.9);
+        sun.fillCircle(0, 0, 30);
+        sun.lineStyle(3, 0xFFD700, 0.7);
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * 45) * Math.PI / 180;
+            const x1 = Math.cos(angle) * 35;
+            const y1 = Math.sin(angle) * 35;
+            const x2 = Math.cos(angle) * 45;
+            const y2 = Math.sin(angle) * 45;
+            sun.moveTo(x1, y1);
+            sun.lineTo(x2, y2);
+            sun.stroke();
+        }
+        sun.x = 700;
+        sun.y = 70;
+
+        // Add subtle rotation to sun
+        this.tweens.add({
+            targets: sun,
+            rotation: Math.PI * 2,
+            duration: 20000,
+            repeat: -1,
+            ease: 'Linear'
+        });
+
+        // Generate random clouds
+        const numClouds = Phaser.Math.Between(3, 6);
+        
+        for (let i = 0; i < numClouds; i++) {
+            const cloud = this.add.graphics();
+            
+            // Random cloud opacity and size
+            const opacity = Phaser.Math.FloatBetween(0.5, 0.8);
+            const baseSize = Phaser.Math.Between(15, 25);
+            
+            cloud.fillStyle(0xFFFFFF, opacity);
+            
+            // Create cloud with random bubble configuration
+            const numBubbles = Phaser.Math.Between(3, 5);
+            for (let j = 0; j < numBubbles; j++) {
+                const bubbleX = Phaser.Math.Between(-baseSize, baseSize);
+                const bubbleY = Phaser.Math.Between(-8, 8);
+                const bubbleSize = Phaser.Math.Between(baseSize * 0.6, baseSize);
+                cloud.fillCircle(bubbleX, bubbleY, bubbleSize);
+            }
+            
+            // Random positioning
+            cloud.x = Phaser.Math.Between(50, 750);
+            cloud.y = Phaser.Math.Between(50, 200);
+            
+            // Add floating animation with random parameters
+            this.tweens.add({
+                targets: cloud,
+                x: cloud.x + Phaser.Math.Between(-30, 30),
+                duration: Phaser.Math.Between(6000, 12000),
+                ease: 'Sine.easeInOut',
+                yoyo: true,
+                repeat: -1
+            });
+        }
     }
 
 }
