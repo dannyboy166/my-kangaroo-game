@@ -11,6 +11,16 @@ export default class GameScene extends Phaser.Scene {
         this.coinTimer = null;
         this.lastSpeedIncrease = false;
 
+        // OBSTACLE SIZE CONFIGURATION
+        this.obstacleSizeVariation = 0.20; // ±20% variation from base size
+        this.obstacleBaseSizes = {
+            rock: 0.75,
+            cactus: 0.75,
+            log: 0.5,
+            emu: 0.8,
+            croc: 0.6,
+            camel: 1.2
+        };
 
         // COLLISION PROTECTION
         this.collisionCooldown = false;
@@ -51,12 +61,15 @@ export default class GameScene extends Phaser.Scene {
 
         // Create kangaroo animations
         this.createKangarooAnimations();
+        
+        // Create emu animations
+        this.createEmuAnimations();
 
         // Create kangaroo sprite
         this.kangaroo = this.physics.add.sprite(150, this.groundY, 'kangaroo');
         this.kangaroo.setScale(1.2);
         this.kangaroo.setCollideWorldBounds(true);
-        this.kangaroo.body.setSize(80, 40);
+        this.kangaroo.body.setSize(80, 50);
         this.kangaroo.body.setOffset(30, 70);
         this.kangaroo.body.setGravityY(800);
         this.kangaroo.setOrigin(0.5, 1);
@@ -125,6 +138,39 @@ export default class GameScene extends Phaser.Scene {
         this.anims.create({
             key: 'kangaroo_idle',
             frames: [{ key: 'kangaroo', frame: 0 }],
+            frameRate: 1
+        });
+    }
+
+    createEmuAnimations() {
+        if (this.anims.exists('emu_run')) return;
+
+        // Check how many frames are available in the emu texture
+        const emuTexture = this.textures.get('emu');
+        const frameCount = emuTexture.frameTotal;
+        console.log(`Emu texture has ${frameCount} frames`);
+
+        if (frameCount >= 4) {
+            // Use all 4 frames if available
+            this.anims.create({
+                key: 'emu_run',
+                frames: this.anims.generateFrameNumbers('emu', { start: 0, end: 3 }),
+                frameRate: 6,
+                repeat: -1
+            });
+        } else {
+            // Fallback to just the first frame if not enough frames
+            this.anims.create({
+                key: 'emu_run',
+                frames: [{ key: 'emu', frame: 0 }],
+                frameRate: 1,
+                repeat: -1
+            });
+        }
+
+        this.anims.create({
+            key: 'emu_idle',
+            frames: [{ key: 'emu', frame: 0 }],
             frameRate: 1
         });
     }
@@ -256,28 +302,18 @@ export default class GameScene extends Phaser.Scene {
         const randomType = Phaser.Utils.Array.GetRandom(obstacleTypes);
 
         const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
-        // Set different scales for different obstacles
-        switch(randomType) {
-            case 'rock':
-                obstacle.setScale(0.75); // 50% bigger than 0.5
-                break;
-            case 'cactus':
-                obstacle.setScale(0.75); // 1.5x current size (0.5 * 1.5)
-                break;
-            case 'log':
-                obstacle.setScale(0.5); // keep as is
-                break;
-            case 'emu':
-                obstacle.setScale(1.0); // double current size (0.5 * 2)
-                break;
-            case 'croc':
-                obstacle.setScale(0.6); // 20% bigger than 0.5
-                break;
-            case 'camel':
-                obstacle.setScale(1.5); // triple current size (0.5 * 3)
-                break;
-            default:
-                obstacle.setScale(0.5);
+        
+        // Calculate random size based on base size and variation
+        const baseSize = this.obstacleBaseSizes[randomType] || 0.5;
+        const variation = this.obstacleSizeVariation;
+        const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation; // Random between (1-variation) and (1+variation)
+        const finalSize = baseSize * randomMultiplier;
+        
+        obstacle.setScale(finalSize);
+        
+        // Start animations for animated obstacles
+        if (randomType === 'emu') {
+            obstacle.play('emu_run');
         }
         obstacle.setOrigin(0.5, 1);
         obstacle.body.setImmovable(true);
