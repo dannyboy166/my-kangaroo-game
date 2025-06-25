@@ -1,6 +1,9 @@
+import GameDataManager from '../managers/GameDataManager.js';
+
 export default class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
+        this.gameDataManager = GameDataManager.getInstance();
     }
 
     preload() {
@@ -73,6 +76,20 @@ export default class MenuScene extends Phaser.Scene {
             yoyo: true,
             repeat: -1
         });
+
+        // Add coin UI (top left)
+        const coinIcon = this.add.image(30, 30, 'coin');
+        coinIcon.setScale(0.4);
+        coinIcon.setOrigin(0, 0.5);
+        
+        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.coinText.setOrigin(0, 0.5);
 
         // Add ground line
         const ground = this.add.graphics();

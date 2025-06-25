@@ -1,3 +1,5 @@
+import GameDataManager from '../managers/GameDataManager.js';
+
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
@@ -10,6 +12,7 @@ export default class GameScene extends Phaser.Scene {
         this.obstacleTimer = null;
         this.coinTimer = null;
         this.lastSpeedIncrease = false;
+        this.gameDataManager = GameDataManager.getInstance();
 
         // OBSTACLE SIZE CONFIGURATION
         this.obstacleSizeVariation = 0.20; // ±20% variation from base size
@@ -86,13 +89,27 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.obstacles, this.groundBody);
 
         // Create UI
-        this.scoreText = this.add.text(20, 20, 'Score: 0', {
+        this.scoreText = this.add.text(20, 60, 'Score: 0', {
             fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         });
+
+        // Add coin UI (top left)
+        const coinIcon = this.add.image(30, 30, 'coin');
+        coinIcon.setScale(0.4);
+        coinIcon.setOrigin(0, 0.5);
+        
+        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.coinText.setOrigin(0, 0.5);
 
 
         // Input handling
@@ -356,8 +373,14 @@ export default class GameScene extends Phaser.Scene {
 
         this.coinCollectionCooldown.add(coin);
 
-        // Add points
-        this.score += 50;
+        // Add coins to persistent storage instead of score
+        this.gameDataManager.addCoins(1);
+        
+        // Update coin UI
+        this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+        
+        // Add small score bonus for collecting coins
+        this.score += 10;
 
         // Immediately disable physics and remove from group
         coin.body.setEnable(false);
