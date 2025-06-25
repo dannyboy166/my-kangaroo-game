@@ -22,7 +22,7 @@ export default class GameScene extends Phaser.Scene {
             log: 0.5,
             emu: 0.8,
             croc: 0.6,
-            camel: 1.2
+            camel: 1.1
         };
 
         // COLLISION PROTECTION
@@ -75,7 +75,7 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo = this.physics.add.sprite(150, this.groundY, 'kangaroo');
         this.kangaroo.setScale(1.2);
         this.kangaroo.setCollideWorldBounds(true);
-        this.kangaroo.body.setSize(80, 50);
+        this.kangaroo.body.setSize(80, 48);
         this.kangaroo.body.setOffset(30, 70);
         this.kangaroo.body.setGravityY(800);
         this.kangaroo.setOrigin(0.5, 1);
@@ -280,7 +280,12 @@ export default class GameScene extends Phaser.Scene {
         const delay = Phaser.Math.Between(1500, 3500);
         this.obstacleTimer = this.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
-                this.spawnObstacle();
+                // 40% chance to spawn a gap instead of single obstacle (only after score 1000)
+                if (this.score >= 1000 && Math.random() < 0.4) {
+                    this.spawnGap();
+                } else {
+                    this.spawnObstacle();
+                }
                 this.scheduleNextObstacle();
             }
         });
@@ -340,6 +345,23 @@ export default class GameScene extends Phaser.Scene {
         obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
 
         this.obstacles.add(obstacle);
+    }
+
+    spawnGap() {
+        if (this.isGameOver) {
+            return;
+        }
+
+        // Spawn first obstacle
+        this.spawnObstacle();
+
+        // Spawn second obstacle after a short delay (max 0.1s = 100ms)
+        const gapDelay = Phaser.Math.Between(400, 400);
+        this.time.delayedCall(gapDelay, () => {
+            if (!this.isGameOver && this.scene.isActive()) {
+                this.spawnObstacle();
+            }
+        });
     }
 
     spawnCoin() {
