@@ -70,6 +70,9 @@ export default class GameScene extends Phaser.Scene {
         
         // Create emu animations
         this.createEmuAnimations();
+        
+        // Create magpie animations
+        this.createMagpieAnimations();
 
         // Create kangaroo sprite
         this.kangaroo = this.physics.add.sprite(150, this.groundY, 'kangaroo');
@@ -81,10 +84,10 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo.setOrigin(0.5, 1);
         this.kangaroo.play('kangaroo_run');
 
-        // Create invisible ground for physics collision
+        // Create invisible ground for physics collision (extended for running emus)
         this.groundBody = this.physics.add.staticGroup();
-        const groundCollider = this.groundBody.create(400, 550, null);
-        groundCollider.setSize(1500, 100);
+        const groundCollider = this.groundBody.create(700, 550, null); // Moved center right
+        groundCollider.setSize(2000, 100); // Extended width to cover emu spawn area
         groundCollider.setVisible(false);
 
         // Add collision between kangaroo and ground
@@ -195,6 +198,24 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
+    createMagpieAnimations() {
+        if (this.anims.exists('magpie_fly')) return;
+
+        // Create flying animation using all 4 frames
+        this.anims.create({
+            key: 'magpie_fly',
+            frames: this.anims.generateFrameNumbers('magpie', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'magpie_idle',
+            frames: [{ key: 'magpie', frame: 0 }],
+            frameRate: 1
+        });
+    }
+
     update(time, delta) {
         if (this.isGameOver) return;
 
@@ -237,7 +258,13 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
-            obstacle.x -= this.gameSpeed * delta / 1000;
+            // Special handling for magpie swooping behavior
+            if (obstacle.texture.key === 'magpie') {
+                this.updateMagpieBehavior(obstacle, delta);
+            } else {
+                // Normal obstacle movement
+                obstacle.x -= this.gameSpeed * delta / 1000;
+            }
 
             if (obstacle.x < -100) {
                 obstacle.destroy();
@@ -260,6 +287,59 @@ export default class GameScene extends Phaser.Scene {
 
     }
 
+    updateMagpieBehavior(magpie, delta) {
+        // Move magpie horizontally towards kangaroo (use game speed like other obstacles)
+        magpie.x -= this.gameSpeed * delta / 1000;
+        
+        // Check if magpie is close enough to kangaroo to start swooping
+        const distanceToKangaroo = magpie.x - this.kangaroo.x;
+        
+        // Calculate swoop distance based on height - higher magpies need more distance
+        const magpieHeight = magpie.y;
+        const heightFromGround = this.groundY - magpieHeight;
+        const swoopDistance = 150 + (heightFromGround * 1); // Base 150px + 1px per pixel of height
+        
+        if (!magpie.swoopStarted && distanceToKangaroo <= swoopDistance && magpie.willSwoop) {
+            // Start swooping down
+            magpie.swoopStarted = true;
+            console.log(`Magpie starting swoop attack! Height: ${Math.round(heightFromGround)}px, Distance: ${Math.round(swoopDistance)}px`);
+        }
+        
+        if (magpie.swoopStarted && !magpie.isClimbingBack) {
+            // Swoop down towards ground level
+            const targetY = this.groundY - 20; // Slightly above ground
+            const currentY = magpie.y;
+            
+            if (currentY < targetY) {
+                // Dive down
+                magpie.y += magpie.swoopSpeed * delta / 1000;
+                // Rotate anticlockwise during swoop (negative rotation)
+                magpie.rotation = -Math.PI / 4; // -45 degrees (anticlockwise tilt)
+            } else {
+                // Reached bottom, start straightening phase
+                magpie.rotation = 0; // Straighten out
+                magpie.straightenTime += delta;
+                
+                // After 0.5 seconds of being straight, start climbing back up
+                if (magpie.straightenTime >= 800) {
+                    magpie.isClimbingBack = true;
+                    console.log('Magpie climbing back up!');
+                }
+            }
+        }
+        
+        if (magpie.isClimbingBack) {
+            // Climb back up to original height
+            const originalY = Phaser.Math.Between(50, 150);
+            if (magpie.y > originalY) {
+                magpie.y -= magpie.climbSpeed * delta / 1000;
+                magpie.rotation = Math.PI / 6; // +30 degrees (slight upward tilt)
+            } else {
+                // Back to normal flying
+                magpie.rotation = 0;
+            }
+        }
+    }
 
     jump() {
         if (this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down) {
@@ -282,17 +362,20 @@ export default class GameScene extends Phaser.Scene {
         let maxDelay = 3500;
         
         if (this.score >= 1000) {
-            minDelay = 1200;
+            minDelay = 1500;
             maxDelay = 2500;
         }
         
         const delay = Phaser.Math.Between(minDelay, maxDelay);
+        console.log(`🕐 SCHEDULING next obstacle in ${delay}ms (score: ${Math.floor(this.score)})`);
         this.obstacleTimer = this.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 // 40% chance to spawn a gap instead of single obstacle (only after score 1000)
                 if (this.score >= 1000 && Math.random() < 0.4) {
+                    console.log(`🔄 SPAWNING GAP (score: ${Math.floor(this.score)})`);
                     this.spawnGap();
                 } else {
+                    console.log(`⭐ SPAWNING SINGLE OBSTACLE (score: ${Math.floor(this.score)})`);
                     this.spawnObstacle();
                 }
                 this.scheduleNextObstacle();
@@ -319,48 +402,142 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        let obstacleTypes = ['rock', 'cactus', 'log'];
+        let obstacleTypes = ['rock', 'cactus', 'log', 'magpie']; // Include magpie from start
         
         // Add new obstacles based on score
         if (this.score >= 1000) {
-            obstacleTypes.push('emu');
+            obstacleTypes.push('croc');
         }
         if (this.score >= 2000) {
-            obstacleTypes.push('croc');
+            obstacleTypes.push('emu');
         }
         if (this.score >= 3000) {
             obstacleTypes.push('camel');
         }
         
         const randomType = Phaser.Utils.Array.GetRandom(obstacleTypes);
+        console.log(`🎯 SPAWNING ${randomType} obstacle`);
 
-        const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
+        if (randomType === 'magpie') {
+            this.spawnMagpie();
+        } else {
+            // Spawn regular ground obstacle
+            console.log(`🏃 Spawning ground obstacle: ${randomType}`);
+            const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
+            
+            // Calculate random size based on base size and variation
+            const baseSize = this.obstacleBaseSizes[randomType] || 0.5;
+            const variation = this.obstacleSizeVariation;
+            const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
+            const finalSize = baseSize * randomMultiplier;
+            
+            obstacle.setScale(finalSize);
+            
+            // Start animations for animated obstacles
+            if (randomType === 'emu') {
+                obstacle.play('emu_run');
+            }
+            obstacle.setOrigin(0.5, 1);
+            obstacle.body.setImmovable(true);
+            obstacle.body.setGravityY(0);
+            
+            // Adjust collision box - special handling for camels
+            if (randomType === 'camel') {
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
+            } else {
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+            }
+
+            this.obstacles.add(obstacle);
+        }
+    }
+    
+    spawnMagpie() {
+        if (this.isGameOver) {
+            return;
+        }
+
+        // Create magpie sprite starting high up in the sky
+        const startY = Phaser.Math.Between(50, 150); // High in the sky
+        const magpie = this.physics.add.sprite(1200, startY, 'magpie'); // Same x position as ground obstacles
         
-        // Calculate random size based on base size and variation
-        const baseSize = this.obstacleBaseSizes[randomType] || 0.5;
+        magpie.setScale(0.8);
+        magpie.setOrigin(0.5, 0.5);
+        magpie.body.setImmovable(true);
+        magpie.setVelocityY(0); // 🔒 Freeze vertical movement
+        magpie.body.pushable = false;
+        magpie.body.setSize(magpie.width * 0.7, magpie.height * 0.5);
+        
+        // Start flying animation
+        magpie.play('magpie_fly');
+        
+        // Custom properties for AI behavior
+        magpie.swoopStarted = false;
+        // No swooping before score 1000, then 50% chance after
+        magpie.willSwoop = this.score >= 1000 ? Math.random() < 0.5 : false;
+        magpie.straightenTime = 0;
+        magpie.isClimbingBack = false;
+        magpie.swoopSpeed = 300;
+        magpie.climbSpeed = 200;
+        
+        console.log(`🦅 MAGPIE spawned - willSwoop: ${magpie.willSwoop} (counts as normal obstacle)`);
+        this.obstacles.add(magpie);
+
+        // Bulletproof gravity shutdown (same as coins)
+        this.time.delayedCall(0, () => {
+            if (magpie.body) {
+                magpie.body.setAllowGravity(false);      // 🔒 Turn off global gravity
+                magpie.body.setVelocityY(0);              // 🔒 Reset velocity
+                magpie.body.setGravity(0, 0);             // 🔒 Set local gravity to zero
+                magpie.body.setBounce(0);                 // 🔒 Just in case of collision
+            }
+        });
+    }
+
+    spawnRunningEmu() {
+        if (this.isGameOver) {
+            return;
+        }
+
+        // Simplified approach: emu always runs 30% faster from fixed position
+        const emuSpeedMultiplier = 1.3; // 30% faster (more conservative)
+        const finalEmuSpeed = this.gameSpeed * emuSpeedMultiplier;
+        const finalEmuSpawnX = 1350; // Fixed spawn position
+        
+        // Calculate actual timing for comparison
+        const normalDistance = 1200 - 150; // 1050px
+        const normalTime = normalDistance / this.gameSpeed;
+        const emuDistance = finalEmuSpawnX - 150;
+        const emuTime = emuDistance / finalEmuSpeed;
+        
+        console.log(`🦘 RUNNING EMU DEBUG:`);
+        console.log(`  Normal: spawn=1200, speed=${this.gameSpeed}, time=${normalTime.toFixed(2)}s`);
+        console.log(`  Emu: spawn=${Math.round(finalEmuSpawnX)}, speed=${Math.round(finalEmuSpeed)}, time=${emuTime.toFixed(2)}s`);
+        console.log(`  Speed ratio: ${emuSpeedMultiplier}x, Time diff: ${((emuTime - normalTime) * 1000).toFixed(0)}ms`);
+        
+        const emu = this.physics.add.sprite(finalEmuSpawnX, this.groundY, 'emu');
+        
+        // Set up emu properties
+        const baseSize = this.obstacleBaseSizes.emu || 0.8;
         const variation = this.obstacleSizeVariation;
         const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
         const finalSize = baseSize * randomMultiplier;
         
-        obstacle.setScale(finalSize);
+        emu.setScale(finalSize);
+        emu.setOrigin(0.5, 1);
+        emu.body.setImmovable(true);
+        emu.body.setGravityY(0);
+        emu.body.setSize(emu.width * 0.8, emu.height * 0.8);
         
-        // Start animations for animated obstacles
-        if (randomType === 'emu') {
-            obstacle.play('emu_run');
-        }
-        obstacle.setOrigin(0.5, 1);
-        obstacle.body.setImmovable(true);
-        obstacle.body.setGravityY(0);
+        // Start running animation
+        emu.play('emu_run');
         
-        // Adjust collision box - special handling for camels
-        if (randomType === 'camel') {
-            obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
-            obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
-        } else {
-            obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
-        }
-
-        this.obstacles.add(obstacle);
+        // Mark as running emu for special movement behavior
+        emu.isRunningEmu = true;
+        emu.runSpeed = finalEmuSpeed;
+        
+        this.obstacles.add(emu);
     }
 
     spawnGap() {
@@ -368,6 +545,7 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
+        console.log('🚧 GAP: Spawning first obstacle');
         // Spawn first obstacle
         this.spawnObstacle();
 
@@ -381,8 +559,10 @@ export default class GameScene extends Phaser.Scene {
         }
         
         const gapDelay = Phaser.Math.Between(minDelay, maxDelay);
+        console.log(`🚧 GAP: Scheduling second obstacle in ${gapDelay}ms`);
         this.time.delayedCall(gapDelay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
+                console.log('🚧 GAP: Spawning second obstacle');
                 this.spawnObstacle();
             }
         });

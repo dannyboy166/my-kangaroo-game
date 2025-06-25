@@ -24,6 +24,12 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('croc', 'assets/images/croc.png');
         this.load.image('camel', 'assets/images/camel.png');
         
+        // Load magpie sprite sheet (512x128 with 4x1 frames)
+        this.load.spritesheet('magpie', 'assets/images/magpie_sheet.png', {
+            frameWidth: 128, // 512 ÷ 4 frames = 128 per frame
+            frameHeight: 128
+        });
+        
         // Load coin
         this.load.image('coin', 'assets/images/coin.png');
     }
