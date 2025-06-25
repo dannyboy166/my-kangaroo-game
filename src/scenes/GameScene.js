@@ -261,7 +261,6 @@ export default class GameScene extends Phaser.Scene {
     jump() {
         if (this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down) {
             this.kangaroo.setVelocityY(-950);
-            this.kangaroo.play('kangaroo_jump');
         }
     }
 
