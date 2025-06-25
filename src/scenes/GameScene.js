@@ -99,7 +99,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Add coin UI (top left)
         const coinIcon = this.add.image(30, 30, 'coin');
-        coinIcon.setScale(0.4);
+        coinIcon.setScale(0.17);
         coinIcon.setOrigin(0, 0.5);
         
         this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
