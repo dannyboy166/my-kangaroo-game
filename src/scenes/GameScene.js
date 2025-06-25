@@ -480,9 +480,9 @@ export default class GameScene extends Phaser.Scene {
         magpie.isClimbingBack = false;
         // Scale swoop and climb speeds with game speed for consistent challenge
         magpie.swoopSpeed = this.gameSpeed * 0.7; // 70% of game speed
-        magpie.climbSpeed = this.gameSpeed * 0.7; // 70% of game speed
+        magpie.climbSpeed = this.gameSpeed * 0.7; // 120% of game speed
         // Scale down time inversely with game speed (faster game = less time down)
-        magpie.downTime = Math.max(300, 1200 - (this.gameSpeed * 0.8)); // Min 300ms, scales down as speed increases
+        magpie.downTime = Math.max(100, 500 - (this.gameSpeed * 0.5)); // Min 100ms, scales down as speed increases
         
         console.log(`🦅 MAGPIE spawned - willSwoop: ${magpie.willSwoop} (counts as normal obstacle)`);
         this.obstacles.add(magpie);
