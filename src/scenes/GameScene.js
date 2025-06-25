@@ -1,25 +1,20 @@
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
-        
-        // Game variables
         this.gameSpeed = 300;
         this.score = 0;
         this.isGameOver = false;
-        this.groundY = 450; // Define ground level
-        
-        // Groups for collision detection
+        this.groundY = 450;
         this.obstacles = null;
         this.coins = null;
-        
-        // Timers
         this.obstacleTimer = null;
         this.coinTimer = null;
+        this.lastSpeedIncrease = false; // for score pacing
     }
 
     create() {
         console.log('GameScene: Creating new game');
-        
+
         // Reset all game state
         this.isGameOver = false;
         this.score = 0;
@@ -36,7 +31,7 @@ export default class GameScene extends Phaser.Scene {
         this.ground = this.add.graphics();
         this.ground.fillStyle(0x8B4513);
         this.ground.fillRect(0, 500, 800, 100);
-        
+
         // Add some ground texture
         this.ground.fillStyle(0x654321);
         for (let i = 0; i < 10; i++) {
@@ -56,11 +51,11 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo.setCollideWorldBounds(true);
         this.kangaroo.body.setSize(80, 40); // Adjust hitbox
         this.kangaroo.body.setOffset(30, 70);
-        
+
         // IMPORTANT: Set kangaroo physics properly
         this.kangaroo.body.setGravityY(800); // Add gravity to kangaroo only
         this.kangaroo.setOrigin(0.5, 1); // Set origin to bottom-center for ground positioning
-        
+
         // Start with running animation
         this.kangaroo.play('kangaroo_run');
 
@@ -69,13 +64,13 @@ export default class GameScene extends Phaser.Scene {
         const groundCollider = this.groundBody.create(400, 550, null);
         groundCollider.setSize(1500, 100);
         groundCollider.setVisible(false);
-        
+
         // Add collision between kangaroo and ground
         this.physics.add.collider(this.kangaroo, this.groundBody);
-        
+
         // IMPORTANT: Add collision between obstacles and ground so they don't fall through
         this.physics.add.collider(this.obstacles, this.groundBody);
-        
+
         // Create UI
         this.scoreText = this.add.text(20, 20, 'Score: 0', {
             fontSize: '24px',
@@ -131,48 +126,50 @@ export default class GameScene extends Phaser.Scene {
         if (this.isGameOver) return;
 
         // Jump input
-        if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || 
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
             Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.jump();
         }
 
-        // Handle animations based on kangaroo state
-        if (this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down) {
-            // On ground - play running animation
-            if (this.kangaroo.anims.currentAnim?.key !== 'kangaroo_run') {
+        // Handle kangaroo animations
+        const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
+        const currentAnim = this.kangaroo.anims.currentAnim?.key;
+
+        if (isOnGround) {
+            if (currentAnim !== 'kangaroo_run') {
                 this.kangaroo.play('kangaroo_run');
             }
         } else {
-            // In air - play jumping animation
-            if (this.kangaroo.anims.currentAnim?.key !== 'kangaroo_jump') {
+            if (currentAnim !== 'kangaroo_jump') {
                 this.kangaroo.play('kangaroo_jump');
             }
         }
 
-        // Update score based on time (slower)
+        // Update score
         this.score += 0.5;
         this.scoreText.setText('Score: ' + Math.floor(this.score));
 
-        // Gradually increase game speed
-        if (this.score % 50 === 0) {
+        // Increase game speed every 50 points (only once per interval)
+        const flooredScore = Math.floor(this.score);
+        if (flooredScore % 50 === 0 && !this.lastSpeedIncrease) {
             this.gameSpeed += 5;
+            this.lastSpeedIncrease = true;
+        } else if (flooredScore % 50 !== 0) {
+            this.lastSpeedIncrease = false;
         }
 
-        // Move obstacles and coins
-        this.obstacles.children.entries.forEach((obstacle) => {
+        // Move obstacles
+        this.obstacles.children.iterate(obstacle => {
+            if (!obstacle) return;
             obstacle.x -= this.gameSpeed * this.game.loop.delta / 1000;
-            
-            if (obstacle.x < -100) {
-                console.log('Destroying obstacle at x:', obstacle.x);
-                obstacle.destroy();
-            }
+            if (obstacle.x < -100) obstacle.destroy();
         });
 
-        this.coins.children.entries.forEach((coin) => {
+        // Move coins
+        this.coins.children.iterate(coin => {
+            if (!coin) return;
             coin.x -= this.gameSpeed * this.game.loop.delta / 1000;
-            if (coin.x < -100) {
-                coin.destroy();
-            }
+            if (coin.x < -100) coin.destroy();
         });
     }
 
@@ -187,14 +184,14 @@ export default class GameScene extends Phaser.Scene {
     startSpawning() {
         // Start initial obstacle spawn
         this.scheduleNextObstacle();
-        
+
         // Start initial coin spawn  
         this.scheduleNextCoin();
     }
 
     scheduleNextObstacle() {
         if (this.isGameOver) return;
-        
+
         this.obstacleTimer = this.time.delayedCall(Phaser.Math.Between(1500, 3500), () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 this.spawnObstacle();
@@ -205,7 +202,7 @@ export default class GameScene extends Phaser.Scene {
 
     scheduleNextCoin() {
         if (this.isGameOver) return;
-        
+
         this.coinTimer = this.time.delayedCall(Phaser.Math.Between(2500, 4500), () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 this.spawnCoin();
@@ -216,41 +213,43 @@ export default class GameScene extends Phaser.Scene {
 
     spawnObstacle() {
         if (this.isGameOver) return;
-        
+
         const obstacleTypes = ['rock', 'cactus', 'log'];
         const randomType = Phaser.Utils.Array.GetRandom(obstacleTypes);
-        
+
         // Create obstacle as physics sprite but make it IMMOVABLE
         const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
         obstacle.setScale(0.5);
         obstacle.setOrigin(0.5, 1); // Bottom-center origin for ground positioning
-        
+
         // CRITICAL: Make obstacle immovable so it doesn't fall
         obstacle.body.setImmovable(true);
         obstacle.body.setGravityY(0); // Remove gravity from obstacles
         obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
-        
+
         // Add to physics group for collision detection
         this.obstacles.add(obstacle);
     }
 
     spawnCoin() {
         if (this.isGameOver) return;
-        
-        // Spawn coin at random height
         const coinY = Phaser.Math.Between(200, this.groundY - 50);
-        const coin = this.add.image(850, coinY, 'coin');
+        const coin = this.physics.add.image(850, coinY, 'coin');
         coin.setScale(0.3);
-        
-        // Add spinning animation
+        coin.setOrigin(0.5);
+        coin.setGravityY(0);
+        coin.body.setAllowGravity(false);
+        coin.setImmovable(true);
+
+        // Rotation tween
         this.tweens.add({
             targets: coin,
-            rotation: Math.PI * 2,
+            angle: 360,
             duration: 1000,
             repeat: -1
         });
 
-        // Add floating animation
+        // Floating tween
         this.tweens.add({
             targets: coin,
             y: coinY - 10,
@@ -265,7 +264,7 @@ export default class GameScene extends Phaser.Scene {
 
     shutdown() {
         console.log('GameScene: Shutting down and cleaning up');
-        
+
         // Stop all timers
         if (this.obstacleTimer) {
             this.obstacleTimer.destroy();
@@ -275,13 +274,13 @@ export default class GameScene extends Phaser.Scene {
             this.coinTimer.destroy();
             this.coinTimer = null;
         }
-        
+
         // Clear all tweens
         this.tweens.killAll();
-        
+
         // Remove input listeners
         this.input.off('pointerdown', this.jump, this);
-        
+
         // Clear physics groups
         if (this.obstacles) {
             this.obstacles.clear(true, true);
@@ -289,17 +288,17 @@ export default class GameScene extends Phaser.Scene {
         if (this.coins) {
             this.coins.clear(true, true);
         }
-        
+
         // Reset game state
         this.isGameOver = false;
-        
+
         console.log('GameScene: Cleanup complete');
     }
 
     collectCoin(kangaroo, coin) {
         // Add points
         this.score += 50;
-        
+
         // Create collection effect
         this.tweens.add({
             targets: coin,
@@ -324,7 +323,7 @@ export default class GameScene extends Phaser.Scene {
 
     hitObstacle(kangaroo, obstacle) {
         if (this.isGameOver) return;
-        
+
         console.log('Hit obstacle - game over!');
         this.isGameOver = true;
 
@@ -348,7 +347,7 @@ export default class GameScene extends Phaser.Scene {
                 obs.body.setVelocity(0, 0);
             }
         });
-        
+
         this.coins.children.entries.forEach(coin => {
             // Stop tweens on coins
             this.tweens.killTweensOf(coin);
