@@ -9,10 +9,21 @@ export default class GameScene extends Phaser.Scene {
         this.groundY = 450;
         this.obstacles = null;
         this.coins = null;
+        this.powerups = null;
         this.obstacleTimer = null;
         this.coinTimer = null;
+        this.powerupTimer = null;
         this.lastSpeedIncrease = false;
         this.gameDataManager = GameDataManager.getInstance();
+
+        // POWERUP SYSTEM
+        this.activePowerups = {
+            shield: { active: false, timeLeft: 0 },
+            magnet: { active: false, timeLeft: 0 },
+            double: { active: false, timeLeft: 0, jumpsLeft: 0 }
+        };
+        this.glowTimer = null;
+        this.currentGlowIndex = 0;
 
         // OBSTACLE SIZE CONFIGURATION
         this.obstacleSizeVariation = 0.20; // ±20% variation from base size
@@ -38,8 +49,21 @@ export default class GameScene extends Phaser.Scene {
         this.gameSpeed = 300;
         this.obstacleTimer = null;
         this.coinTimer = null;
+        this.powerupTimer = null;
         this.collisionCooldown = false;
         this.coinCollectionCooldown.clear();
+
+        // Reset powerup state
+        this.activePowerups = {
+            shield: { active: false, timeLeft: 0 },
+            magnet: { active: false, timeLeft: 0 },
+            double: { active: false, timeLeft: 0, jumpsLeft: 0 }
+        };
+        this.currentGlowIndex = 0;
+        if (this.glowTimer) {
+            this.glowTimer.destroy();
+            this.glowTimer = null;
+        }
 
         // Add background
         const graphics = this.add.graphics();
@@ -63,6 +87,7 @@ export default class GameScene extends Phaser.Scene {
         // Create physics groups with debug tracking
         this.obstacles = this.physics.add.group();
         this.coins = this.physics.add.group();
+        this.powerups = this.physics.add.group();
 
 
         // Create kangaroo animations
@@ -117,6 +142,31 @@ export default class GameScene extends Phaser.Scene {
         });
         this.coinText.setOrigin(0, 0.5);
 
+        // Add powerup UI
+        this.powerupUI = {
+            shield: this.add.text(20, 120, '', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#00FF00',
+                stroke: '#000000',
+                strokeThickness: 1
+            }),
+            magnet: this.add.text(20, 150, '', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#FF00FF',
+                stroke: '#000000',
+                strokeThickness: 1
+            }),
+            double: this.add.text(20, 180, '', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#00FFFF',
+                stroke: '#000000',
+                strokeThickness: 1
+            })
+        };
+
 
         // Input handling
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -124,7 +174,7 @@ export default class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', this.jump, this);
 
 
-        // Start spawning obstacles and coins
+        // Start spawning obstacles, coins, and powerups
         this.startSpawning();
 
         // Add collision detection
@@ -137,6 +187,12 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.kangaroo, this.coins, (kangaroo, coin) => {
             if (!this.coinCollectionCooldown.has(coin) && !this.isGameOver) {
                 this.collectCoin(kangaroo, coin);
+            }
+        }, null, this);
+
+        this.physics.add.overlap(this.kangaroo, this.powerups, (kangaroo, powerup) => {
+            if (!this.isGameOver) {
+                this.collectPowerup(kangaroo, powerup);
             }
         }, null, this);
 
@@ -219,6 +275,9 @@ export default class GameScene extends Phaser.Scene {
     update(time, delta) {
         if (this.isGameOver) return;
 
+        // Update powerup timers
+        this.updatePowerups(delta);
+
         // Jump input
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
             Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
@@ -277,11 +336,40 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
+            // Magnet effect
+            if (this.activePowerups.magnet.active) {
+                const distanceToKangaroo = Phaser.Math.Distance.Between(
+                    coin.x, coin.y, this.kangaroo.x, this.kangaroo.y
+                );
+                
+                if (distanceToKangaroo < 400) {
+                    const attractionForce = 1000;
+                    const angle = Phaser.Math.Angle.Between(
+                        coin.x, coin.y, this.kangaroo.x, this.kangaroo.y
+                    );
+                    coin.x += Math.cos(angle) * attractionForce * delta / 1000;
+                    coin.y += Math.sin(angle) * attractionForce * delta / 1000;
+                }
+            }
+
             coin.x -= this.gameSpeed * delta / 1000;
 
             if (coin.x < -100) {
                 this.coinCollectionCooldown.delete(coin);
                 coin.destroy();
+            }
+        });
+
+        // Move powerups and clean up off-screen ones
+        this.powerups.children.entries.slice().forEach((powerup) => {
+            if (!powerup || !powerup.active) {
+                return;
+            }
+
+            powerup.x -= this.gameSpeed * delta / 1000;
+
+            if (powerup.x < -100) {
+                powerup.destroy();
             }
         });
 
@@ -342,14 +430,24 @@ export default class GameScene extends Phaser.Scene {
     }
 
     jump() {
-        if (this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down) {
+        const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
+        
+        if (isOnGround) {
             this.kangaroo.setVelocityY(-950);
+            if (this.activePowerups.double.active) {
+                this.activePowerups.double.jumpsLeft = 1;
+            }
+        } else if (this.activePowerups.double.active && this.activePowerups.double.jumpsLeft > 0) {
+            // Double jump (less powerful)
+            this.kangaroo.setVelocityY(-750);
+            this.activePowerups.double.jumpsLeft--;
         }
     }
 
     startSpawning() {
         this.scheduleNextObstacle();
         this.scheduleNextCoin();
+        this.scheduleNextPowerup();
     }
 
     scheduleNextObstacle() {
@@ -641,6 +739,31 @@ export default class GameScene extends Phaser.Scene {
     hitObstacle(kangaroo, obstacle) {
         if (this.isGameOver || this.collisionCooldown) return;
 
+        // Shield protection (one-time use)
+        if (this.activePowerups.shield.active) {
+            this.collisionCooldown = true;
+            
+            // Deactivate shield after one use
+            this.activePowerups.shield.active = false;
+            this.activePowerups.shield.timeLeft = 0;
+            
+            // Visual feedback for shield protection
+            this.kangaroo.setTint(0x00FF00);
+            this.time.delayedCall(200, () => {
+                this.updateKangarooGlow(); // Update glow after shield is used
+            });
+            
+            // Destroy the obstacle
+            obstacle.destroy();
+            
+            // Reset collision cooldown after brief period
+            this.time.delayedCall(500, () => {
+                this.collisionCooldown = false;
+            });
+            
+            return;
+        }
+
         this.collisionCooldown = true;
         this.isGameOver = true;
 
@@ -658,6 +781,11 @@ export default class GameScene extends Phaser.Scene {
         // Stop timers & obstacles
         this.cleanupTimers();
         this.obstacles.children.iterate(obs => obs?.body?.setVelocity(0, 0));
+        this.coins.children.iterate(coin => coin?.body?.setVelocity(0, 0));
+        this.powerups.children.iterate(powerup => powerup?.body?.setVelocity(0, 0));
+        
+        // Stop all tweens to prevent weird animations
+        this.tweens.killTweensOf([...this.coins.children.entries, ...this.powerups.children.entries]);
 
         // Crash effect
         this.tweens.add({
@@ -683,6 +811,14 @@ export default class GameScene extends Phaser.Scene {
             this.coinTimer.destroy();
             this.coinTimer = null;
         }
+        if (this.powerupTimer) {
+            this.powerupTimer.destroy();
+            this.powerupTimer = null;
+        }
+        if (this.glowTimer) {
+            this.glowTimer.destroy();
+            this.glowTimer = null;
+        }
     }
 
 
@@ -702,6 +838,9 @@ export default class GameScene extends Phaser.Scene {
         }
         if (this.coins) {
             this.coins.clear(true, true);
+        }
+        if (this.powerups) {
+            this.powerups.clear(true, true);
         }
 
         // Clear cooldown tracking
@@ -775,6 +914,205 @@ export default class GameScene extends Phaser.Scene {
                 repeat: -1
             });
         }
+    }
+
+    // POWERUP SYSTEM METHODS
+    
+    scheduleNextPowerup() {
+        if (this.isGameOver) {
+            return;
+        }
+
+        const delay = Phaser.Math.Between(16000, 25000); // 16-25 seconds
+        this.powerupTimer = this.time.delayedCall(delay, () => {
+            if (!this.isGameOver && this.scene.isActive()) {
+                this.spawnPowerup();
+                this.scheduleNextPowerup();
+            }
+        });
+    }
+
+    spawnPowerup() {
+        if (this.isGameOver) return;
+
+        const powerupTypes = ['shield', 'magnet', 'double'];
+        const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
+        
+        const powerupY = Phaser.Math.Between(200, this.groundY - 50);
+        const powerup = this.physics.add.image(850, powerupY, randomType);
+        powerup.setScale(0.3);
+        powerup.setOrigin(0.5);
+        powerup.setImmovable(true);
+        powerup.setVelocityY(0);
+        powerup.body.pushable = false;
+        powerup.powerupType = randomType;
+
+        this.powerups.add(powerup);
+
+        // Bulletproof gravity shutdown
+        this.time.delayedCall(0, () => {
+            if (powerup.body) {
+                powerup.body.setAllowGravity(false);
+                powerup.body.setVelocityY(0);
+                powerup.body.setGravity(0, 0);
+                powerup.body.setBounce(0);
+            }
+        });
+
+        // Add glow effect
+        this.tweens.add({
+            targets: powerup,
+            scaleX: 0.4,
+            scaleY: 0.4,
+            duration: 1000,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+    }
+
+    collectPowerup(player, powerup) {
+        const type = powerup.powerupType;
+        
+        // Activate powerup with different durations
+        this.activePowerups[type].active = true;
+        if (type === 'shield') {
+            this.activePowerups[type].timeLeft = 15000; // 15 seconds for shield
+        } else {
+            this.activePowerups[type].timeLeft = 10000; // 10 seconds for magnet and double jump
+        }
+        
+        if (type === 'double') {
+            // Check if kangaroo is in the air when collecting double jump
+            const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
+            this.activePowerups[type].jumpsLeft = isOnGround ? 0 : 1; // Give immediate jump if mid-air
+        }
+
+        // Visual effect
+        const effectPowerup = this.add.image(powerup.x, powerup.y, type);
+        effectPowerup.setScale(0.6);
+
+        this.tweens.add({
+            targets: effectPowerup,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            alpha: 0,
+            duration: 400,
+            onComplete: () => {
+                effectPowerup.destroy();
+            }
+        });
+
+        // Remove powerup
+        this.powerups.remove(powerup);
+        powerup.destroy();
+
+        console.log(`Collected ${type} powerup!`);
+        
+        // Update kangaroo glow effect
+        this.updateKangarooGlow();
+    }
+
+    updatePowerups(delta) {
+        // Update powerup timers and UI
+        Object.keys(this.activePowerups).forEach(type => {
+            const powerup = this.activePowerups[type];
+            
+            if (powerup.active) {
+                powerup.timeLeft -= delta;
+                
+                if (powerup.timeLeft <= 0) {
+                    powerup.active = false;
+                    powerup.timeLeft = 0;
+                    if (type === 'double') {
+                        powerup.jumpsLeft = 0;
+                    }
+                }
+            }
+            
+            // Update UI
+            this.updatePowerupUI(type);
+        });
+        
+        // Update kangaroo glow effect
+        this.updateKangarooGlow();
+    }
+
+    updatePowerupUI(type) {
+        const powerup = this.activePowerups[type];
+        const ui = this.powerupUI[type];
+        
+        if (powerup.active) {
+            const secondsLeft = Math.ceil(powerup.timeLeft / 1000);
+            let text = '';
+            
+            switch (type) {
+                case 'shield':
+                    text = `Shield: ${secondsLeft}s`;
+                    break;
+                case 'magnet':
+                    text = `Magnet: ${secondsLeft}s`;
+                    break;
+                case 'double':
+                    text = `Double Jump: ${secondsLeft}s`;
+                    break;
+            }
+            
+            ui.setText(text);
+        } else {
+            ui.setText('');
+        }
+    }
+
+    updateKangarooGlow() {
+        // Stop any existing glow timer
+        if (this.glowTimer) {
+            this.glowTimer.destroy();
+            this.glowTimer = null;
+        }
+        
+        // Get active powerup colors
+        const activePowerupColors = [];
+        
+        if (this.activePowerups.shield.active) {
+            activePowerupColors.push(0xAAFFAA); // Light green for shield
+        }
+        if (this.activePowerups.magnet.active) {
+            activePowerupColors.push(0xFFAAFF); // Light magenta for magnet
+        }
+        if (this.activePowerups.double.active) {
+            activePowerupColors.push(0xAAFFFF); // Light cyan for double jump
+        }
+        
+        if (activePowerupColors.length === 0) {
+            // No powerups active, clear tint
+            this.kangaroo.clearTint();
+            this.currentGlowIndex = 0;
+            return;
+        } else if (activePowerupColors.length === 1) {
+            // Single powerup, use its color
+            this.kangaroo.setTint(activePowerupColors[0]);
+            this.currentGlowIndex = 0;
+        } else {
+            // Multiple powerups, cycle between colors
+            this.currentGlowIndex = 0;
+            this.cycleGlowColors(activePowerupColors);
+        }
+    }
+    
+    cycleGlowColors(colors) {
+        // Set initial color
+        this.kangaroo.setTint(colors[this.currentGlowIndex]);
+        
+        // Start cycling timer (change color every 800ms)
+        this.glowTimer = this.time.addEvent({
+            delay: 800,
+            callback: () => {
+                this.currentGlowIndex = (this.currentGlowIndex + 1) % colors.length;
+                this.kangaroo.setTint(colors[this.currentGlowIndex]);
+            },
+            loop: true
+        });
     }
 
 }

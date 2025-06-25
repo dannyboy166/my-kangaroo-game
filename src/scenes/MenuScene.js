@@ -32,6 +32,11 @@ export default class MenuScene extends Phaser.Scene {
         
         // Load coin
         this.load.image('coin', 'assets/images/coin.png');
+        
+        // Load powerup images
+        this.load.image('shield', 'assets/images/shield.png');
+        this.load.image('magnet', 'assets/images/magnet.png');
+        this.load.image('double', 'assets/images/double.png');
     }
 
     create() {
