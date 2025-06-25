@@ -18,7 +18,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('cactus', 'assets/images/cactus.png');
         this.load.image('log', 'assets/images/log.png');
         this.load.spritesheet('emu', 'assets/images/emu_sheet.png', {
-            frameWidth: 128, // 512 ÷ 4 frames = 128 per frame
+            frameWidth: 128, // 256 ÷ 2 frames = 128 per frame
             frameHeight: 128
         });
         this.load.image('croc', 'assets/images/croc.png');

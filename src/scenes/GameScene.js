@@ -320,8 +320,8 @@ export default class GameScene extends Phaser.Scene {
                 magpie.rotation = 0; // Straighten out
                 magpie.straightenTime += delta;
                 
-                // After 0.5 seconds of being straight, start climbing back up
-                if (magpie.straightenTime >= 800) {
+                // After calculated down time, start climbing back up
+                if (magpie.straightenTime >= magpie.downTime) {
                     magpie.isClimbingBack = true;
                     console.log('Magpie climbing back up!');
                 }
@@ -478,8 +478,11 @@ export default class GameScene extends Phaser.Scene {
         magpie.willSwoop = this.score >= 1000 ? Math.random() < 0.5 : false;
         magpie.straightenTime = 0;
         magpie.isClimbingBack = false;
-        magpie.swoopSpeed = 300;
-        magpie.climbSpeed = 200;
+        // Scale swoop and climb speeds with game speed for consistent challenge
+        magpie.swoopSpeed = this.gameSpeed * 0.7; // 70% of game speed
+        magpie.climbSpeed = this.gameSpeed * 0.7; // 70% of game speed
+        // Scale down time inversely with game speed (faster game = less time down)
+        magpie.downTime = Math.max(300, 1200 - (this.gameSpeed * 0.8)); // Min 300ms, scales down as speed increases
         
         console.log(`🦅 MAGPIE spawned - willSwoop: ${magpie.willSwoop} (counts as normal obstacle)`);
         this.obstacles.add(magpie);
