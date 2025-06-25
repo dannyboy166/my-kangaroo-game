@@ -22,7 +22,7 @@ export default class GameScene extends Phaser.Scene {
             log: 0.5,
             emu: 0.8,
             croc: 0.6,
-            camel: 1.1
+            camel: 1.0
         };
 
         // COLLISION PROTECTION
@@ -75,8 +75,8 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo = this.physics.add.sprite(150, this.groundY, 'kangaroo');
         this.kangaroo.setScale(1.2);
         this.kangaroo.setCollideWorldBounds(true);
-        this.kangaroo.body.setSize(80, 48);
-        this.kangaroo.body.setOffset(30, 70);
+        this.kangaroo.body.setSize(70, 48);
+        this.kangaroo.body.setOffset(40, 70);
         this.kangaroo.body.setGravityY(800);
         this.kangaroo.setOrigin(0.5, 1);
         this.kangaroo.play('kangaroo_run');
@@ -277,7 +277,16 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        const delay = Phaser.Math.Between(1500, 3500);
+        // More frequent obstacles after score 1000
+        let minDelay = 1500;
+        let maxDelay = 3500;
+        
+        if (this.score >= 1000) {
+            minDelay = 1200;
+            maxDelay = 2500;
+        }
+        
+        const delay = Phaser.Math.Between(minDelay, maxDelay);
         this.obstacleTimer = this.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 // 40% chance to spawn a gap instead of single obstacle (only after score 1000)
@@ -330,7 +339,7 @@ export default class GameScene extends Phaser.Scene {
         // Calculate random size based on base size and variation
         const baseSize = this.obstacleBaseSizes[randomType] || 0.5;
         const variation = this.obstacleSizeVariation;
-        const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation; // Random between (1-variation) and (1+variation)
+        const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
         const finalSize = baseSize * randomMultiplier;
         
         obstacle.setScale(finalSize);
@@ -342,7 +351,14 @@ export default class GameScene extends Phaser.Scene {
         obstacle.setOrigin(0.5, 1);
         obstacle.body.setImmovable(true);
         obstacle.body.setGravityY(0);
-        obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+        
+        // Adjust collision box - special handling for camels
+        if (randomType === 'camel') {
+            obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
+            obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
+        } else {
+            obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+        }
 
         this.obstacles.add(obstacle);
     }
@@ -355,14 +371,23 @@ export default class GameScene extends Phaser.Scene {
         // Spawn first obstacle
         this.spawnObstacle();
 
-        // Spawn second obstacle after a short delay (max 0.1s = 100ms)
-        const gapDelay = Phaser.Math.Between(400, 400);
+        // Spawn second obstacle after a delay with score-based spacing
+        let minDelay = 300;
+        let maxDelay = 400;
+        
+        if (this.score >= 3000) {
+            minDelay = 250;
+            maxDelay = 500;
+        }
+        
+        const gapDelay = Phaser.Math.Between(minDelay, maxDelay);
         this.time.delayedCall(gapDelay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 this.spawnObstacle();
             }
         });
     }
+
 
     spawnCoin() {
         if (this.isGameOver) return;
