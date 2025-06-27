@@ -168,12 +168,6 @@ export default class MenuScene extends Phaser.Scene {
         // Add ground texture
         ground.fillStyle(0xfc8d15);
         ground.fillRect(0, 500, 800, 100);
-        
-        // Add some ground detail
-        ground.fillStyle(0xe67a00);
-        for (let i = 0; i < 8; i++) {
-            ground.fillRect(i * 100, 500, 50, 8);
-        }
 
         // Add natural obstacles at proper scale and positioning
         this.add.image(120, 500, 'emu').setScale(0.5).setOrigin(0.5, 1);
@@ -181,16 +175,16 @@ export default class MenuScene extends Phaser.Scene {
         this.add.image(350, 500, 'camel').setScale(0.8).setOrigin(0.5, 1);
 
         // Add weeds for ground decoration - random positions across floor
-        const numMenuWeeds = 8;
-        const floorStartY = 500; // Ground line  
-        const floorEndY = 600; // Bottom of screen
-        const maxWeedHeight = 485; // 10 pixels lower than before
+        const numMenuWeeds = 4;
+        const groundY = 500; // Ground level
+        const floorHeight = 100; // Floor is 100px tall (500 to 600)
+        const weedZoneHeight = floorHeight * 0.3; // Top 30% of floor
 
         console.log('🌿 Adding menu weeds...');
         for (let i = 0; i < numMenuWeeds; i++) {
             const x = Phaser.Math.Between(30, 770); // Random x across screen
-            const y = Phaser.Math.Between(maxWeedHeight, floorEndY); // Random y on floor
-            const scale = Phaser.Math.FloatBetween(0.3, 0.6); // Random scale
+            const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Top 30% of floor (500-530)
+            const scale = Phaser.Math.FloatBetween(0.6, 1.2); // Random scale (2x to 3x larger than before)
             
             const weed = this.add.image(x, y, 'weed');
             weed.setScale(scale);

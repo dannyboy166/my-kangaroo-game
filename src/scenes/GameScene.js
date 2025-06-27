@@ -100,12 +100,6 @@ export default class GameScene extends Phaser.Scene {
         this.ground.fillStyle(0xfc8d15);
         this.ground.fillRect(0, 500, 800, 100);
 
-        // Add some ground texture
-        this.ground.fillStyle(0xe67a00);
-        for (let i = 0; i < 10; i++) {
-            this.ground.fillRect(i * 80, 500, 40, 5);
-        }
-
         // Add weeds for ground decoration
         this.addGroundWeeds();
 
@@ -113,7 +107,7 @@ export default class GameScene extends Phaser.Scene {
         this.obstacles = this.physics.add.group();
         this.coins = this.physics.add.group();
         this.powerups = this.physics.add.group();
-        this.weeds = this.physics.add.group();
+        this.weeds = this.add.group();
 
 
         // Create kangaroo animations
@@ -411,6 +405,7 @@ export default class GameScene extends Phaser.Scene {
             weed.x -= this.gameSpeed * delta / 1000;
 
             if (weed.x < -100) {
+                this.weeds.remove(weed);
                 weed.destroy();
             }
         });
@@ -1067,32 +1062,20 @@ export default class GameScene extends Phaser.Scene {
     spawnWeed() {
         if (this.isGameOver) return;
 
-        const floorEndY = 600; // Bottom of screen
-        const maxWeedHeight = 410; // 10 pixels lower than before
+        const groundY = 500; // Ground level
+        const floorHeight = 100; // Floor is 100px tall (500 to 600)
+        const weedZoneHeight = floorHeight * 0.3; // Top 30% of floor
         
         const x = 850; // Spawn off-screen right
-        const y = Phaser.Math.Between(maxWeedHeight, floorEndY); // Random y on floor area
-        const scale = Phaser.Math.FloatBetween(0.3, 0.6); // Random scale
+        const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Top 30% of floor (500-530)
+        const scale = Phaser.Math.FloatBetween(0.6, 1.8); // Random scale (2x to 3x larger than before)
         
-        const weed = this.physics.add.image(x, y, 'weed');
+        const weed = this.add.image(x, y, 'weed');
         weed.setScale(scale);
         weed.setOrigin(0.5, 1);
         weed.setDepth(5); // Behind obstacles but in front of ground
-        weed.setImmovable(true);
-        weed.setVelocityY(0); // 🔒 Freeze vertical movement
-        weed.body.pushable = false;
         
         this.weeds.add(weed);
-        
-        // Bulletproof gravity shutdown (same as coins)
-        this.time.delayedCall(0, () => {
-            if (weed.body) {
-                weed.body.setAllowGravity(false);      // 🔒 Turn off global gravity
-                weed.body.setVelocityY(0);              // 🔒 Reset velocity
-                weed.body.setGravity(0, 0);             // 🔒 Set local gravity to zero
-                weed.body.setBounce(0);                 // 🔒 Just in case of collision
-            }
-        });
         
         console.log(`🌿 Spawned weed: x=${x}, y=${y}, scale=${scale.toFixed(2)}`);
     }
