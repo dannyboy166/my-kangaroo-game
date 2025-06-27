@@ -194,9 +194,11 @@ export default class MenuScene extends Phaser.Scene {
         // Input handling - only for non-interactive areas
         this.input.keyboard.on('keydown-SPACE', this.startGame, this);
         
-        // Make clicking on non-interactive areas start the game
-        this.input.on('pointerdown', (gameObjects) => {
-            if (gameObjects.length === 0) {
+        // Make clicking anywhere start the game (except on interactive elements)
+        this.input.on('pointerdown', (_, gameObjects) => {
+            // Check if any of the clicked objects are interactive (like the shop button)
+            const hasInteractiveObject = gameObjects.some(obj => obj.input && obj.input.enabled);
+            if (!hasInteractiveObject) {
                 this.startGame();
             }
         });

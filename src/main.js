@@ -15,7 +15,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: true // Enable debug mode to see collision boxes
+            debug: false // Disable debug mode to hide collision boxes
         }
     },
     scene: [

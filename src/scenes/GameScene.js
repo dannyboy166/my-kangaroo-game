@@ -18,7 +18,7 @@ export default class GameScene extends Phaser.Scene {
         this.lastSpeedIncrease = false;
         this.gameDataManager = GameDataManager.getInstance();
         this.audioManager = null;
-        
+
         // HELMET SYSTEM
         this.helmetEquipped = false;
         this.storeManager = null;
@@ -64,7 +64,7 @@ export default class GameScene extends Phaser.Scene {
     create(data) {
         // Get audio manager from menu scene
         this.audioManager = data.audioManager;
-        
+
         // Initialize store manager and check for helmet
         this.storeManager = new StoreManager();
         const helmetCount = this.storeManager.getPowerUpCount('helmet');
@@ -116,7 +116,7 @@ export default class GameScene extends Phaser.Scene {
         this.ground = this.add.graphics();
         this.ground.fillStyle(0xfc8d15);
         this.ground.fillRect(0, 500, 800, 100);
-        
+
         // Create physics groups with debug tracking
         this.obstacles = this.physics.add.group();
         this.coins = this.physics.add.group();
@@ -162,102 +162,7 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.kangaroo, this.groundBody);
         this.physics.add.collider(this.obstacles, this.groundBody);
 
-        // Create UI
-        this.scoreText = this.add.text(20, 60, 'Score: 0', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        });
-
-        // Add coin UI (top left)
-        const coinIcon = this.add.image(30, 30, 'coin');
-        coinIcon.setScale(0.17);
-        coinIcon.setOrigin(0, 0.5);
-
-        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#FFD700',
-            stroke: '#000000',
-            strokeThickness: 2
-        });
-        this.coinText.setOrigin(0, 0.5);
-
-        // Add powerup UI (active powerups)
-        this.powerupUI = {
-            shield: this.add.text(20, 120, '', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#00FF00',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            magnet: this.add.text(20, 150, '', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#FF00FF',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            double: this.add.text(20, 180, '', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#00FFFF',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            helmet: this.add.text(20, 210, this.helmetEquipped ? '🪖 Helmet: Magpie Protection' : '', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#FFD700',
-                stroke: '#000000',
-                strokeThickness: 1
-            })
-        };
-
-        // Add purchased powerup inventory UI (right side)
-        this.inventoryUI = {
-            title: this.add.text(600, 30, 'Inventory:', {
-                fontSize: '16px',
-                fontFamily: 'Arial',
-                color: '#FFFFFF',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            shield: this.add.text(600, 60, '', {
-                fontSize: '14px',
-                fontFamily: 'Arial',
-                color: '#00FF00',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            magnet: this.add.text(600, 80, '', {
-                fontSize: '14px',
-                fontFamily: 'Arial',
-                color: '#FF00FF',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            double: this.add.text(600, 100, '', {
-                fontSize: '14px',
-                fontFamily: 'Arial',
-                color: '#00FFFF',
-                stroke: '#000000',
-                strokeThickness: 1
-            }),
-            controls: this.add.text(600, 130, 'Press 1,2,3 to use', {
-                fontSize: '12px',
-                fontFamily: 'Arial',
-                color: '#CCCCCC',
-                stroke: '#000000',
-                strokeThickness: 1
-            })
-        };
-
-        // Update inventory display
-        this.updateInventoryUI();
+        this.createUI();
 
 
         // Input handling
@@ -295,6 +200,135 @@ export default class GameScene extends Phaser.Scene {
 
     }
 
+    createUI() {
+        // Score text (keep existing positioning)
+        this.scoreText = this.add.text(20, 60, 'Score: 0', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+
+        // Coin UI (keep existing)
+        const coinIcon = this.add.image(30, 30, 'coin');
+        coinIcon.setScale(0.17);
+        coinIcon.setOrigin(0, 0.5);
+
+        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.coinText.setOrigin(0, 0.5);
+
+        // Create simplified powerup and inventory UI
+        this.createSimpleInventoryUI();
+        this.createSimplePowerupUI();
+    }
+
+    createSimpleInventoryUI() {
+        // Simple inventory icons under the score
+        const startY = 120;
+        const spacing = 40;
+
+        // Shield
+        this.shieldIcon = this.add.image(30, startY, 'shield');
+        this.shieldIcon.setScale(0.15);
+        this.shieldIcon.setOrigin(0.1, 0.5);
+
+        this.shieldCount = this.add.text(55, startY, '0', {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#00FF00',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        });
+        this.shieldCount.setOrigin(0, 0.5);
+
+        // Magnet
+        this.magnetIcon = this.add.image(30, startY + spacing, 'magnet');
+        this.magnetIcon.setScale(0.12);
+        this.magnetIcon.setOrigin(0, 0.5);
+
+        this.magnetCount = this.add.text(55, startY + spacing, '0', {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#FF00FF',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        });
+        this.magnetCount.setOrigin(0, 0.5);
+
+        // Double Jump
+        this.doubleIcon = this.add.image(30, startY + (spacing * 2), 'double');
+        this.doubleIcon.setScale(0.15);
+        this.doubleIcon.setOrigin(0.1, 0.5);
+
+        this.doubleCount = this.add.text(55, startY + (spacing * 2), '0', {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#00FFFF',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        });
+        this.doubleCount.setOrigin(0, 0.5);
+
+        // Update initial counts
+        this.updateSimpleInventoryUI();
+    }
+
+    createSimplePowerupUI() {
+        // Create simple progress bars for active powerups (no container/panel)
+        this.activeBars = {
+            shield: this.createSimpleProgressBar(200, 15, '#00FF00'),
+            magnet: this.createSimpleProgressBar(200, 30, '#FF00FF'),
+            double: this.createSimpleProgressBar(200, 45, '#00FFFF')
+        };
+
+        // Initially hide all bars
+        Object.values(this.activeBars).forEach(bar => {
+            bar.container.setVisible(false);
+        });
+    }
+
+    createSimpleProgressBar(x, y, color) {
+        const container = this.add.container(x, y);
+
+        // Background bar
+        const bgBar = this.add.graphics();
+        bgBar.fillStyle(0x333333, 0.8);
+        bgBar.fillRoundedRect(0, 0, 120, 8, 4);
+        container.add(bgBar);
+
+        // Progress fill
+        const fillBar = this.add.graphics();
+        container.add(fillBar);
+
+        // Time text
+        const timeText = this.add.text(130, 4, '', {
+            fontSize: '12px',
+            fontFamily: 'Arial',
+            color: color,
+            fontStyle: 'bold'
+        });
+        timeText.setOrigin(0, 0.5);
+        container.add(timeText);
+
+        return {
+            container: container,
+            bgBar: bgBar,
+            fillBar: fillBar,
+            timeText: timeText,
+            color: color
+        };
+    }
+
     createKangarooAnimations() {
         // Regular kangaroo animations
         if (!this.anims.exists('kangaroo_run')) {
@@ -317,7 +351,7 @@ export default class GameScene extends Phaser.Scene {
                 frameRate: 1
             });
         }
-        
+
         // Helmet kangaroo animations (using same frame indices)
         if (!this.anims.exists('kangaroo_helmet_run')) {
             this.anims.create({
@@ -542,7 +576,7 @@ export default class GameScene extends Phaser.Scene {
             const y = Phaser.Math.Between(510, 590);
             const size = Phaser.Math.FloatBetween(2, 6);
             const isDarkRock = Math.random() < 0.3;
-            
+
             if (isDarkRock) {
                 dot.fillStyle(0x8B4513, 0.6);
             } else {
@@ -551,7 +585,7 @@ export default class GameScene extends Phaser.Scene {
             dot.fillCircle(0, 0, size);
             dot.setPosition(850, y); // Start off-screen to the right
             dot.setDepth(2);
-            
+
             this.groundTextures.add(dot);
         }
 
@@ -980,25 +1014,25 @@ export default class GameScene extends Phaser.Scene {
         // Helmet protection against magpies (doesn't consume helmet)
         if (this.helmetEquipped && obstacle.texture && obstacle.texture.key === 'magpie') {
             console.log('🪖 Helmet protected from magpie attack!');
-            
+
             // Play collision sound
             this.audioManager?.playCollision();
-            
+
             // Visual feedback for helmet protection - blue flash
             this.kangaroo.setTint(0x00FFFF);
             this.time.delayedCall(200, () => {
                 this.kangaroo.clearTint();
             });
-            
+
             // Destroy the magpie
             obstacle.destroy();
-            
+
             // Brief collision cooldown to prevent multiple hits
             this.collisionCooldown = true;
             this.time.delayedCall(300, () => {
                 this.collisionCooldown = false;
             });
-            
+
             return;
         }
 
@@ -1072,14 +1106,14 @@ export default class GameScene extends Phaser.Scene {
         // Game over screen
         this.time.delayedCall(1000, () => {
             const obstacleType = obstacle.texture ? obstacle.texture.key : 'rock';
-            
+
             // Reset helmet when game ends (helmet lasts one game only)
             if (this.helmetEquipped) {
                 this.storeManager.helmetCount = 0;
                 this.storeManager.saveData();
                 console.log(`🪖 Helmet used up - can now purchase again`);
             }
-            
+
             this.scene.start('GameOverScene', {
                 score: this.score,
                 audioManager: this.audioManager,
@@ -1243,20 +1277,20 @@ export default class GameScene extends Phaser.Scene {
         const groundY = 500; // Ground level
         const floorHeight = 100; // Floor is 100px tall (500 to 600)
         const weedZoneHeight = floorHeight * 0.8; // Spread across 80% of floor for natural look
-        
+
         const x = 850; // Spawn off-screen right
         const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Wider spread (500-580)
         const scale = Phaser.Math.FloatBetween(0.3, 0.8); // Smaller, more subtle scale
-        
+
         const weed = this.add.image(x, y, 'weed');
         weed.setScale(scale);
         weed.setOrigin(0.5, 1);
         weed.setDepth(1); // Far background to look less prominent
         weed.setAlpha(Phaser.Math.FloatBetween(0.6, 0.8)); // Add transparency for background feel
         weed.setTint(0xB8860B); // Brownish tint for dried grass look
-        
+
         this.weeds.add(weed);
-        
+
         console.log(`🌿 Spawned weed: x=${x}, y=${y}, scale=${scale.toFixed(2)}, alpha=${weed.alpha.toFixed(2)}`);
     }
 
@@ -1266,7 +1300,7 @@ export default class GameScene extends Phaser.Scene {
         for (let i = 0; i < 20; i++) {
             this.spawnGroundTextureDot();
         }
-        
+
         // Add subtle horizontal lines for texture (these don't need to move)
         const textureGraphics = this.add.graphics();
         textureGraphics.lineStyle(1, 0xD2691E, 0.3);
@@ -1278,13 +1312,13 @@ export default class GameScene extends Phaser.Scene {
         }
         textureGraphics.setDepth(2);
     }
-    
+
     spawnGroundTextureDot() {
         const x = Phaser.Math.Between(0, 800);
         const y = Phaser.Math.Between(510, 590);
         const size = Phaser.Math.FloatBetween(2, 6);
         const isDarkRock = Math.random() < 0.3; // 30% chance for dark rocks
-        
+
         // Create a small circle graphic as a sprite
         const dot = this.add.graphics();
         if (isDarkRock) {
@@ -1295,7 +1329,7 @@ export default class GameScene extends Phaser.Scene {
         dot.fillCircle(0, 0, size);
         dot.setPosition(x, y);
         dot.setDepth(2);
-        
+
         this.groundTextures.add(dot);
     }
 
@@ -1421,38 +1455,47 @@ export default class GameScene extends Phaser.Scene {
             }
 
             // Update UI
-            this.updatePowerupUI(type);
+            this.updateSimplePowerupUI(type);
         });
 
         // Update powerup orbs positions
         this.updatePowerupOrbs(delta);
     }
-
-    updatePowerupUI(type) {
+    updateSimplePowerupUI(type) {
         const powerup = this.activePowerups[type];
-        const ui = this.powerupUI[type];
+        const bar = this.activeBars[type];
+
+        if (!bar) return;
 
         if (powerup.active) {
+            // Show progress bar
+            bar.container.setVisible(true);
+
             const secondsLeft = Math.ceil(powerup.timeLeft / 1000);
-            let text = '';
+            const maxTime = 10; // All powerups last 10 seconds
+            const progress = powerup.timeLeft / (maxTime * 1000);
 
-            switch (type) {
-                case 'shield':
-                    text = `Shield: ${secondsLeft}s`;
-                    break;
-                case 'magnet':
-                    text = `Magnet: ${secondsLeft}s`;
-                    break;
-                case 'double':
-                    text = `Double Jump: ${secondsLeft}s`;
-                    break;
+            // Update progress bar
+            bar.fillBar.clear();
+            bar.fillBar.fillStyle(bar.color);
+            const barWidth = 120 * progress;
+            bar.fillBar.fillRoundedRect(0, 0, barWidth, 8, 4);
+
+            // Update time text
+            bar.timeText.setText(`${secondsLeft}s`);
+
+            // Flash red when time is low
+            if (secondsLeft <= 3) {
+                bar.fillBar.clear();
+                bar.fillBar.fillStyle(0xFF0000);
+                bar.fillBar.fillRoundedRect(0, 0, barWidth, 8, 4);
             }
-
-            ui.setText(text);
         } else {
-            ui.setText('');
+            // Hide progress bar
+            bar.container.setVisible(false);
         }
     }
+
 
     createPowerupOrb(type) {
         // Remove existing orbs of this type first
@@ -1547,7 +1590,7 @@ export default class GameScene extends Phaser.Scene {
         const storeType = type === 'double' ? 'doubleJump' : type;
         if (this.storeManager.usePowerUp(storeType)) {
             console.log(`Activated ${type} powerup! Remaining: ${this.storeManager.getPowerUpCount(storeType)}`);
-            
+
             // Play powerup-specific sound
             if (type === 'shield') {
                 this.audioManager?.playShieldActivate();
@@ -1571,18 +1614,29 @@ export default class GameScene extends Phaser.Scene {
             this.createPowerupOrb(type);
 
             // Update inventory display
-            this.updateInventoryUI();
+            this.updateSimpleInventoryUI();
         }
     }
-
-    updateInventoryUI() {
+    updateSimpleInventoryUI() {
         const shieldCount = this.storeManager.getPowerUpCount('shield');
         const magnetCount = this.storeManager.getPowerUpCount('magnet');
         const doubleCount = this.storeManager.getPowerUpCount('doubleJump');
 
-        this.inventoryUI.shield.setText(shieldCount > 0 ? `1. Shield: ${shieldCount}` : '');
-        this.inventoryUI.magnet.setText(magnetCount > 0 ? `2. Magnet: ${magnetCount}` : '');
-        this.inventoryUI.double.setText(doubleCount > 0 ? `3. Double: ${doubleCount}` : '');
+        // Update counts
+        this.shieldCount.setText(shieldCount.toString());
+        this.magnetCount.setText(magnetCount.toString());
+        this.doubleCount.setText(doubleCount.toString());
+
+        // Dim icons when count is 0
+        this.shieldIcon.setAlpha(shieldCount > 0 ? 1.0 : 0.4);
+        this.shieldCount.setAlpha(shieldCount > 0 ? 1.0 : 0.4);
+
+        this.magnetIcon.setAlpha(magnetCount > 0 ? 1.0 : 0.4);
+        this.magnetCount.setAlpha(magnetCount > 0 ? 1.0 : 0.4);
+
+        this.doubleIcon.setAlpha(doubleCount > 0 ? 1.0 : 0.4);
+        this.doubleCount.setAlpha(doubleCount > 0 ? 1.0 : 0.4);
     }
+
 
 }
