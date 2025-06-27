@@ -40,7 +40,7 @@ export default class GameScene extends Phaser.Scene {
         // COLLISION PROTECTION
         this.collisionCooldown = false;
         this.coinCollectionCooldown = new Set(); // Track coins that are being collected
-        
+
         // AUDIO TRACKING
         this.wasOnGround = true; // Track if kangaroo was on ground for landing sound
     }
@@ -99,10 +99,10 @@ export default class GameScene extends Phaser.Scene {
 
         // Create kangaroo animations
         this.createKangarooAnimations();
-        
+
         // Create emu animations
         this.createEmuAnimations();
-        
+
         // Create magpie animations
         this.createMagpieAnimations();
 
@@ -139,7 +139,7 @@ export default class GameScene extends Phaser.Scene {
         const coinIcon = this.add.image(30, 30, 'coin');
         coinIcon.setScale(0.17);
         coinIcon.setOrigin(0, 0.5);
-        
+
         this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
             fontFamily: 'Arial',
@@ -351,7 +351,7 @@ export default class GameScene extends Phaser.Scene {
                 const distanceToKangaroo = Phaser.Math.Distance.Between(
                     coin.x, coin.y, this.kangaroo.x, this.kangaroo.y
                 );
-                
+
                 if (distanceToKangaroo < 400) {
                     const attractionForce = 1000;
                     const angle = Phaser.Math.Angle.Between(
@@ -388,26 +388,26 @@ export default class GameScene extends Phaser.Scene {
     updateMagpieBehavior(magpie, delta) {
         // Move magpie horizontally towards kangaroo (use game speed like other obstacles)
         magpie.x -= this.gameSpeed * delta / 1000;
-        
+
         // Check if magpie is close enough to kangaroo to start swooping
         const distanceToKangaroo = magpie.x - this.kangaroo.x;
-        
+
         // Calculate swoop distance based on height - higher magpies need more distance
         const magpieHeight = magpie.y;
         const heightFromGround = this.groundY - magpieHeight;
         const swoopDistance = 150 + (heightFromGround * 1); // Base 150px + 1px per pixel of height
-        
+
         if (!magpie.swoopStarted && distanceToKangaroo <= swoopDistance && magpie.willSwoop) {
             // Start swooping down
             magpie.swoopStarted = true;
             console.log(`Magpie starting swoop attack! Height: ${Math.round(heightFromGround)}px, Distance: ${Math.round(swoopDistance)}px`);
         }
-        
+
         if (magpie.swoopStarted && !magpie.isClimbingBack) {
             // Swoop down towards ground level
             const targetY = this.groundY - 20; // Slightly above ground
             const currentY = magpie.y;
-            
+
             if (currentY < targetY) {
                 // Dive down
                 magpie.y += magpie.swoopSpeed * delta / 1000;
@@ -417,7 +417,7 @@ export default class GameScene extends Phaser.Scene {
                 // Reached bottom, start straightening phase
                 magpie.rotation = 0; // Straighten out
                 magpie.straightenTime += delta;
-                
+
                 // After calculated down time, start climbing back up
                 if (magpie.straightenTime >= magpie.downTime) {
                     magpie.isClimbingBack = true;
@@ -425,7 +425,7 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
         }
-        
+
         if (magpie.isClimbingBack) {
             // Climb back up to original height
             const originalY = Phaser.Math.Between(50, 150);
@@ -441,7 +441,7 @@ export default class GameScene extends Phaser.Scene {
 
     jump() {
         const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
-        
+
         if (isOnGround) {
             this.kangaroo.setVelocityY(-950);
             this.audioManager?.playJump();
@@ -470,12 +470,12 @@ export default class GameScene extends Phaser.Scene {
         // More frequent obstacles after score 1000
         let minDelay = 1500;
         let maxDelay = 3500;
-        
+
         if (this.score >= 1000) {
             minDelay = 1500;
             maxDelay = 2500;
         }
-        
+
         const delay = Phaser.Math.Between(minDelay, maxDelay);
         console.log(`🕐 SCHEDULING next obstacle in ${delay}ms (score: ${Math.floor(this.score)})`);
         this.obstacleTimer = this.time.delayedCall(delay, () => {
@@ -513,7 +513,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         let obstacleTypes = ['rock', 'cactus', 'log', 'magpie']; // Include magpie from start
-        
+
         // Add new obstacles based on score
         if (this.score >= 1000) {
             obstacleTypes.push('croc');
@@ -524,7 +524,7 @@ export default class GameScene extends Phaser.Scene {
         if (this.score >= 3000) {
             obstacleTypes.push('camel');
         }
-        
+
         const randomType = Phaser.Utils.Array.GetRandom(obstacleTypes);
         console.log(`🎯 SPAWNING ${randomType} obstacle`);
 
@@ -534,15 +534,15 @@ export default class GameScene extends Phaser.Scene {
             // Spawn regular ground obstacle
             console.log(`🏃 Spawning ground obstacle: ${randomType}`);
             const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
-            
+
             // Calculate random size based on base size and variation
             const baseSize = this.obstacleBaseSizes[randomType] || 0.5;
             const variation = this.obstacleSizeVariation;
             const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
             const finalSize = baseSize * randomMultiplier;
-            
+
             obstacle.setScale(finalSize);
-            
+
             // Start animations for animated obstacles
             if (randomType === 'emu') {
                 obstacle.play('emu_run');
@@ -550,7 +550,7 @@ export default class GameScene extends Phaser.Scene {
             obstacle.setOrigin(0.5, 1);
             obstacle.body.setImmovable(true);
             obstacle.body.setGravityY(0);
-            
+
             // Adjust collision box - special handling for camels
             if (randomType === 'camel') {
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
@@ -562,7 +562,7 @@ export default class GameScene extends Phaser.Scene {
             this.obstacles.add(obstacle);
         }
     }
-    
+
     spawnMagpie() {
         if (this.isGameOver) {
             return;
@@ -571,17 +571,17 @@ export default class GameScene extends Phaser.Scene {
         // Create magpie sprite starting high up in the sky
         const startY = Phaser.Math.Between(50, 150); // High in the sky
         const magpie = this.physics.add.sprite(1200, startY, 'magpie'); // Same x position as ground obstacles
-        
+
         magpie.setScale(0.8);
         magpie.setOrigin(0.5, 0.5);
         magpie.body.setImmovable(true);
         magpie.setVelocityY(0); // 🔒 Freeze vertical movement
         magpie.body.pushable = false;
         magpie.body.setSize(magpie.width * 0.7, magpie.height * 0.5);
-        
+
         // Start flying animation
         magpie.play('magpie_fly');
-        
+
         // Custom properties for AI behavior
         magpie.swoopStarted = false;
         // No swooping before score 1000, then 50% chance after
@@ -593,7 +593,7 @@ export default class GameScene extends Phaser.Scene {
         magpie.climbSpeed = this.gameSpeed * 0.7; // 120% of game speed
         // Scale down time inversely with game speed (faster game = less time down)
         magpie.downTime = Math.max(100, 500 - (this.gameSpeed * 0.5)); // Min 100ms, scales down as speed increases
-        
+
         console.log(`🦅 MAGPIE spawned - willSwoop: ${magpie.willSwoop} (counts as normal obstacle)`);
         this.obstacles.add(magpie);
 
@@ -617,39 +617,39 @@ export default class GameScene extends Phaser.Scene {
         const emuSpeedMultiplier = 1.3; // 30% faster (more conservative)
         const finalEmuSpeed = this.gameSpeed * emuSpeedMultiplier;
         const finalEmuSpawnX = 1350; // Fixed spawn position
-        
+
         // Calculate actual timing for comparison
         const normalDistance = 1200 - 150; // 1050px
         const normalTime = normalDistance / this.gameSpeed;
         const emuDistance = finalEmuSpawnX - 150;
         const emuTime = emuDistance / finalEmuSpeed;
-        
+
         console.log(`🦘 RUNNING EMU DEBUG:`);
         console.log(`  Normal: spawn=1200, speed=${this.gameSpeed}, time=${normalTime.toFixed(2)}s`);
         console.log(`  Emu: spawn=${Math.round(finalEmuSpawnX)}, speed=${Math.round(finalEmuSpeed)}, time=${emuTime.toFixed(2)}s`);
         console.log(`  Speed ratio: ${emuSpeedMultiplier}x, Time diff: ${((emuTime - normalTime) * 1000).toFixed(0)}ms`);
-        
+
         const emu = this.physics.add.sprite(finalEmuSpawnX, this.groundY, 'emu');
-        
+
         // Set up emu properties
         const baseSize = this.obstacleBaseSizes.emu || 0.8;
         const variation = this.obstacleSizeVariation;
         const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
         const finalSize = baseSize * randomMultiplier;
-        
+
         emu.setScale(finalSize);
         emu.setOrigin(0.5, 1);
         emu.body.setImmovable(true);
         emu.body.setGravityY(0);
         emu.body.setSize(emu.width * 0.8, emu.height * 0.8);
-        
+
         // Start running animation
         emu.play('emu_run');
-        
+
         // Mark as running emu for special movement behavior
         emu.isRunningEmu = true;
         emu.runSpeed = finalEmuSpeed;
-        
+
         this.obstacles.add(emu);
     }
 
@@ -665,12 +665,12 @@ export default class GameScene extends Phaser.Scene {
         // Spawn second obstacle after a delay with score-based spacing
         let minDelay = 300;
         let maxDelay = 400;
-        
+
         if (this.score >= 3000) {
             minDelay = 250;
             maxDelay = 500;
         }
-        
+
         const gapDelay = Phaser.Math.Between(minDelay, maxDelay);
         console.log(`🚧 GAP: Scheduling second obstacle in ${gapDelay}ms`);
         this.time.delayedCall(gapDelay, () => {
@@ -696,6 +696,8 @@ export default class GameScene extends Phaser.Scene {
 
         this.coins.add(coin);
 
+
+
         // Bulletproof gravity shutdown
         this.time.delayedCall(0, () => {
             if (coin.body) {
@@ -717,13 +719,13 @@ export default class GameScene extends Phaser.Scene {
 
         // Play coin collection sound
         this.audioManager?.playCoinCollect();
-        
+
         // Add coins to persistent storage instead of score
         this.gameDataManager.addCoins(1);
-        
+
         // Update coin UI
         this.coinText.setText(`${this.gameDataManager.getCoins()}`);
-        
+
         // Add small score bonus for collecting coins
         this.score += 10;
 
@@ -757,25 +759,28 @@ export default class GameScene extends Phaser.Scene {
         // Shield protection (one-time use)
         if (this.activePowerups.shield.active) {
             this.collisionCooldown = true;
-            
+
+            // Play collision sound for shield hit
+            this.audioManager?.playCollision();
+
             // Deactivate shield after one use
             this.activePowerups.shield.active = false;
             this.activePowerups.shield.timeLeft = 0;
-            
+
             // Visual feedback for shield protection
             this.kangaroo.setTint(0x00FF00);
             this.time.delayedCall(200, () => {
                 this.updateKangarooGlow(); // Update glow after shield is used
             });
-            
+
             // Destroy the obstacle
             obstacle.destroy();
-            
+
             // Reset collision cooldown after brief period
             this.time.delayedCall(500, () => {
                 this.collisionCooldown = false;
             });
-            
+
             return;
         }
 
@@ -803,7 +808,7 @@ export default class GameScene extends Phaser.Scene {
         this.obstacles.children.iterate(obs => obs?.body?.setVelocity(0, 0));
         this.coins.children.iterate(coin => coin?.body?.setVelocity(0, 0));
         this.powerups.children.iterate(powerup => powerup?.body?.setVelocity(0, 0));
-        
+
         // Stop all tweens to prevent weird animations
         this.tweens.killTweensOf([...this.coins.children.entries, ...this.powerups.children.entries]);
 
@@ -901,16 +906,16 @@ export default class GameScene extends Phaser.Scene {
 
         // Generate random clouds
         const numClouds = Phaser.Math.Between(3, 6);
-        
+
         for (let i = 0; i < numClouds; i++) {
             const cloud = this.add.graphics();
-            
+
             // Random cloud opacity and size
             const opacity = Phaser.Math.FloatBetween(0.5, 0.8);
             const baseSize = Phaser.Math.Between(15, 25);
-            
+
             cloud.fillStyle(0xFFFFFF, opacity);
-            
+
             // Create cloud with random bubble configuration
             const numBubbles = Phaser.Math.Between(3, 5);
             for (let j = 0; j < numBubbles; j++) {
@@ -919,11 +924,11 @@ export default class GameScene extends Phaser.Scene {
                 const bubbleSize = Phaser.Math.Between(baseSize * 0.6, baseSize);
                 cloud.fillCircle(bubbleX, bubbleY, bubbleSize);
             }
-            
+
             // Random positioning
             cloud.x = Phaser.Math.Between(50, 750);
             cloud.y = Phaser.Math.Between(50, 200);
-            
+
             // Add floating animation with random parameters
             this.tweens.add({
                 targets: cloud,
@@ -937,7 +942,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // POWERUP SYSTEM METHODS
-    
+
     scheduleNextPowerup() {
         if (this.isGameOver) {
             return;
@@ -957,7 +962,7 @@ export default class GameScene extends Phaser.Scene {
 
         const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
-        
+
         const powerupY = Phaser.Math.Between(200, this.groundY - 50);
         const powerup = this.physics.add.image(850, powerupY, randomType);
         powerup.setScale(0.3);
@@ -993,7 +998,7 @@ export default class GameScene extends Phaser.Scene {
 
     collectPowerup(player, powerup) {
         const type = powerup.powerupType;
-        
+
         // Play powerup-specific sound
         if (type === 'shield') {
             this.audioManager?.playShieldActivate();
@@ -1002,7 +1007,7 @@ export default class GameScene extends Phaser.Scene {
         } else if (type === 'double') {
             this.audioManager?.playDoubleJump();
         }
-        
+
         // Activate powerup with different durations
         this.activePowerups[type].active = true;
         if (type === 'shield') {
@@ -1010,7 +1015,7 @@ export default class GameScene extends Phaser.Scene {
         } else {
             this.activePowerups[type].timeLeft = 10000; // 10 seconds for magnet and double jump
         }
-        
+
         if (type === 'double') {
             // Check if kangaroo is in the air when collecting double jump
             const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
@@ -1037,7 +1042,7 @@ export default class GameScene extends Phaser.Scene {
         powerup.destroy();
 
         console.log(`Collected ${type} powerup!`);
-        
+
         // Update kangaroo glow effect
         this.updateKangarooGlow();
     }
@@ -1046,10 +1051,10 @@ export default class GameScene extends Phaser.Scene {
         // Update powerup timers and UI
         Object.keys(this.activePowerups).forEach(type => {
             const powerup = this.activePowerups[type];
-            
+
             if (powerup.active) {
                 powerup.timeLeft -= delta;
-                
+
                 if (powerup.timeLeft <= 0) {
                     powerup.active = false;
                     powerup.timeLeft = 0;
@@ -1058,11 +1063,11 @@ export default class GameScene extends Phaser.Scene {
                     }
                 }
             }
-            
+
             // Update UI
             this.updatePowerupUI(type);
         });
-        
+
         // Update kangaroo glow effect
         this.updateKangarooGlow();
     }
@@ -1070,11 +1075,11 @@ export default class GameScene extends Phaser.Scene {
     updatePowerupUI(type) {
         const powerup = this.activePowerups[type];
         const ui = this.powerupUI[type];
-        
+
         if (powerup.active) {
             const secondsLeft = Math.ceil(powerup.timeLeft / 1000);
             let text = '';
-            
+
             switch (type) {
                 case 'shield':
                     text = `Shield: ${secondsLeft}s`;
@@ -1086,7 +1091,7 @@ export default class GameScene extends Phaser.Scene {
                     text = `Double Jump: ${secondsLeft}s`;
                     break;
             }
-            
+
             ui.setText(text);
         } else {
             ui.setText('');
@@ -1099,10 +1104,10 @@ export default class GameScene extends Phaser.Scene {
             this.glowTimer.destroy();
             this.glowTimer = null;
         }
-        
+
         // Get active powerup colors
         const activePowerupColors = [];
-        
+
         if (this.activePowerups.shield.active) {
             activePowerupColors.push(0xAAFFAA); // Light green for shield
         }
@@ -1112,7 +1117,7 @@ export default class GameScene extends Phaser.Scene {
         if (this.activePowerups.double.active) {
             activePowerupColors.push(0xAAFFFF); // Light cyan for double jump
         }
-        
+
         if (activePowerupColors.length === 0) {
             // No powerups active, clear tint
             this.kangaroo.clearTint();
@@ -1128,11 +1133,11 @@ export default class GameScene extends Phaser.Scene {
             this.cycleGlowColors(activePowerupColors);
         }
     }
-    
+
     cycleGlowColors(colors) {
         // Set initial color
         this.kangaroo.setTint(colors[this.currentGlowIndex]);
-        
+
         // Start cycling timer (change color every 800ms)
         this.glowTimer = this.time.addEvent({
             delay: 800,
