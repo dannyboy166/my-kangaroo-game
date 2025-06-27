@@ -489,6 +489,9 @@ export default class GameScene extends Phaser.Scene {
             // Special handling for magpie swooping behavior
             if (obstacle.texture.key === 'magpie') {
                 this.updateMagpieBehavior(obstacle, delta);
+            } else if (obstacle.isRunningEmu) {
+                // Running emu uses custom speed
+                obstacle.x -= obstacle.runSpeed * delta / 1000;
             } else {
                 // Normal obstacle movement
                 obstacle.x -= this.gameSpeed * delta / 1000;
@@ -714,13 +717,29 @@ export default class GameScene extends Phaser.Scene {
     }
 
     getObstacleTypes() {
-        // Base obstacle types - each gets 25%
-        return [
+        // Base obstacle types
+        const obstacles = [
             { type: 'rock', weight: 25 },
             { type: 'log', weight: 25 },
             { type: 'cactus', weight: 25 },
             { type: 'magpie', weight: 25 }
         ];
+
+        // Add new obstacles based on score
+        if (this.score >= 1000) {
+            obstacles.push({ type: 'koala', weight: 20 });
+        }
+        if (this.score >= 2000) {
+            obstacles.push({ type: 'emu', weight: 15 });
+        }
+        if (this.score >= 3000) {
+            obstacles.push({ type: 'camel', weight: 10 });
+        }
+        if (this.score >= 4000) {
+            obstacles.push({ type: 'croc', weight: 10 });
+        }
+
+        return obstacles;
     }
 
     selectRandomObstacle(obstacleTypes) {
@@ -767,6 +786,8 @@ export default class GameScene extends Phaser.Scene {
 
         if (randomType === 'magpie') {
             this.spawnMagpie();
+        } else if (randomType === 'emu') {
+            this.spawnRunningEmu();
         } else {
             // Spawn regular ground obstacle
             console.log(`🏃 Spawning ground obstacle: ${randomType}`);
@@ -799,7 +820,7 @@ export default class GameScene extends Phaser.Scene {
             } else if (randomType === 'spider_rock') {
                 // Shorter collision box for spider rock - bottom 60% only
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.6);
-                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.4);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.35);
             } else if (randomType === 'cactus') {
                 // Custom collision box for cactus
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
@@ -914,8 +935,8 @@ export default class GameScene extends Phaser.Scene {
         }
 
         console.log('🚧 GAP: Spawning first obstacle');
-        // Spawn first obstacle
-        this.spawnObstacle();
+        // Spawn first obstacle (no emus in gaps)
+        this.spawnGapObstacle();
 
         // Spawn second obstacle after a delay with score-based spacing
         let minDelay = 300;
@@ -931,9 +952,70 @@ export default class GameScene extends Phaser.Scene {
         this.time.delayedCall(gapDelay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 console.log('🚧 GAP: Spawning second obstacle');
-                this.spawnObstacle();
+                this.spawnGapObstacle();
             }
         });
+    }
+
+    spawnGapObstacle() {
+        if (this.isGameOver) {
+            return;
+        }
+
+        // Get obstacle types but exclude emus for gaps
+        const obstacleTypes = this.getObstacleTypes().filter(type => type.type !== 'emu');
+        const randomType = this.selectRandomObstacle(obstacleTypes);
+        console.log(`🎯 SPAWNING GAP ${randomType} obstacle`);
+
+        if (randomType === 'magpie') {
+            this.spawnMagpie();
+        } else {
+            // Spawn regular ground obstacle
+            console.log(`🏃 Spawning gap ground obstacle: ${randomType}`);
+            const obstacle = this.physics.add.sprite(1200, this.groundY, randomType);
+
+            // Calculate random size based on base size and variation
+            const baseSize = this.obstacleBaseSizes[randomType] || 0.5;
+            const variation = this.obstacleSizeVariation;
+            const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
+            const finalSize = baseSize * randomMultiplier;
+
+            obstacle.setScale(finalSize);
+
+            // Start animations for animated obstacles
+            if (randomType === 'emu') {
+                obstacle.play('emu_run');
+            }
+            obstacle.setOrigin(0.5, 1);
+            obstacle.body.setImmovable(true);
+            obstacle.body.setGravityY(0);
+
+            // Adjust collision box - special handling for different obstacle types
+            if (randomType === 'camel') {
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
+            } else if (randomType === 'koala') {
+                // Smaller collision box for koala tree - only the bottom trunk area
+                obstacle.body.setSize(obstacle.width * 0.3, obstacle.height * 0.7);
+                obstacle.body.setOffset(obstacle.width * 0.35, obstacle.height * 0.23);
+            } else if (randomType === 'spider_rock') {
+                // Shorter collision box for spider rock - bottom 60% only
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.6);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.35);
+            } else if (randomType === 'cactus') {
+                // Custom collision box for cactus
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.2);
+            } else if (randomType === 'snake_log') {
+                // Shorter collision box for snake log - bottom 60% height, 70% width
+                obstacle.body.setSize(obstacle.width * 0.7, obstacle.height * 0.6);
+                obstacle.body.setOffset(obstacle.width * 0.15, obstacle.height * 0.35);
+            } else {
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+            }
+
+            this.obstacles.add(obstacle);
+        }
     }
 
 
