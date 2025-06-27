@@ -95,10 +95,13 @@ export default class GameScene extends Phaser.Scene {
         // Add atmospheric elements (sun and clouds)
         this.createBackgroundElements();
 
-        // Create ground
+        // Create ground with texture
         this.ground = this.add.graphics();
         this.ground.fillStyle(0xfc8d15);
         this.ground.fillRect(0, 500, 800, 100);
+        
+        // Add subtle ground texture
+        this.addGroundTexture();
 
         // Add weeds for ground decoration
         this.addGroundWeeds();
@@ -402,7 +405,7 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
-            weed.x -= this.gameSpeed * delta / 1000;
+            weed.x -= (this.gameSpeed * 1) * delta / 1000; // Faster foreground parallax movement
 
             if (weed.x < -100) {
                 this.weeds.remove(weed);
@@ -1064,20 +1067,58 @@ export default class GameScene extends Phaser.Scene {
 
         const groundY = 500; // Ground level
         const floorHeight = 100; // Floor is 100px tall (500 to 600)
-        const weedZoneHeight = floorHeight * 0.3; // Top 30% of floor
+        const weedZoneHeight = floorHeight * 0.8; // Spread across 80% of floor for natural look
         
         const x = 850; // Spawn off-screen right
-        const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Top 30% of floor (500-530)
-        const scale = Phaser.Math.FloatBetween(0.6, 1.8); // Random scale (2x to 3x larger than before)
+        const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Wider spread (500-580)
+        const scale = Phaser.Math.FloatBetween(0.3, 0.8); // Smaller, more subtle scale
         
         const weed = this.add.image(x, y, 'weed');
         weed.setScale(scale);
         weed.setOrigin(0.5, 1);
-        weed.setDepth(5); // Behind obstacles but in front of ground
+        weed.setDepth(1); // Far background to look less prominent
+        weed.setAlpha(Phaser.Math.FloatBetween(0.6, 0.8)); // Add transparency for background feel
+        weed.setTint(0xB8860B); // Brownish tint for dried grass look
         
         this.weeds.add(weed);
         
-        console.log(`🌿 Spawned weed: x=${x}, y=${y}, scale=${scale.toFixed(2)}`);
+        console.log(`🌿 Spawned weed: x=${x}, y=${y}, scale=${scale.toFixed(2)}, alpha=${weed.alpha.toFixed(2)}`);
+    }
+
+    addGroundTexture() {
+        // Add subtle dirt/pebble texture to ground
+        const textureGraphics = this.add.graphics();
+        
+        // Add small scattered dirt spots
+        for (let i = 0; i < 15; i++) {
+            const x = Phaser.Math.Between(0, 800);
+            const y = Phaser.Math.Between(510, 590);
+            const size = Phaser.Math.FloatBetween(2, 6);
+            
+            textureGraphics.fillStyle(0xD2691E, 0.4); // Brown dirt spots
+            textureGraphics.fillCircle(x, y, size);
+        }
+        
+        // Add tiny rock/pebble details
+        for (let i = 0; i < 8; i++) {
+            const x = Phaser.Math.Between(0, 800);
+            const y = Phaser.Math.Between(505, 580);
+            const size = Phaser.Math.FloatBetween(1, 3);
+            
+            textureGraphics.fillStyle(0x8B4513, 0.6); // Darker brown rocks
+            textureGraphics.fillCircle(x, y, size);
+        }
+        
+        // Add subtle horizontal lines for texture
+        textureGraphics.lineStyle(1, 0xD2691E, 0.3);
+        for (let i = 0; i < 4; i++) {
+            const y = 520 + (i * 20);
+            textureGraphics.moveTo(0, y);
+            textureGraphics.lineTo(800, y);
+            textureGraphics.stroke();
+        }
+        
+        textureGraphics.setDepth(2); // Just above ground but below other elements
     }
 
     // POWERUP SYSTEM METHODS

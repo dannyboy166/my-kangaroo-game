@@ -184,7 +184,7 @@ export default class MenuScene extends Phaser.Scene {
         for (let i = 0; i < numMenuWeeds; i++) {
             const x = Phaser.Math.Between(30, 770); // Random x across screen
             const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Top 30% of floor (500-530)
-            const scale = Phaser.Math.FloatBetween(0.6, 1.2); // Random scale (2x to 3x larger than before)
+            const scale = Phaser.Math.FloatBetween(0.6, 1.0); // Random scale (2x to 3x larger than before)
             
             const weed = this.add.image(x, y, 'weed');
             weed.setScale(scale);
