@@ -13,6 +13,7 @@ export default class GameScene extends Phaser.Scene {
         this.obstacleTimer = null;
         this.coinTimer = null;
         this.powerupTimer = null;
+        this.weedTimer = null;
         this.lastSpeedIncrease = false;
         this.gameDataManager = GameDataManager.getInstance();
         this.audioManager = null;
@@ -23,7 +24,7 @@ export default class GameScene extends Phaser.Scene {
             magnet: { active: false, timeLeft: 0 },
             double: { active: false, timeLeft: 0, jumpsLeft: 0 }
         };
-        
+
         // POWERUP ORBS SYSTEM
         this.powerupOrbs = {
             shield: [],
@@ -36,11 +37,13 @@ export default class GameScene extends Phaser.Scene {
         // OBSTACLE SIZE CONFIGURATION
         this.obstacleSizeVariation = 0.20; // ±20% variation from base size
         this.obstacleBaseSizes = {
-            rock: 0.75,
+            rock: 0.8,
+            spider_rock: 0.75,
             cactus: 0.75,
             log: 0.5,
+            snake_log: 0.78,
             emu: 0.8,
-            croc: 0.6,
+            croc: 0.55,
             camel: 1.0,
             koala: 0.8
         };
@@ -64,6 +67,7 @@ export default class GameScene extends Phaser.Scene {
         this.obstacleTimer = null;
         this.coinTimer = null;
         this.powerupTimer = null;
+        this.weedTimer = null;
         this.collisionCooldown = false;
         this.coinCollectionCooldown.clear();
         this.wasOnGround = true;
@@ -74,7 +78,7 @@ export default class GameScene extends Phaser.Scene {
             magnet: { active: false, timeLeft: 0 },
             double: { active: false, timeLeft: 0, jumpsLeft: 0 }
         };
-        
+
         // Clean up existing powerup orbs
         Object.keys(this.powerupOrbs).forEach(type => {
             this.powerupOrbs[type].forEach(orb => {
@@ -85,7 +89,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Add background
         const graphics = this.add.graphics();
-        graphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
+        graphics.fillGradientStyle(0x39cef9, 0x39cef9, 0x7dd9fc, 0x7dd9fc, 1);
         graphics.fillRect(0, 0, 800, 600);
 
         // Add atmospheric elements (sun and clouds)
@@ -93,19 +97,23 @@ export default class GameScene extends Phaser.Scene {
 
         // Create ground
         this.ground = this.add.graphics();
-        this.ground.fillStyle(0x8B4513);
+        this.ground.fillStyle(0xfc8d15);
         this.ground.fillRect(0, 500, 800, 100);
 
         // Add some ground texture
-        this.ground.fillStyle(0x654321);
+        this.ground.fillStyle(0xe67a00);
         for (let i = 0; i < 10; i++) {
             this.ground.fillRect(i * 80, 500, 40, 5);
         }
+
+        // Add weeds for ground decoration
+        this.addGroundWeeds();
 
         // Create physics groups with debug tracking
         this.obstacles = this.physics.add.group();
         this.coins = this.physics.add.group();
         this.powerups = this.physics.add.group();
+        this.weeds = this.physics.add.group();
 
 
         // Create kangaroo animations
@@ -394,6 +402,19 @@ export default class GameScene extends Phaser.Scene {
             }
         });
 
+        // Move weeds and clean up off-screen ones
+        this.weeds.children.entries.slice().forEach((weed) => {
+            if (!weed || !weed.active) {
+                return;
+            }
+
+            weed.x -= this.gameSpeed * delta / 1000;
+
+            if (weed.x < -100) {
+                weed.destroy();
+            }
+        });
+
     }
 
     updateMagpieBehavior(magpie, delta) {
@@ -518,13 +539,56 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
+    getObstacleTypes() {
+        // Base obstacle types - each gets 25%
+        return [
+            { type: 'rock', weight: 25 },
+            { type: 'log', weight: 25 },
+            { type: 'cactus', weight: 25 },
+            { type: 'magpie', weight: 25 }
+        ];
+    }
+
+    selectRandomObstacle(obstacleTypes) {
+        // Calculate total weight
+        const totalWeight = obstacleTypes.reduce((sum, item) => sum + item.weight, 0);
+
+        // Generate random number between 0 and total weight
+        let random = Math.random() * totalWeight;
+
+        // Select obstacle based on weights
+        let selectedType = null;
+        for (let i = 0; i < obstacleTypes.length; i++) {
+            random -= obstacleTypes[i].weight;
+            if (random <= 0) {
+                selectedType = obstacleTypes[i].type;
+                break;
+            }
+        }
+
+        // If no type selected, use fallback
+        if (!selectedType) {
+            selectedType = obstacleTypes[0].type;
+        }
+
+        // Apply variant logic: 60% chance for variants
+        if (selectedType === 'rock') {
+            return Math.random() < 0.6 ? 'spider_rock' : 'rock';
+        } else if (selectedType === 'log') {
+            return Math.random() < 0.6 ? 'snake_log' : 'log';
+        }
+
+        return selectedType;
+    }
+
     spawnObstacle() {
         if (this.isGameOver) {
             return;
         }
 
-        // TESTING: Force all obstacles to be koala
-        const randomType = 'koala';
+        // Define obstacle types with proper distribution
+        const obstacleTypes = this.getObstacleTypes();
+        const randomType = this.selectRandomObstacle(obstacleTypes);
         console.log(`🎯 SPAWNING ${randomType} obstacle`);
 
         if (randomType === 'magpie') {
@@ -550,7 +614,7 @@ export default class GameScene extends Phaser.Scene {
             obstacle.body.setImmovable(true);
             obstacle.body.setGravityY(0);
 
-            // Adjust collision box - special handling for camels and koalas
+            // Adjust collision box - special handling for different obstacle types
             if (randomType === 'camel') {
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
                 obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
@@ -558,6 +622,19 @@ export default class GameScene extends Phaser.Scene {
                 // Smaller collision box for koala tree - only the bottom trunk area
                 obstacle.body.setSize(obstacle.width * 0.3, obstacle.height * 0.7);
                 obstacle.body.setOffset(obstacle.width * 0.35, obstacle.height * 0.23);
+            } else if (randomType === 'spider_rock') {
+                // Shorter collision box for spider rock - bottom 60% only
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.6);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.4);
+            } else if (randomType === 'cactus') {
+                // Custom collision box for cactus
+                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.2);
+            } else if (randomType === 'snake_log') {
+                // Shorter collision box for snake log - bottom 60% height, 70% width
+                obstacle.body.setSize(obstacle.width * 0.7, obstacle.height * 0.6);
+                obstacle.body.setOffset(obstacle.width * 0.15, obstacle.height * 0.35);
+
             } else {
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
             }
@@ -709,7 +786,7 @@ export default class GameScene extends Phaser.Scene {
                 coin.body.setVelocityY(0);              // 🔒 Reset velocity
                 coin.body.setGravity(0, 0);             // 🔒 Set local gravity to zero
                 coin.body.setBounce(0);                 // 🔒 Just in case of collision
-            }2
+            } 2
         });
     }
 
@@ -770,7 +847,7 @@ export default class GameScene extends Phaser.Scene {
             // Deactivate shield after one use
             this.activePowerups.shield.active = false;
             this.activePowerups.shield.timeLeft = 0;
-            
+
             // Remove shield orbs immediately
             this.removePowerupOrb('shield');
 
@@ -830,8 +907,8 @@ export default class GameScene extends Phaser.Scene {
         // Game over screen
         this.time.delayedCall(1000, () => {
             const obstacleType = obstacle.texture ? obstacle.texture.key : 'rock';
-            this.scene.start('GameOverScene', { 
-                score: this.score, 
+            this.scene.start('GameOverScene', {
+                score: this.score,
                 audioManager: this.audioManager,
                 obstacleType: obstacleType
             });
@@ -851,6 +928,10 @@ export default class GameScene extends Phaser.Scene {
         if (this.powerupTimer) {
             this.powerupTimer.destroy();
             this.powerupTimer = null;
+        }
+        if (this.weedTimer) {
+            this.weedTimer.destroy();
+            this.weedTimer = null;
         }
         // Clean up powerup orbs
         Object.keys(this.powerupOrbs).forEach(type => {
@@ -882,10 +963,13 @@ export default class GameScene extends Phaser.Scene {
         if (this.powerups) {
             this.powerups.clear(true, true);
         }
+        if (this.weeds) {
+            this.weeds.clear(true, true);
+        }
 
         // Clear cooldown tracking
         this.coinCollectionCooldown.clear();
-        
+
         // Clean up powerup orbs
         Object.keys(this.powerupOrbs).forEach(type => {
             this.removePowerupOrb(type);
@@ -959,6 +1043,58 @@ export default class GameScene extends Phaser.Scene {
                 repeat: -1
             });
         }
+    }
+
+    addGroundWeeds() {
+        // Start spawning weeds continuously
+        this.scheduleNextWeed();
+    }
+
+    scheduleNextWeed() {
+        if (this.isGameOver) {
+            return;
+        }
+
+        const delay = Phaser.Math.Between(800, 1500); // Spawn weeds frequently
+        this.weedTimer = this.time.delayedCall(delay, () => {
+            if (!this.isGameOver && this.scene.isActive()) {
+                this.spawnWeed();
+                this.scheduleNextWeed();
+            }
+        });
+    }
+
+    spawnWeed() {
+        if (this.isGameOver) return;
+
+        const floorEndY = 600; // Bottom of screen
+        const maxWeedHeight = 410; // 10 pixels lower than before
+        
+        const x = 850; // Spawn off-screen right
+        const y = Phaser.Math.Between(maxWeedHeight, floorEndY); // Random y on floor area
+        const scale = Phaser.Math.FloatBetween(0.3, 0.6); // Random scale
+        
+        const weed = this.physics.add.image(x, y, 'weed');
+        weed.setScale(scale);
+        weed.setOrigin(0.5, 1);
+        weed.setDepth(5); // Behind obstacles but in front of ground
+        weed.setImmovable(true);
+        weed.setVelocityY(0); // 🔒 Freeze vertical movement
+        weed.body.pushable = false;
+        
+        this.weeds.add(weed);
+        
+        // Bulletproof gravity shutdown (same as coins)
+        this.time.delayedCall(0, () => {
+            if (weed.body) {
+                weed.body.setAllowGravity(false);      // 🔒 Turn off global gravity
+                weed.body.setVelocityY(0);              // 🔒 Reset velocity
+                weed.body.setGravity(0, 0);             // 🔒 Set local gravity to zero
+                weed.body.setBounce(0);                 // 🔒 Just in case of collision
+            }
+        });
+        
+        console.log(`🌿 Spawned weed: x=${x}, y=${y}, scale=${scale.toFixed(2)}`);
     }
 
     // POWERUP SYSTEM METHODS
@@ -1123,16 +1259,16 @@ export default class GameScene extends Phaser.Scene {
     createPowerupOrb(type) {
         // Remove existing orbs of this type first
         this.removePowerupOrb(type);
-        
+
         // Define orb colors and properties
         const orbConfigs = {
             shield: { color: 0x00FF00, radius: 20 },
             magnet: { color: 0xFF00FF, radius: 18 },
             double: { color: 0x00FFFF, radius: 16 }
         };
-        
+
         const config = orbConfigs[type];
-        
+
         // Create multiple orbs for this powerup
         for (let i = 0; i < this.orbsPerPowerup; i++) {
             const orb = this.add.graphics();
@@ -1140,20 +1276,20 @@ export default class GameScene extends Phaser.Scene {
             orb.fillCircle(0, 0, config.radius);
             orb.lineStyle(2, config.color, 1);
             orb.strokeCircle(0, 0, config.radius);
-            
+
             // Add glow effect
             orb.setBlendMode(Phaser.BlendModes.ADD);
-            
+
             // Set initial position and rotation data
             orb.orbType = type;
             orb.orbRadius = 60; // Distance from kangaroo center
             orb.currentAngle = this.getOrbStartAngle(type, i);
             orb.orbIndex = i;
-            
+
             this.powerupOrbs[type].push(orb);
         }
     }
-    
+
     getOrbStartAngle(type, orbIndex) {
         // Start orbs at different angles to avoid overlap
         const baseAngles = {
@@ -1161,12 +1297,12 @@ export default class GameScene extends Phaser.Scene {
             magnet: 120,
             double: 240
         };
-        
+
         // Space multiple orbs evenly around the circle
         const angleSpacing = 360 / this.orbsPerPowerup;
         return (baseAngles[type] || 0) + (orbIndex * angleSpacing);
     }
-    
+
     updatePowerupOrbs(delta) {
         Object.keys(this.powerupOrbs).forEach(type => {
             const orbs = this.powerupOrbs[type];
@@ -1175,7 +1311,7 @@ export default class GameScene extends Phaser.Scene {
                     if (orb) {
                         // Update rotation angle
                         orb.currentAngle += this.orbRotationSpeed * delta / 1000;
-                        
+
                         // Calculate position around kangaroo (moved up 50 pixels, right 10 pixels)
                         const angleRad = Phaser.Math.DegToRad(orb.currentAngle);
                         orb.x = this.kangaroo.x + 10 + Math.cos(angleRad) * orb.orbRadius;
@@ -1185,7 +1321,7 @@ export default class GameScene extends Phaser.Scene {
             }
         });
     }
-    
+
     removePowerupOrb(type) {
         if (this.powerupOrbs[type]) {
             this.powerupOrbs[type].forEach(orb => {

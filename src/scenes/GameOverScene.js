@@ -88,6 +88,23 @@ export default class GameOverScene extends Phaser.Scene {
                 "Boom! Straight into eucalyptus real estate.",
                 "That koala's going to need therapy.",
                 "Next time, try not to headbutt Australia's laziest animal."
+            ],
+            snake_log: [
+                "Australia is home to 20 of the world's 25 most venomous snakes.",
+                "Strike! You just stepped on a hissy fit.",
+                "You found the wrong kind of noodle.",
+                "Fun fact: Inland taipans can kill a human in under an hour. Sweet dreams!",
+                "That snake was minding its business — until you flew into it.",
+                "Snakes can't blink, but that one definitely judged you."
+            ],
+            spider_rock: [
+                "Australia has over 2,000 types of spiders. Lucky you found one.",
+                "Boom! Right into an 8-legged ambush.",
+                "Don't worry — most Aussie spiders probably won't kill you.",
+                "Yikes! That redback wasn't feeling friendly.",
+                "You just met someone's worst fear.",
+                "Fun fact: Funnel-web spiders can bite through toenails. Sleep tight!",
+                "That spider didn't appreciate the surprise hug."
             ]
         };
 
@@ -177,7 +194,9 @@ export default class GameOverScene extends Phaser.Scene {
         // Obstacle fact display
         const obstacleEmojis = {
             log: '🪵',
-            rock: '🪨', 
+            snake_log: '🐍',
+            rock: '🪨',
+            spider_rock: '🕷️', 
             cactus: '🌵',
             emu: '🦅',
             camel: '🐫',

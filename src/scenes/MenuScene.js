@@ -17,8 +17,10 @@ export default class MenuScene extends Phaser.Scene {
         
         // Load obstacle sprites
         this.load.image('rock', 'assets/images/rock.png');
+        this.load.image('spider_rock', 'assets/images/spider_rock.png');
         this.load.image('cactus', 'assets/images/cactus.png');
         this.load.image('log', 'assets/images/log.png');
+        this.load.image('snake_log', 'assets/images/snake_log.png');
         this.load.spritesheet('emu', 'assets/images/emu_sheet.png', {
             frameWidth: 128, // 256 ÷ 2 frames = 128 per frame
             frameHeight: 128
@@ -35,6 +37,9 @@ export default class MenuScene extends Phaser.Scene {
         
         // Load coin
         this.load.image('coin', 'assets/images/coin.png');
+        
+        // Load ground decoration
+        this.load.image('weed', 'assets/images/weed.png');
         
         // Load powerup images
         this.load.image('shield', 'assets/images/shield.png');
@@ -70,7 +75,7 @@ export default class MenuScene extends Phaser.Scene {
 
         // Add background color gradient effect
         const graphics = this.add.graphics();
-        graphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
+        graphics.fillGradientStyle(0x39cef9, 0x39cef9, 0x7dd9fc, 0x7dd9fc, 1);
         graphics.fillRect(0, 0, 800, 600);
 
         // Add title with better positioning
@@ -155,17 +160,17 @@ export default class MenuScene extends Phaser.Scene {
     createGroundScene() {
         // Add ground line
         const ground = this.add.graphics();
-        ground.lineStyle(6, 0x8B4513);
+        ground.lineStyle(6, 0xfc8d15);
         ground.moveTo(0, 500);
         ground.lineTo(800, 500);
         ground.stroke();
 
         // Add ground texture
-        ground.fillStyle(0x654321);
+        ground.fillStyle(0xfc8d15);
         ground.fillRect(0, 500, 800, 100);
         
         // Add some ground detail
-        ground.fillStyle(0x8B4513);
+        ground.fillStyle(0xe67a00);
         for (let i = 0; i < 8; i++) {
             ground.fillRect(i * 100, 500, 50, 8);
         }
@@ -174,6 +179,25 @@ export default class MenuScene extends Phaser.Scene {
         this.add.image(120, 500, 'emu').setScale(0.5).setOrigin(0.5, 1);
         this.add.image(680, 500, 'cactus').setScale(0.6).setOrigin(0.5, 1);
         this.add.image(350, 500, 'camel').setScale(0.8).setOrigin(0.5, 1);
+
+        // Add weeds for ground decoration - random positions across floor
+        const numMenuWeeds = 8;
+        const floorStartY = 500; // Ground line  
+        const floorEndY = 600; // Bottom of screen
+        const maxWeedHeight = 485; // 10 pixels lower than before
+
+        console.log('🌿 Adding menu weeds...');
+        for (let i = 0; i < numMenuWeeds; i++) {
+            const x = Phaser.Math.Between(30, 770); // Random x across screen
+            const y = Phaser.Math.Between(maxWeedHeight, floorEndY); // Random y on floor
+            const scale = Phaser.Math.FloatBetween(0.3, 0.6); // Random scale
+            
+            const weed = this.add.image(x, y, 'weed');
+            weed.setScale(scale);
+            weed.setOrigin(0.5, 1);
+            weed.setDepth(10); // In front of ground but behind animals
+            console.log(`🌿 Menu weed ${i + 1}: x=${x}, y=${y}, scale=${scale.toFixed(2)}`);
+        }
 
         // Add small coins scattered on the ground (much smaller and more natural)
         this.add.image(250, 400, 'coin').setScale(0.15);
