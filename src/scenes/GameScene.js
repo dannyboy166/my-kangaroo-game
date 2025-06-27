@@ -23,8 +23,15 @@ export default class GameScene extends Phaser.Scene {
             magnet: { active: false, timeLeft: 0 },
             double: { active: false, timeLeft: 0, jumpsLeft: 0 }
         };
-        this.glowTimer = null;
-        this.currentGlowIndex = 0;
+        
+        // POWERUP ORBS SYSTEM
+        this.powerupOrbs = {
+            shield: [],
+            magnet: [],
+            double: []
+        };
+        this.orbRotationSpeed = 200; // degrees per second
+        this.orbsPerPowerup = 3;
 
         // OBSTACLE SIZE CONFIGURATION
         this.obstacleSizeVariation = 0.20; // ±20% variation from base size
@@ -66,11 +73,14 @@ export default class GameScene extends Phaser.Scene {
             magnet: { active: false, timeLeft: 0 },
             double: { active: false, timeLeft: 0, jumpsLeft: 0 }
         };
-        this.currentGlowIndex = 0;
-        if (this.glowTimer) {
-            this.glowTimer.destroy();
-            this.glowTimer = null;
-        }
+        
+        // Clean up existing powerup orbs
+        Object.keys(this.powerupOrbs).forEach(type => {
+            this.powerupOrbs[type].forEach(orb => {
+                if (orb) orb.destroy();
+            });
+            this.powerupOrbs[type] = [];
+        });
 
         // Add background
         const graphics = this.add.graphics();
@@ -705,7 +715,7 @@ export default class GameScene extends Phaser.Scene {
                 coin.body.setVelocityY(0);              // 🔒 Reset velocity
                 coin.body.setGravity(0, 0);             // 🔒 Set local gravity to zero
                 coin.body.setBounce(0);                 // 🔒 Just in case of collision
-            }
+            }2
         });
     }
 
@@ -766,11 +776,14 @@ export default class GameScene extends Phaser.Scene {
             // Deactivate shield after one use
             this.activePowerups.shield.active = false;
             this.activePowerups.shield.timeLeft = 0;
+            
+            // Remove shield orbs immediately
+            this.removePowerupOrb('shield');
 
-            // Visual feedback for shield protection
+            // Visual feedback for shield protection - brief flash
             this.kangaroo.setTint(0x00FF00);
             this.time.delayedCall(200, () => {
-                this.updateKangarooGlow(); // Update glow after shield is used
+                this.kangaroo.clearTint(); // Clear tint after brief flash
             });
 
             // Destroy the obstacle
@@ -840,10 +853,13 @@ export default class GameScene extends Phaser.Scene {
             this.powerupTimer.destroy();
             this.powerupTimer = null;
         }
-        if (this.glowTimer) {
-            this.glowTimer.destroy();
-            this.glowTimer = null;
-        }
+        // Clean up powerup orbs
+        Object.keys(this.powerupOrbs).forEach(type => {
+            this.powerupOrbs[type].forEach(orb => {
+                if (orb) orb.destroy();
+            });
+            this.powerupOrbs[type] = [];
+        });
     }
 
 
@@ -870,6 +886,11 @@ export default class GameScene extends Phaser.Scene {
 
         // Clear cooldown tracking
         this.coinCollectionCooldown.clear();
+        
+        // Clean up powerup orbs
+        Object.keys(this.powerupOrbs).forEach(type => {
+            this.removePowerupOrb(type);
+        });
 
         // Reset game state
         this.isGameOver = false;
@@ -996,7 +1017,7 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    collectPowerup(player, powerup) {
+    collectPowerup(kangaroo, powerup) {
         const type = powerup.powerupType;
 
         // Play powerup-specific sound
@@ -1043,8 +1064,8 @@ export default class GameScene extends Phaser.Scene {
 
         console.log(`Collected ${type} powerup!`);
 
-        // Update kangaroo glow effect
-        this.updateKangarooGlow();
+        // Create powerup orb
+        this.createPowerupOrb(type);
     }
 
     updatePowerups(delta) {
@@ -1061,6 +1082,8 @@ export default class GameScene extends Phaser.Scene {
                     if (type === 'double') {
                         powerup.jumpsLeft = 0;
                     }
+                    // Remove orb when powerup expires
+                    this.removePowerupOrb(type);
                 }
             }
 
@@ -1068,8 +1091,8 @@ export default class GameScene extends Phaser.Scene {
             this.updatePowerupUI(type);
         });
 
-        // Update kangaroo glow effect
-        this.updateKangarooGlow();
+        // Update powerup orbs positions
+        this.updatePowerupOrbs(delta);
     }
 
     updatePowerupUI(type) {
@@ -1098,55 +1121,79 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
-    updateKangarooGlow() {
-        // Stop any existing glow timer
-        if (this.glowTimer) {
-            this.glowTimer.destroy();
-            this.glowTimer = null;
-        }
-
-        // Get active powerup colors
-        const activePowerupColors = [];
-
-        if (this.activePowerups.shield.active) {
-            activePowerupColors.push(0xAAFFAA); // Light green for shield
-        }
-        if (this.activePowerups.magnet.active) {
-            activePowerupColors.push(0xFFAAFF); // Light magenta for magnet
-        }
-        if (this.activePowerups.double.active) {
-            activePowerupColors.push(0xAAFFFF); // Light cyan for double jump
-        }
-
-        if (activePowerupColors.length === 0) {
-            // No powerups active, clear tint
-            this.kangaroo.clearTint();
-            this.currentGlowIndex = 0;
-            return;
-        } else if (activePowerupColors.length === 1) {
-            // Single powerup, use its color
-            this.kangaroo.setTint(activePowerupColors[0]);
-            this.currentGlowIndex = 0;
-        } else {
-            // Multiple powerups, cycle between colors
-            this.currentGlowIndex = 0;
-            this.cycleGlowColors(activePowerupColors);
+    createPowerupOrb(type) {
+        // Remove existing orbs of this type first
+        this.removePowerupOrb(type);
+        
+        // Define orb colors and properties
+        const orbConfigs = {
+            shield: { color: 0x00FF00, radius: 20 },
+            magnet: { color: 0xFF00FF, radius: 18 },
+            double: { color: 0x00FFFF, radius: 16 }
+        };
+        
+        const config = orbConfigs[type];
+        
+        // Create multiple orbs for this powerup
+        for (let i = 0; i < this.orbsPerPowerup; i++) {
+            const orb = this.add.graphics();
+            orb.fillStyle(config.color, 0.7);
+            orb.fillCircle(0, 0, config.radius);
+            orb.lineStyle(2, config.color, 1);
+            orb.strokeCircle(0, 0, config.radius);
+            
+            // Add glow effect
+            orb.setBlendMode(Phaser.BlendModes.ADD);
+            
+            // Set initial position and rotation data
+            orb.orbType = type;
+            orb.orbRadius = 60; // Distance from kangaroo center
+            orb.currentAngle = this.getOrbStartAngle(type, i);
+            orb.orbIndex = i;
+            
+            this.powerupOrbs[type].push(orb);
         }
     }
-
-    cycleGlowColors(colors) {
-        // Set initial color
-        this.kangaroo.setTint(colors[this.currentGlowIndex]);
-
-        // Start cycling timer (change color every 800ms)
-        this.glowTimer = this.time.addEvent({
-            delay: 800,
-            callback: () => {
-                this.currentGlowIndex = (this.currentGlowIndex + 1) % colors.length;
-                this.kangaroo.setTint(colors[this.currentGlowIndex]);
-            },
-            loop: true
+    
+    getOrbStartAngle(type, orbIndex) {
+        // Start orbs at different angles to avoid overlap
+        const baseAngles = {
+            shield: 0,
+            magnet: 120,
+            double: 240
+        };
+        
+        // Space multiple orbs evenly around the circle
+        const angleSpacing = 360 / this.orbsPerPowerup;
+        return (baseAngles[type] || 0) + (orbIndex * angleSpacing);
+    }
+    
+    updatePowerupOrbs(delta) {
+        Object.keys(this.powerupOrbs).forEach(type => {
+            const orbs = this.powerupOrbs[type];
+            if (orbs && this.activePowerups[type].active) {
+                orbs.forEach(orb => {
+                    if (orb) {
+                        // Update rotation angle
+                        orb.currentAngle += this.orbRotationSpeed * delta / 1000;
+                        
+                        // Calculate position around kangaroo (moved up 50 pixels)
+                        const angleRad = Phaser.Math.DegToRad(orb.currentAngle);
+                        orb.x = this.kangaroo.x + Math.cos(angleRad) * orb.orbRadius;
+                        orb.y = this.kangaroo.y - 50 + Math.sin(angleRad) * orb.orbRadius;
+                    }
+                });
+            }
         });
+    }
+    
+    removePowerupOrb(type) {
+        if (this.powerupOrbs[type]) {
+            this.powerupOrbs[type].forEach(orb => {
+                if (orb) orb.destroy();
+            });
+            this.powerupOrbs[type] = [];
+        }
     }
 
 }
