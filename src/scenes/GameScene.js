@@ -490,8 +490,8 @@ export default class GameScene extends Phaser.Scene {
         console.log(`🕐 SCHEDULING next obstacle in ${delay}ms (score: ${Math.floor(this.score)})`);
         this.obstacleTimer = this.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
-                // 40% chance to spawn a gap instead of single obstacle (only after score 1000)
-                if (this.score >= 1000 && Math.random() < 0.4) {
+                // 40% chance to spawn a gap instead of single obstacle (only after score 1500)
+                if (this.score >= 1500 && Math.random() < 0.4) {
                     console.log(`🔄 SPAWNING GAP (score: ${Math.floor(this.score)})`);
                     this.spawnGap();
                 } else {
@@ -651,7 +651,8 @@ export default class GameScene extends Phaser.Scene {
         emu.setOrigin(0.5, 1);
         emu.body.setImmovable(true);
         emu.body.setGravityY(0);
-        emu.body.setSize(emu.width * 0.8, emu.height * 0.8);
+        emu.body.setSize(emu.width * 0.6, emu.height * 0.8);
+        emu.body.setOffset(0, emu.height * 0.2);
 
         // Start running animation
         emu.play('emu_run');
@@ -835,7 +836,12 @@ export default class GameScene extends Phaser.Scene {
 
         // Game over screen
         this.time.delayedCall(1000, () => {
-            this.scene.start('GameOverScene', { score: this.score, audioManager: this.audioManager });
+            const obstacleType = obstacle.texture ? obstacle.texture.key : 'rock';
+            this.scene.start('GameOverScene', { 
+                score: this.score, 
+                audioManager: this.audioManager,
+                obstacleType: obstacleType
+            });
         });
     }
 
@@ -1177,9 +1183,9 @@ export default class GameScene extends Phaser.Scene {
                         // Update rotation angle
                         orb.currentAngle += this.orbRotationSpeed * delta / 1000;
                         
-                        // Calculate position around kangaroo (moved up 50 pixels)
+                        // Calculate position around kangaroo (moved up 50 pixels, right 10 pixels)
                         const angleRad = Phaser.Math.DegToRad(orb.currentAngle);
-                        orb.x = this.kangaroo.x + Math.cos(angleRad) * orb.orbRadius;
+                        orb.x = this.kangaroo.x + 10 + Math.cos(angleRad) * orb.orbRadius;
                         orb.y = this.kangaroo.y - 50 + Math.sin(angleRad) * orb.orbRadius;
                     }
                 });

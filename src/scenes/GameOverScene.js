@@ -9,6 +9,7 @@ export default class GameOverScene extends Phaser.Scene {
     init(data) {
         this.finalScore = data.score || 0;
         this.audioManager = data.audioManager;
+        this.obstacleType = data.obstacleType || 'rock';
         
         // Load/save high score from localStorage
         this.highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
@@ -21,6 +22,70 @@ export default class GameOverScene extends Phaser.Scene {
     }
 
     create() {
+        // Obstacle facts
+        const obstacleFacts = {
+            emu: [
+                "Emus outran the Australian army in 1932.",
+                "Emus can sprint at 50 km/h — good luck.",
+                "Emus don't fly, but they do fight.",
+                "Emus kick like they mean it.",
+                "You just lost to a big angry bird.",
+                "Emus swallow pebbles to help them digest food."
+            ],
+            camel: [
+                "Camels were imported — now they rule the outback.",
+                "Camels can drink 100 litres in 10 minutes.",
+                "You got trampled by a desert beast.",
+                "Camels don't forget… and they spit.",
+                "Turns out humps don't make them friendly.",
+                "Wild camels once caused so much damage, they started getting airlifted out."
+            ],
+            croc: [
+                "Crocs launch out of water like missiles.",
+                "You got chomped by a prehistoric tank.",
+                "Crocodiles have been killing things for 100 million years.",
+                "Their bite is stronger than a T-Rex.",
+                "Rule #1: Never smile at a crocodile.",
+                "A saltwater croc can swim 29 km in a day — you're not escaping."
+            ],
+            magpie: [
+                "Magpies swoop humans every spring — you're not special.",
+                "It remembered your face. And came back.",
+                "Cyclists wear zip-ties to survive magpie season.",
+                "You just got clapped by a black-and-white bird.",
+                "Swoop! You've been magpie'd.",
+                "Some magpies sing over 900 different sounds."
+            ],
+            log: [
+                "Logs make great snake hotels. You stepped in.",
+                "Wet logs = Aussie slip'n'slide of doom.",
+                "Whoops — that wasn't a platform.",
+                "Log 1, you 0.",
+                "Nature just said 'nope.'",
+                "Insects live rent-free in every Aussie log."
+            ],
+            rock: [
+                "Australia's rocks are older than dinosaurs — and meaner.",
+                "You tripped over a rock. Classic.",
+                "That fall looked expensive.",
+                "Rock solid mistake.",
+                "Oof. That hurt to watch.",
+                "Some Aussie rocks are over 3 billion years old."
+            ],
+            cactus: [
+                "Prickly pears once took over Australia. Seriously.",
+                "You just got owned by a plant.",
+                "Spikes > dignity.",
+                "Why were you even near that cactus?",
+                "You've been cactus'd. That's a thing now.",
+                "Some cacti shoot needles when touched. Nature's trap."
+            ]
+        };
+
+        // Get random fact for this obstacle
+        const facts = obstacleFacts[this.obstacleType] || obstacleFacts.rock;
+        const randomFact = Phaser.Utils.Array.GetRandom(facts);
+
         // Add background
         const graphics = this.add.graphics();
         graphics.fillGradientStyle(0x330066, 0x330066, 0x87CEEB, 0x87CEEB, 1);
@@ -100,8 +165,31 @@ export default class GameOverScene extends Phaser.Scene {
             this.time.delayedCall(3000, () => particles.destroy());
         }
 
+        // Obstacle fact display
+        const obstacleEmojis = {
+            log: '🪵',
+            rock: '🪨', 
+            cactus: '🌵',
+            emu: '🦅',
+            camel: '🐫',
+            croc: '🐊',
+            magpie: '🐦'
+        };
+
+        const emoji = obstacleEmojis[this.obstacleType] || '🪨';
+        
+        this.add.text(400, 320, `${emoji} ${randomFact}`, {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            color: '#FFAA44',
+            stroke: '#000000',
+            strokeThickness: 1,
+            align: 'center',
+            wordWrap: { width: 600 }
+        }).setOrigin(0.5);
+
         // Play again button
-        const playAgainBtn = this.add.text(400, 350, 'PLAY AGAIN', {
+        const playAgainBtn = this.add.text(400, 380, 'PLAY AGAIN', {
             fontSize: '28px',
             fontFamily: 'Arial',
             color: '#00FF00',
@@ -126,7 +214,7 @@ export default class GameOverScene extends Phaser.Scene {
         });
 
         // Menu button
-        const menuBtn = this.add.text(400, 420, 'MAIN MENU', {
+        const menuBtn = this.add.text(400, 450, 'MAIN MENU', {
             fontSize: '28px',
             fontFamily: 'Arial',
             color: '#FFD700',
@@ -151,7 +239,7 @@ export default class GameOverScene extends Phaser.Scene {
         });
 
         // Add instruction text
-        this.add.text(400, 500, 'Press SPACE to restart or click buttons above', {
+        this.add.text(400, 530, 'Press SPACE to restart or click buttons above', {
             fontSize: '18px',
             fontFamily: 'Arial',
             color: '#CCCCCC',
