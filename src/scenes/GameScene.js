@@ -41,7 +41,8 @@ export default class GameScene extends Phaser.Scene {
             log: 0.5,
             emu: 0.8,
             croc: 0.6,
-            camel: 1.0
+            camel: 1.0,
+            koala: 0.8
         };
 
         // COLLISION PROTECTION
@@ -522,20 +523,8 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        let obstacleTypes = ['rock', 'cactus', 'log', 'magpie']; // Include magpie from start
-
-        // Add new obstacles based on score
-        if (this.score >= 1000) {
-            obstacleTypes.push('croc');
-        }
-        if (this.score >= 2000) {
-            obstacleTypes.push('emu');
-        }
-        if (this.score >= 3000) {
-            obstacleTypes.push('camel');
-        }
-
-        const randomType = Phaser.Utils.Array.GetRandom(obstacleTypes);
+        // TESTING: Force all obstacles to be koala
+        const randomType = 'koala';
         console.log(`🎯 SPAWNING ${randomType} obstacle`);
 
         if (randomType === 'magpie') {
@@ -561,10 +550,14 @@ export default class GameScene extends Phaser.Scene {
             obstacle.body.setImmovable(true);
             obstacle.body.setGravityY(0);
 
-            // Adjust collision box - special handling for camels
+            // Adjust collision box - special handling for camels and koalas
             if (randomType === 'camel') {
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
                 obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
+            } else if (randomType === 'koala') {
+                // Smaller collision box for koala tree - only the bottom trunk area
+                obstacle.body.setSize(obstacle.width * 0.3, obstacle.height * 0.7);
+                obstacle.body.setOffset(obstacle.width * 0.35, obstacle.height * 0.23);
             } else {
                 obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
             }

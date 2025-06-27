@@ -79,6 +79,15 @@ export default class GameOverScene extends Phaser.Scene {
                 "Why were you even near that cactus?",
                 "You've been cactus'd. That's a thing now.",
                 "Some cacti shoot needles when touched. Nature's trap."
+            ],
+            koala: [
+                "Koalas sleep up to 20 hours a day. You just woke one up.",
+                "Ouch! That koala was not expecting visitors.",
+                "You ran into a tree... with an angry tenant.",
+                "Koalas aren't bears — but they do bear grudges.",
+                "Boom! Straight into eucalyptus real estate.",
+                "That koala's going to need therapy.",
+                "Next time, try not to headbutt Australia's laziest animal."
             ]
         };
 
@@ -173,7 +182,8 @@ export default class GameOverScene extends Phaser.Scene {
             emu: '🦅',
             camel: '🐫',
             croc: '🐊',
-            magpie: '🐦'
+            magpie: '🐦',
+            koala: '🐨'
         };
 
         const emoji = obstacleEmojis[this.obstacleType] || '🪨';
