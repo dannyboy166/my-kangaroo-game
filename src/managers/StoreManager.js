@@ -4,14 +4,17 @@ export default class StoreManager {
         this.doubleJumpCount = parseInt(localStorage.getItem('kangaroo_hop_double_jump')) || 0;
         this.shieldCount = parseInt(localStorage.getItem('kangaroo_hop_shield')) || 0;
         this.magnetCount = parseInt(localStorage.getItem('kangaroo_hop_magnet')) || 0;
+        this.helmetCount = parseInt(localStorage.getItem('kangaroo_hop_helmet')) || 0;
         
         this.prices = {
             doubleJump: 75,
             shield: 100,
-            magnet: 50
+            magnet: 50,
+            helmet: 20
         };
         
         this.maxItemCount = 3;
+        this.maxHelmetCount = 1; // Only one helmet can be owned at a time
     }
     
     saveData() {
@@ -19,6 +22,7 @@ export default class StoreManager {
         localStorage.setItem('kangaroo_hop_double_jump', this.doubleJumpCount.toString());
         localStorage.setItem('kangaroo_hop_shield', this.shieldCount.toString());
         localStorage.setItem('kangaroo_hop_magnet', this.magnetCount.toString());
+        localStorage.setItem('kangaroo_hop_helmet', this.helmetCount.toString());
     }
     
     addCoins(amount) {
@@ -29,7 +33,8 @@ export default class StoreManager {
     canPurchase(type) {
         const price = this.prices[type];
         const count = this.getPowerUpCount(type);
-        return this.totalCoins >= price && count < this.maxItemCount;
+        const maxCount = type === 'helmet' ? this.maxHelmetCount : this.maxItemCount;
+        return this.totalCoins >= price && count < maxCount;
     }
     
     purchasePowerUp(type) {
@@ -47,6 +52,9 @@ export default class StoreManager {
                 break;
             case 'magnet':
                 this.magnetCount++;
+                break;
+            case 'helmet':
+                this.helmetCount++;
                 break;
         }
         
@@ -77,6 +85,13 @@ export default class StoreManager {
                     return true;
                 }
                 break;
+            case 'helmet':
+                if (this.helmetCount > 0) {
+                    this.helmetCount--;
+                    this.saveData();
+                    return true;
+                }
+                break;
         }
         return false;
     }
@@ -89,6 +104,8 @@ export default class StoreManager {
                 return this.shieldCount;
             case 'magnet':
                 return this.magnetCount;
+            case 'helmet':
+                return this.helmetCount;
             default:
                 return 0;
         }
@@ -102,7 +119,8 @@ export default class StoreManager {
         const names = {
             doubleJump: 'Double Jump',
             shield: 'Shield',
-            magnet: 'Coin Magnet'
+            magnet: 'Coin Magnet',
+            helmet: 'Zip Tie Helmet'
         };
         return names[type] || type;
     }
@@ -111,7 +129,8 @@ export default class StoreManager {
         const descriptions = {
             doubleJump: 'Jump twice in the air!\nLasts 10 seconds',
             shield: 'Protects from one hit!\nLasts 8 seconds',
-            magnet: 'Attracts nearby coins!\nLasts 10 seconds'
+            magnet: 'Attracts nearby coins!\nLasts 10 seconds',
+            helmet: 'Protects from magpie swoops!\nLasts one game'
         };
         return descriptions[type] || '';
     }

@@ -2,6 +2,7 @@
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
+import StoreScene from './scenes/StoreScene.js';
 
 // Game configuration
 const config = {
@@ -20,7 +21,8 @@ const config = {
     scene: [
         MenuScene,
         GameScene,
-        GameOverScene
+        GameOverScene,
+        StoreScene
     ]
 };
 

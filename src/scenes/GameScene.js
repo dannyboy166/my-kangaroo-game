@@ -1,4 +1,5 @@
 import GameDataManager from '../managers/GameDataManager.js';
+import StoreManager from '../managers/StoreManager.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -17,6 +18,10 @@ export default class GameScene extends Phaser.Scene {
         this.lastSpeedIncrease = false;
         this.gameDataManager = GameDataManager.getInstance();
         this.audioManager = null;
+        
+        // HELMET SYSTEM
+        this.helmetEquipped = false;
+        this.storeManager = null;
 
         // POWERUP SYSTEM
         this.activePowerups = {
@@ -59,6 +64,18 @@ export default class GameScene extends Phaser.Scene {
     create(data) {
         // Get audio manager from menu scene
         this.audioManager = data.audioManager;
+        
+        // Initialize store manager and check for helmet
+        this.storeManager = new StoreManager();
+        const helmetCount = this.storeManager.getPowerUpCount('helmet');
+        console.log(`🪖 Helmet count at game start: ${helmetCount}`);
+        if (helmetCount > 0) {
+            this.helmetEquipped = true;
+            console.log('🪖 Helmet equipped! Magpie protection active!');
+        } else {
+            this.helmetEquipped = false;
+            console.log('🪖 No helmet available');
+        }
 
         // Reset all game state
         this.isGameOver = false;
@@ -100,17 +117,18 @@ export default class GameScene extends Phaser.Scene {
         this.ground.fillStyle(0xfc8d15);
         this.ground.fillRect(0, 500, 800, 100);
         
-        // Add subtle ground texture
-        this.addGroundTexture();
-
-        // Add weeds for ground decoration
-        this.addGroundWeeds();
-
         // Create physics groups with debug tracking
         this.obstacles = this.physics.add.group();
         this.coins = this.physics.add.group();
         this.powerups = this.physics.add.group();
         this.weeds = this.add.group();
+        this.groundTextures = this.add.group();
+
+        // Add subtle ground texture
+        this.addGroundTexture();
+
+        // Add weeds for ground decoration
+        this.addGroundWeeds();
 
 
         // Create kangaroo animations
@@ -122,15 +140,17 @@ export default class GameScene extends Phaser.Scene {
         // Create magpie animations
         this.createMagpieAnimations();
 
-        // Create kangaroo sprite
-        this.kangaroo = this.physics.add.sprite(150, this.groundY, 'kangaroo');
+        // Create kangaroo sprite (with or without helmet)
+        const spriteKey = this.helmetEquipped ? 'kangaroo_helmet' : 'kangaroo';
+        this.kangaroo = this.physics.add.sprite(150, this.groundY, spriteKey);
         this.kangaroo.setScale(1.2);
         this.kangaroo.setCollideWorldBounds(true);
         this.kangaroo.body.setSize(70, 48);
         this.kangaroo.body.setOffset(40, 70);
         this.kangaroo.body.setGravityY(900);
         this.kangaroo.setOrigin(0.5, 1);
-        this.kangaroo.play('kangaroo_run');
+        const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';
+        this.kangaroo.play(runAnimKey);
 
         // Create invisible ground for physics collision (extended for running emus)
         this.groundBody = this.physics.add.staticGroup();
@@ -187,6 +207,13 @@ export default class GameScene extends Phaser.Scene {
                 color: '#00FFFF',
                 stroke: '#000000',
                 strokeThickness: 1
+            }),
+            helmet: this.add.text(20, 210, this.helmetEquipped ? '🪖 Helmet: Magpie Protection' : '', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 1
             })
         };
 
@@ -224,26 +251,49 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createKangarooAnimations() {
-        if (this.anims.exists('kangaroo_run')) return;
+        // Regular kangaroo animations
+        if (!this.anims.exists('kangaroo_run')) {
+            this.anims.create({
+                key: 'kangaroo_run',
+                frames: this.anims.generateFrameNumbers('kangaroo', { start: 0, end: 11 }),
+                frameRate: 15,
+                repeat: -1
+            });
 
-        this.anims.create({
-            key: 'kangaroo_run',
-            frames: this.anims.generateFrameNumbers('kangaroo', { start: 0, end: 11 }),
-            frameRate: 15,
-            repeat: -1
-        });
+            this.anims.create({
+                key: 'kangaroo_jump',
+                frames: [{ key: 'kangaroo', frame: 2 }],
+                frameRate: 1
+            });
 
-        this.anims.create({
-            key: 'kangaroo_jump',
-            frames: [{ key: 'kangaroo', frame: 2 }],
-            frameRate: 1
-        });
+            this.anims.create({
+                key: 'kangaroo_idle',
+                frames: [{ key: 'kangaroo', frame: 0 }],
+                frameRate: 1
+            });
+        }
+        
+        // Helmet kangaroo animations (using same frame indices)
+        if (!this.anims.exists('kangaroo_helmet_run')) {
+            this.anims.create({
+                key: 'kangaroo_helmet_run',
+                frames: this.anims.generateFrameNumbers('kangaroo_helmet', { start: 0, end: 11 }),
+                frameRate: 15,
+                repeat: -1
+            });
 
-        this.anims.create({
-            key: 'kangaroo_idle',
-            frames: [{ key: 'kangaroo', frame: 0 }],
-            frameRate: 1
-        });
+            this.anims.create({
+                key: 'kangaroo_helmet_jump',
+                frames: [{ key: 'kangaroo_helmet', frame: 2 }],
+                frameRate: 1
+            });
+
+            this.anims.create({
+                key: 'kangaroo_helmet_idle',
+                frames: [{ key: 'kangaroo_helmet', frame: 0 }],
+                frameRate: 1
+            });
+        }
     }
 
     createEmuAnimations() {
@@ -313,14 +363,17 @@ export default class GameScene extends Phaser.Scene {
         const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
         const currentAnim = this.kangaroo.anims.currentAnim?.key;
 
+        // Get correct animation keys based on helmet status
+        const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';
+        const jumpAnimKey = this.helmetEquipped ? 'kangaroo_helmet_jump' : 'kangaroo_jump';
 
         if (isOnGround) {
-            if (currentAnim !== 'kangaroo_run') {
-                this.kangaroo.play('kangaroo_run');
+            if (currentAnim !== runAnimKey) {
+                this.kangaroo.play(runAnimKey);
             }
         } else {
-            if (currentAnim !== 'kangaroo_jump') {
-                this.kangaroo.play('kangaroo_jump');
+            if (currentAnim !== jumpAnimKey) {
+                this.kangaroo.play(jumpAnimKey);
             }
         }
 
@@ -412,6 +465,39 @@ export default class GameScene extends Phaser.Scene {
                 weed.destroy();
             }
         });
+
+        // Move ground texture dots and clean up off-screen ones
+        this.groundTextures.children.entries.slice().forEach((dot) => {
+            if (!dot || !dot.active) {
+                return;
+            }
+
+            dot.x -= (this.gameSpeed * 1) * delta / 1000; // Same speed as weeds
+
+            if (dot.x < -50) {
+                this.groundTextures.remove(dot);
+                dot.destroy();
+            }
+        });
+
+        // Spawn new ground texture dots from the right side
+        if (Math.random() < 0.02) { // 2% chance per frame to spawn new dot
+            const dot = this.add.graphics();
+            const y = Phaser.Math.Between(510, 590);
+            const size = Phaser.Math.FloatBetween(2, 6);
+            const isDarkRock = Math.random() < 0.3;
+            
+            if (isDarkRock) {
+                dot.fillStyle(0x8B4513, 0.6);
+            } else {
+                dot.fillStyle(0xD2691E, 0.4);
+            }
+            dot.fillCircle(0, 0, size);
+            dot.setPosition(850, y); // Start off-screen to the right
+            dot.setDepth(2);
+            
+            this.groundTextures.add(dot);
+        }
 
     }
 
@@ -835,6 +921,31 @@ export default class GameScene extends Phaser.Scene {
     hitObstacle(kangaroo, obstacle) {
         if (this.isGameOver || this.collisionCooldown) return;
 
+        // Helmet protection against magpies (doesn't consume helmet)
+        if (this.helmetEquipped && obstacle.texture && obstacle.texture.key === 'magpie') {
+            console.log('🪖 Helmet protected from magpie attack!');
+            
+            // Play collision sound
+            this.audioManager?.playCollision();
+            
+            // Visual feedback for helmet protection - blue flash
+            this.kangaroo.setTint(0x00FFFF);
+            this.time.delayedCall(200, () => {
+                this.kangaroo.clearTint();
+            });
+            
+            // Destroy the magpie
+            obstacle.destroy();
+            
+            // Brief collision cooldown to prevent multiple hits
+            this.collisionCooldown = true;
+            this.time.delayedCall(300, () => {
+                this.collisionCooldown = false;
+            });
+            
+            return;
+        }
+
         // Shield protection (one-time use)
         if (this.activePowerups.shield.active) {
             this.collisionCooldown = true;
@@ -905,6 +1016,14 @@ export default class GameScene extends Phaser.Scene {
         // Game over screen
         this.time.delayedCall(1000, () => {
             const obstacleType = obstacle.texture ? obstacle.texture.key : 'rock';
+            
+            // Reset helmet when game ends (helmet lasts one game only)
+            if (this.helmetEquipped) {
+                this.storeManager.helmetCount = 0;
+                this.storeManager.saveData();
+                console.log(`🪖 Helmet used up - can now purchase again`);
+            }
+            
             this.scene.start('GameOverScene', {
                 score: this.score,
                 audioManager: this.audioManager,
@@ -1086,30 +1205,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     addGroundTexture() {
-        // Add subtle dirt/pebble texture to ground
+        // Add moving ground texture dots that scroll with the game
+        // Initial population across the screen
+        for (let i = 0; i < 20; i++) {
+            this.spawnGroundTextureDot();
+        }
+        
+        // Add subtle horizontal lines for texture (these don't need to move)
         const textureGraphics = this.add.graphics();
-        
-        // Add small scattered dirt spots
-        for (let i = 0; i < 15; i++) {
-            const x = Phaser.Math.Between(0, 800);
-            const y = Phaser.Math.Between(510, 590);
-            const size = Phaser.Math.FloatBetween(2, 6);
-            
-            textureGraphics.fillStyle(0xD2691E, 0.4); // Brown dirt spots
-            textureGraphics.fillCircle(x, y, size);
-        }
-        
-        // Add tiny rock/pebble details
-        for (let i = 0; i < 8; i++) {
-            const x = Phaser.Math.Between(0, 800);
-            const y = Phaser.Math.Between(505, 580);
-            const size = Phaser.Math.FloatBetween(1, 3);
-            
-            textureGraphics.fillStyle(0x8B4513, 0.6); // Darker brown rocks
-            textureGraphics.fillCircle(x, y, size);
-        }
-        
-        // Add subtle horizontal lines for texture
         textureGraphics.lineStyle(1, 0xD2691E, 0.3);
         for (let i = 0; i < 4; i++) {
             const y = 520 + (i * 20);
@@ -1117,8 +1220,27 @@ export default class GameScene extends Phaser.Scene {
             textureGraphics.lineTo(800, y);
             textureGraphics.stroke();
         }
+        textureGraphics.setDepth(2);
+    }
+    
+    spawnGroundTextureDot() {
+        const x = Phaser.Math.Between(0, 800);
+        const y = Phaser.Math.Between(510, 590);
+        const size = Phaser.Math.FloatBetween(2, 6);
+        const isDarkRock = Math.random() < 0.3; // 30% chance for dark rocks
         
-        textureGraphics.setDepth(2); // Just above ground but below other elements
+        // Create a small circle graphic as a sprite
+        const dot = this.add.graphics();
+        if (isDarkRock) {
+            dot.fillStyle(0x8B4513, 0.6); // Darker brown rocks
+        } else {
+            dot.fillStyle(0xD2691E, 0.4); // Brown dirt spots
+        }
+        dot.fillCircle(0, 0, size);
+        dot.setPosition(x, y);
+        dot.setDepth(2);
+        
+        this.groundTextures.add(dot);
     }
 
     // POWERUP SYSTEM METHODS

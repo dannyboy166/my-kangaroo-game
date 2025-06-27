@@ -15,6 +15,12 @@ export default class MenuScene extends Phaser.Scene {
             frameHeight: 128
         });
         
+        // Load kangaroo helmet sprite sheet (same dimensions as normal kangaroo)
+        this.load.spritesheet('kangaroo_helmet', 'assets/images/kangaroos_helmet_sheet.png', {
+            frameWidth: 128,
+            frameHeight: 128
+        });
+        
         // Load obstacle sprites
         this.load.image('rock', 'assets/images/rock.png');
         this.load.image('spider_rock', 'assets/images/spider_rock.png');
@@ -45,6 +51,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('shield', 'assets/images/shield.png');
         this.load.image('magnet', 'assets/images/magnet.png');
         this.load.image('double', 'assets/images/double.png');
+        this.load.image('helmet', 'assets/images/helmet.png');
 
         // Load audio files
         this.load.audio('button_click', 'assets/audio/sfx/button_click.mp3');
@@ -141,6 +148,40 @@ export default class MenuScene extends Phaser.Scene {
             }).setOrigin(0.5);
         }
 
+        // Add shop button
+        const shopButton = this.add.text(400, 320, 'SHOP', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#00FF00',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+
+        shopButton.setInteractive();
+        shopButton.on('pointerdown', () => {
+            this.audioManager.playButtonClick();
+            this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'MenuScene' });
+        });
+
+        // Add hover effect to shop button
+        shopButton.on('pointerover', () => {
+            shopButton.setScale(1.1);
+        });
+        shopButton.on('pointerout', () => {
+            shopButton.setScale(1);
+        });
+
+        // Add pulsing effect to shop button
+        this.tweens.add({
+            targets: shopButton,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 1500,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
         // Add instructions
         this.add.text(400, 520, 'Jump over obstacles and collect coins!', {
             fontSize: '18px',
@@ -150,9 +191,15 @@ export default class MenuScene extends Phaser.Scene {
             strokeThickness: 1
         }).setOrigin(0.5);
 
-        // Input handling
+        // Input handling - only for non-interactive areas
         this.input.keyboard.on('keydown-SPACE', this.startGame, this);
-        this.input.on('pointerdown', this.startGame, this);
+        
+        // Make clicking on non-interactive areas start the game
+        this.input.on('pointerdown', (gameObjects) => {
+            if (gameObjects.length === 0) {
+                this.startGame();
+            }
+        });
 
         console.log('Menu scene loaded');
     }

@@ -242,8 +242,33 @@ export default class GameOverScene extends Phaser.Scene {
             playAgainBtn.clearTint();
         });
 
+        // Shop button
+        const shopBtn = this.add.text(250, 450, 'SHOP', {
+            fontSize: '28px',
+            fontFamily: 'Arial',
+            color: '#00FFFF',
+            stroke: '#000000',
+            strokeThickness: 2,
+            backgroundColor: '#004444',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5);
+
+        shopBtn.setInteractive({ useHandCursor: true });
+        shopBtn.on('pointerdown', () => {
+            this.audioManager?.playButtonClick();
+            this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'GameOverScene' });
+        });
+
+        shopBtn.on('pointerover', () => {
+            shopBtn.setTint(0xccffff);
+        });
+
+        shopBtn.on('pointerout', () => {
+            shopBtn.clearTint();
+        });
+
         // Menu button
-        const menuBtn = this.add.text(400, 450, 'MAIN MENU', {
+        const menuBtn = this.add.text(550, 450, 'MAIN MENU', {
             fontSize: '28px',
             fontFamily: 'Arial',
             color: '#FFD700',
