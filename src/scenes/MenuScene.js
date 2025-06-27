@@ -1,9 +1,11 @@
 import GameDataManager from '../managers/GameDataManager.js';
+import AudioManager from '../managers/AudioManager.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
         this.gameDataManager = GameDataManager.getInstance();
+        this.audioManager = new AudioManager();
     }
 
     preload() {
@@ -37,9 +39,34 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('shield', 'assets/images/shield.png');
         this.load.image('magnet', 'assets/images/magnet.png');
         this.load.image('double', 'assets/images/double.png');
+
+        // Load audio files
+        this.load.audio('button_click', 'assets/audio/sfx/button_click.mp3');
+        this.load.audio('jump', 'assets/audio/sfx/jump.mp3');
+        this.load.audio('land', 'assets/audio/sfx/land.mp3');
+        this.load.audio('coin_collect', 'assets/audio/sfx/coin_collect.mp3');
+        this.load.audio('collision', 'assets/audio/sfx/collision.mp3');
+        this.load.audio('game_over', 'assets/audio/sfx/game_over.mp3');
+        this.load.audio('double_jump', 'assets/audio/sfx/double_jump.mp3');
+        this.load.audio('shield_activate', 'assets/audio/sfx/shield_activate.mp3');
+        this.load.audio('magnet_activate', 'assets/audio/sfx/magnet_activate.mp3');
     }
 
     create() {
+        // Initialize audio manager
+        this.audioManager.init(this);
+        this.audioManager.setSounds({
+            button_click: this.sound.add('button_click'),
+            jump: this.sound.add('jump'),
+            land: this.sound.add('land'),
+            coin_collect: this.sound.add('coin_collect'),
+            collision: this.sound.add('collision'),
+            game_over: this.sound.add('game_over'),
+            double_jump: this.sound.add('double_jump'),
+            shield_activate: this.sound.add('shield_activate'),
+            magnet_activate: this.sound.add('magnet_activate')
+        });
+
         // Add background color gradient effect
         const graphics = this.add.graphics();
         graphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
@@ -227,6 +254,7 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     startGame() {
-        this.scene.start('GameScene');
+        this.audioManager.playButtonClick();
+        this.scene.start('GameScene', { audioManager: this.audioManager });
     }
 }

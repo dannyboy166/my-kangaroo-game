@@ -8,6 +8,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     init(data) {
         this.finalScore = data.score || 0;
+        this.audioManager = data.audioManager;
         
         // Load/save high score from localStorage
         this.highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
@@ -112,7 +113,8 @@ export default class GameOverScene extends Phaser.Scene {
 
         playAgainBtn.setInteractive({ useHandCursor: true });
         playAgainBtn.on('pointerdown', () => {
-            this.scene.start('GameScene');
+            this.audioManager?.playButtonClick();
+            this.scene.start('GameScene', { audioManager: this.audioManager });
         });
 
         playAgainBtn.on('pointerover', () => {
@@ -136,6 +138,7 @@ export default class GameOverScene extends Phaser.Scene {
 
         menuBtn.setInteractive({ useHandCursor: true });
         menuBtn.on('pointerdown', () => {
+            this.audioManager?.playButtonClick();
             this.scene.start('MenuScene');
         });
 
@@ -158,10 +161,12 @@ export default class GameOverScene extends Phaser.Scene {
 
         // Keyboard input
         this.input.keyboard.on('keydown-SPACE', () => {
-            this.scene.start('GameScene');
+            this.audioManager?.playButtonClick();
+            this.scene.start('GameScene', { audioManager: this.audioManager });
         });
 
         this.input.keyboard.on('keydown-ESC', () => {
+            this.audioManager?.playButtonClick();
             this.scene.start('MenuScene');
         });
 

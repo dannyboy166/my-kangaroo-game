@@ -15,6 +15,7 @@ export default class GameScene extends Phaser.Scene {
         this.powerupTimer = null;
         this.lastSpeedIncrease = false;
         this.gameDataManager = GameDataManager.getInstance();
+        this.audioManager = null;
 
         // POWERUP SYSTEM
         this.activePowerups = {
@@ -39,9 +40,14 @@ export default class GameScene extends Phaser.Scene {
         // COLLISION PROTECTION
         this.collisionCooldown = false;
         this.coinCollectionCooldown = new Set(); // Track coins that are being collected
+        
+        // AUDIO TRACKING
+        this.wasOnGround = true; // Track if kangaroo was on ground for landing sound
     }
 
-    create() {
+    create(data) {
+        // Get audio manager from menu scene
+        this.audioManager = data.audioManager;
 
         // Reset all game state
         this.isGameOver = false;
@@ -52,6 +58,7 @@ export default class GameScene extends Phaser.Scene {
         this.powerupTimer = null;
         this.collisionCooldown = false;
         this.coinCollectionCooldown.clear();
+        this.wasOnGround = true;
 
         // Reset powerup state
         this.activePowerups = {
@@ -105,7 +112,7 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo.setCollideWorldBounds(true);
         this.kangaroo.body.setSize(70, 48);
         this.kangaroo.body.setOffset(40, 70);
-        this.kangaroo.body.setGravityY(800);
+        this.kangaroo.body.setGravityY(900);
         this.kangaroo.setOrigin(0.5, 1);
         this.kangaroo.play('kangaroo_run');
 
@@ -186,6 +193,8 @@ export default class GameScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.kangaroo, this.coins, (kangaroo, coin) => {
             if (!this.coinCollectionCooldown.has(coin) && !this.isGameOver) {
+                // Immediately disable coin physics to prevent separation
+                coin.body.setEnable(false);
                 this.collectCoin(kangaroo, coin);
             }
         }, null, this);
@@ -284,9 +293,10 @@ export default class GameScene extends Phaser.Scene {
             this.jump();
         }
 
-        // Handle kangaroo animations
+        // Handle kangaroo animations and landing sound
         const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
         const currentAnim = this.kangaroo.anims.currentAnim?.key;
+
 
         if (isOnGround) {
             if (currentAnim !== 'kangaroo_run') {
@@ -434,12 +444,14 @@ export default class GameScene extends Phaser.Scene {
         
         if (isOnGround) {
             this.kangaroo.setVelocityY(-950);
+            this.audioManager?.playJump();
             if (this.activePowerups.double.active) {
                 this.activePowerups.double.jumpsLeft = 1;
             }
         } else if (this.activePowerups.double.active && this.activePowerups.double.jumpsLeft > 0) {
             // Double jump (less powerful)
             this.kangaroo.setVelocityY(-750);
+            this.audioManager?.playDoubleJump();
             this.activePowerups.double.jumpsLeft--;
         }
     }
@@ -703,6 +715,9 @@ export default class GameScene extends Phaser.Scene {
 
         this.coinCollectionCooldown.add(coin);
 
+        // Play coin collection sound
+        this.audioManager?.playCoinCollect();
+        
         // Add coins to persistent storage instead of score
         this.gameDataManager.addCoins(1);
         
@@ -767,6 +782,11 @@ export default class GameScene extends Phaser.Scene {
         this.collisionCooldown = true;
         this.isGameOver = true;
 
+        // Play game over sound after delay
+        this.time.delayedCall(50, () => {
+            this.audioManager?.playGameOver();
+        });
+
         // Stop jump inputs
         this.input.off('pointerdown', this.jump, this);
         this.spaceKey.enabled = false;
@@ -797,7 +817,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Game over screen
         this.time.delayedCall(1000, () => {
-            this.scene.start('GameOverScene', { score: this.score });
+            this.scene.start('GameOverScene', { score: this.score, audioManager: this.audioManager });
         });
     }
 
@@ -973,6 +993,15 @@ export default class GameScene extends Phaser.Scene {
 
     collectPowerup(player, powerup) {
         const type = powerup.powerupType;
+        
+        // Play powerup-specific sound
+        if (type === 'shield') {
+            this.audioManager?.playShieldActivate();
+        } else if (type === 'magnet') {
+            this.audioManager?.playMagnetActivate();
+        } else if (type === 'double') {
+            this.audioManager?.playDoubleJump();
+        }
         
         // Activate powerup with different durations
         this.activePowerups[type].active = true;
