@@ -185,7 +185,7 @@ export default class GameScene extends Phaser.Scene {
         });
         this.coinText.setOrigin(0, 0.5);
 
-        // Add powerup UI
+        // Add powerup UI (active powerups)
         this.powerupUI = {
             shield: this.add.text(20, 120, '', {
                 fontSize: '18px',
@@ -217,10 +217,55 @@ export default class GameScene extends Phaser.Scene {
             })
         };
 
+        // Add purchased powerup inventory UI (right side)
+        this.inventoryUI = {
+            title: this.add.text(600, 30, 'Inventory:', {
+                fontSize: '16px',
+                fontFamily: 'Arial',
+                color: '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 1
+            }),
+            shield: this.add.text(600, 60, '', {
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#00FF00',
+                stroke: '#000000',
+                strokeThickness: 1
+            }),
+            magnet: this.add.text(600, 80, '', {
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#FF00FF',
+                stroke: '#000000',
+                strokeThickness: 1
+            }),
+            double: this.add.text(600, 100, '', {
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#00FFFF',
+                stroke: '#000000',
+                strokeThickness: 1
+            }),
+            controls: this.add.text(600, 130, 'Press 1,2,3 to use', {
+                fontSize: '12px',
+                fontFamily: 'Arial',
+                color: '#CCCCCC',
+                stroke: '#000000',
+                strokeThickness: 1
+            })
+        };
+
+        // Update inventory display
+        this.updateInventoryUI();
+
 
         // Input handling
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.key1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+        this.key2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+        this.key3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
         this.input.on('pointerdown', this.jump, this);
 
 
@@ -357,6 +402,17 @@ export default class GameScene extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
             Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.jump();
+        }
+
+        // Power-up activation inputs
+        if (Phaser.Input.Keyboard.JustDown(this.key1)) {
+            this.activatePurchasedPowerup('shield');
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.key2)) {
+            this.activatePurchasedPowerup('magnet');
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.key3)) {
+            this.activatePurchasedPowerup('double');
         }
 
         // Handle kangaroo animations and landing sound
@@ -1310,13 +1366,9 @@ export default class GameScene extends Phaser.Scene {
             this.audioManager?.playDoubleJump();
         }
 
-        // Activate powerup with different durations
+        // Activate powerup with durations
         this.activePowerups[type].active = true;
-        if (type === 'shield') {
-            this.activePowerups[type].timeLeft = 15000; // 15 seconds for shield
-        } else {
-            this.activePowerups[type].timeLeft = 10000; // 10 seconds for magnet and double jump
-        }
+        this.activePowerups[type].timeLeft = 10000; // 10 seconds for all powerups
 
         if (type === 'double') {
             // Check if kangaroo is in the air when collecting double jump
@@ -1475,6 +1527,62 @@ export default class GameScene extends Phaser.Scene {
             });
             this.powerupOrbs[type] = [];
         }
+    }
+
+    activatePurchasedPowerup(type) {
+        // Check if powerup is already active
+        if (this.activePowerups[type].active) {
+            console.log(`${type} powerup already active!`);
+            return;
+        }
+
+        // Check if player has purchased this powerup
+        const count = this.storeManager.getPowerUpCount(type === 'double' ? 'doubleJump' : type);
+        if (count <= 0) {
+            console.log(`No ${type} powerups available!`);
+            return;
+        }
+
+        // Use the powerup (deduct from store)
+        const storeType = type === 'double' ? 'doubleJump' : type;
+        if (this.storeManager.usePowerUp(storeType)) {
+            console.log(`Activated ${type} powerup! Remaining: ${this.storeManager.getPowerUpCount(storeType)}`);
+            
+            // Play powerup-specific sound
+            if (type === 'shield') {
+                this.audioManager?.playShieldActivate();
+            } else if (type === 'magnet') {
+                this.audioManager?.playMagnetActivate();
+            } else if (type === 'double') {
+                this.audioManager?.playDoubleJump();
+            }
+
+            // Activate powerup with durations
+            this.activePowerups[type].active = true;
+            this.activePowerups[type].timeLeft = 10000; // 10 seconds for all powerups
+
+            if (type === 'double') {
+                // Check if kangaroo is in the air when activating double jump
+                const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
+                this.activePowerups[type].jumpsLeft = isOnGround ? 0 : 1; // Give immediate jump if mid-air
+            }
+
+            // Create powerup orb
+            this.createPowerupOrb(type);
+
+            // Update inventory display
+            this.updateInventoryUI();
+        }
+    }
+
+    updateInventoryUI() {
+        const shieldCount = this.storeManager.getPowerUpCount('shield');
+        const magnetCount = this.storeManager.getPowerUpCount('magnet');
+        const doubleCount = this.storeManager.getPowerUpCount('doubleJump');
+
+        this.inventoryUI.shield.setText(shieldCount > 0 ? `1. Shield: ${shieldCount}` : '');
+        this.inventoryUI.magnet.setText(magnetCount > 0 ? `2. Magnet: ${magnetCount}` : '');
+        this.inventoryUI.double.setText(doubleCount > 0 ? `3. Double: ${doubleCount}` : '');
     }
 
 }

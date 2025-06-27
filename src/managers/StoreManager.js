@@ -7,10 +7,10 @@ export default class StoreManager {
         this.helmetCount = parseInt(localStorage.getItem('kangaroo_hop_helmet')) || 0;
         
         this.prices = {
-            doubleJump: 75,
-            shield: 100,
-            magnet: 50,
-            helmet: 20
+            doubleJump: 20,
+            shield: 40,
+            magnet: 30,
+            helmet: 100
         };
         
         this.maxItemCount = 3;
