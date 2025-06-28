@@ -177,7 +177,7 @@ export default class MenuScene extends Phaser.Scene {
         // Add hover effect to shop button
         shopButton.on('pointerover', () => {
             pulseTween.pause();
-            shopButton.setScale(1.1);
+            shopButton.setScale(1.2);
         });
         shopButton.on('pointerout', () => {
             shopButton.setScale(1);

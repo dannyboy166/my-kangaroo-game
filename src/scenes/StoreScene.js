@@ -34,7 +34,7 @@ export default class StoreScene extends Phaser.Scene {
         const coinIcon = this.add.image(30, 30, 'coin');
         coinIcon.setScale(0.17);
         coinIcon.setOrigin(0, 0.5);
-        
+
         this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
             fontFamily: 'Arial',
@@ -70,11 +70,10 @@ export default class StoreScene extends Phaser.Scene {
             backButton.setScale(1);
         });
     }
-
     createShopItems() {
-        const items = ['doubleJump', 'shield', 'magnet', 'helmet'];
+        const items = ['shield', 'magnet', 'doubleJump', 'helmet'];
         const startY = 140;
-        const spacing = 90;
+        const spacing = 110; // Increased from 90 to 110 for more space
 
         items.forEach((item, index) => {
             const y = startY + (index * spacing);
@@ -84,13 +83,13 @@ export default class StoreScene extends Phaser.Scene {
 
     createShopItem(type, x, y) {
         const container = this.add.container(x, y);
-        
-        // Background panel for the item
+
+        // Background panel for the item - INCREASED HEIGHT
         const panel = this.add.graphics();
         panel.fillStyle(0x000000, 0.3);
-        panel.fillRoundedRect(-350, -35, 700, 70, 10);
+        panel.fillRoundedRect(-350, -45, 700, 90, 10); // Increased height from 70 to 90, adjusted y from -35 to -45
         panel.lineStyle(2, 0xFFFFFF, 0.5);
-        panel.strokeRoundedRect(-350, -35, 700, 70, 10);
+        panel.strokeRoundedRect(-350, -45, 700, 90, 10);
         container.add(panel);
 
         // Item icon (use appropriate sprite/image) - handle name mapping
@@ -98,11 +97,11 @@ export default class StoreScene extends Phaser.Scene {
         if (type === 'doubleJump') {
             iconKey = 'double'; // The image is loaded as 'double' not 'doubleJump'
         }
-        
+
         const icon = this.add.image(-300, 0, iconKey);
-        
+
         // Set appropriate scale for each item type
-        switch(type) {
+        switch (type) {
             case 'helmet':
                 icon.setScale(0.8);
                 break;
@@ -118,7 +117,7 @@ export default class StoreScene extends Phaser.Scene {
             default:
                 icon.setScale(0.3);
         }
-        
+
         container.add(icon);
 
         // Item name and description
@@ -127,7 +126,7 @@ export default class StoreScene extends Phaser.Scene {
         const price = this.storeManager.getPowerUpPrice(type);
         const count = this.storeManager.getPowerUpCount(type);
 
-        const nameText = this.add.text(-220, -15, name, {
+        const nameText = this.add.text(-220, -25, name, { // Title at top
             fontSize: '20px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
@@ -137,7 +136,7 @@ export default class StoreScene extends Phaser.Scene {
         nameText.setOrigin(0, 0.5);
         container.add(nameText);
 
-        const descText = this.add.text(-220, 10, description, {
+        const descText = this.add.text(-220, 5, description, { // Description in middle
             fontSize: '14px',
             fontFamily: 'Arial',
             color: '#CCCCCC',
@@ -147,8 +146,47 @@ export default class StoreScene extends Phaser.Scene {
         descText.setOrigin(0, 0.5);
         container.add(descText);
 
-        // Price and count display
-        const priceText = this.add.text(150, -10, `${price} coins`, {
+        // Add activation key instruction (only for non-helmet items)
+        if (type !== 'helmet') {
+            let keyNumber;
+            switch (type) {
+                case 'shield':
+                    keyNumber = '1';
+                    break;
+                case 'magnet':
+                    keyNumber = '2';
+                    break;
+                case 'doubleJump':
+                    keyNumber = '3';
+                    break;
+            }
+
+            const keyInstructionText = this.add.text(-220, 30, `Press ${keyNumber} to activate`, { // Key instruction at bottom
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 1,
+                fontStyle: 'italic'
+            });
+            keyInstructionText.setOrigin(0, 0.5);
+            container.add(keyInstructionText);
+        } else {
+            // For helmet, add a third line explaining it's auto-equipped
+            const autoEquipText = this.add.text(-220, 30, 'Auto-equipped when owned', {
+                fontSize: '14px',
+                fontFamily: 'Arial',
+                color: '#FFD700', // Light blue color
+                stroke: '#000000',
+                strokeThickness: 1,
+                fontStyle: 'italic'
+            });
+            autoEquipText.setOrigin(0, 0.5);
+            container.add(autoEquipText);
+        }
+
+        // Price and count display - BETTER SPACING
+        const priceText = this.add.text(150, -20, `${price} coins`, { // Price at top right
             fontSize: '16px',
             fontFamily: 'Arial',
             color: '#FFD700',
@@ -158,7 +196,7 @@ export default class StoreScene extends Phaser.Scene {
         priceText.setOrigin(0, 0.5);
         container.add(priceText);
 
-        const countText = this.add.text(150, 10, `Owned: ${count}${type === 'helmet' ? '/1' : '/3'}`, {
+        const countText = this.add.text(150, 0, `Owned: ${count}${type === 'helmet' ? '/1' : '/3'}`, { // Count in middle right
             fontSize: '14px',
             fontFamily: 'Arial',
             color: '#CCCCCC',
@@ -172,7 +210,7 @@ export default class StoreScene extends Phaser.Scene {
         const maxCount = type === 'helmet' ? 1 : 3;
         const playerCoins = this.gameDataManager.getCoins();
         const canBuy = playerCoins >= price && count < maxCount;
-        
+
         // Debug logging for helmet
         if (type === 'helmet') {
             const helmetCount = this.storeManager.getPowerUpCount('helmet');
@@ -180,10 +218,10 @@ export default class StoreScene extends Phaser.Scene {
             const helmetPrice = this.storeManager.getPowerUpPrice('helmet');
             console.log(`🪖 Shop debug - Helmet count: ${helmetCount}, Coins: ${coins}, Price: ${helmetPrice}, Can buy: ${canBuy}, maxCount: ${maxCount}`);
         }
-        
+
         const buttonColor = canBuy ? '#00FF00' : '#666666';
         const buttonTextColor = canBuy ? '#000000' : '#999999';
-        
+
         const buyButton = this.add.graphics();
         buyButton.fillStyle(buttonColor === '#00FF00' ? 0x00FF00 : 0x666666);
         buyButton.fillRoundedRect(-40, -15, 80, 30, 5);
@@ -210,9 +248,9 @@ export default class StoreScene extends Phaser.Scene {
                 const itemCount = this.storeManager.getPowerUpCount(type);
                 const itemMaxCount = type === 'helmet' ? 1 : 3;
                 const playerCoins = this.gameDataManager.getCoins();
-                
+
                 console.log(`💰 Purchase attempt - Type: ${type}, PlayerCoins: ${playerCoins}, ItemPrice: ${itemPrice}, ItemCount: ${itemCount}, ItemMaxCount: ${itemMaxCount}`);
-                
+
                 if (playerCoins >= itemPrice && itemCount < itemMaxCount) {
                     // Show confirmation popup
                     const confirmPopup = new PurchaseConfirmPopup(
@@ -223,7 +261,7 @@ export default class StoreScene extends Phaser.Scene {
                             // On confirm - do the purchase
                             console.log(`✅ Purchase confirmed for ${type}`);
                             this.gameDataManager.spendCoins(itemPrice);
-                            
+
                             // Add powerup via StoreManager
                             switch (type) {
                                 case 'doubleJump':
@@ -244,7 +282,7 @@ export default class StoreScene extends Phaser.Scene {
                                     break;
                             }
                             this.storeManager.saveData();
-                            
+
                             this.audioManager.playButtonClick();
                             // Refresh the display
                             container.destroy();
@@ -267,7 +305,7 @@ export default class StoreScene extends Phaser.Scene {
                 buyButton.setScale(1.1);
                 buyText.setScale(1.1);
             });
-            
+
             buyButton.on('pointerout', () => {
                 buyButton.setScale(1);
                 buyText.setScale(1);
