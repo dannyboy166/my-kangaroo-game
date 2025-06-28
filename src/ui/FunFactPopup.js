@@ -40,7 +40,6 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
                 "Some magpies sing over 900 different sounds."
             ],
             log: [
-                "Logs make great snake hotels. You stepped in.",
                 "Wet logs = Aussie slip'n'slide of doom.",
                 "Whoops — that wasn't a platform.",
                 "Log 1, you 0.",
