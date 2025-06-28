@@ -51,7 +51,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
                 "Australia's rocks are older than dinosaurs — and meaner.",
                 "You tripped over a rock. Classic.",
                 "That fall looked expensive.",
-                "Rock solid mistake.",
+                "That was a rock solid mistake.",
                 "Oof. That hurt to watch.",
                 "Some Aussie rocks are over 3 billion years old."
             ],

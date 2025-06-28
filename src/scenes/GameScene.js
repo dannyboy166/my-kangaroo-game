@@ -707,7 +707,7 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        const delay = Phaser.Math.Between(2500, 4500);
+        const delay = Phaser.Math.Between(1750, 3150);
         this.coinTimer = this.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.isActive()) {
                 this.spawnCoin();
@@ -1030,10 +1030,7 @@ export default class GameScene extends Phaser.Scene {
         coin.setVelocityY(0); // 🔒 Freeze vertical movement
         coin.body.pushable = false;
 
-
         this.coins.add(coin);
-
-
 
         // Bulletproof gravity shutdown
         this.time.delayedCall(0, () => {
@@ -1042,7 +1039,7 @@ export default class GameScene extends Phaser.Scene {
                 coin.body.setVelocityY(0);              // 🔒 Reset velocity
                 coin.body.setGravity(0, 0);             // 🔒 Set local gravity to zero
                 coin.body.setBounce(0);                 // 🔒 Just in case of collision
-            } 2
+            }
         });
     }
 
@@ -1167,6 +1164,7 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo.setTint(0xff6666);
         this.kangaroo.anims.stop();         // ❌ Stop animation
         this.kangaroo.setFrame(2);          // Optional: freeze on jump frame
+        this.kangaroo.setDepth(10);         // Bring kangaroo to foreground in front of ground lines
 
         // Stop timers & obstacles
         this.cleanupTimers();
