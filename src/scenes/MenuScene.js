@@ -149,12 +149,14 @@ export default class MenuScene extends Phaser.Scene {
         }
 
         // Add shop button
-        const shopButton = this.add.text(400, 320, 'SHOP', {
+        const shopButton = this.add.text(400, 330, 'SHOP', {
             fontSize: '24px',
             fontFamily: 'Arial',
-            color: '#00FF00',
+            color: '#00FFFF',
             stroke: '#000000',
-            strokeThickness: 2
+            strokeThickness: 2,
+            backgroundColor: '#008888',
+            padding: { x: 20, y: 10 }
         }).setOrigin(0.5);
 
         shopButton.setInteractive();

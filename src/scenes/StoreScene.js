@@ -59,7 +59,12 @@ export default class StoreScene extends Phaser.Scene {
         backButton.setInteractive();
         backButton.on('pointerdown', () => {
             this.audioManager.playButtonClick();
-            this.scene.start(this.fromScene, { audioManager: this.audioManager });
+            if (this.fromScene === 'GameOverScene') {
+                // Don't show fun fact when returning from shop
+                this.scene.start(this.fromScene, { audioManager: this.audioManager, showFunFact: false });
+            } else {
+                this.scene.start(this.fromScene, { audioManager: this.audioManager });
+            }
         });
 
         // Add hover effect to back button
@@ -224,13 +229,23 @@ export default class StoreScene extends Phaser.Scene {
 
         const buyButton = this.add.graphics();
         buyButton.fillStyle(buttonColor === '#00FF00' ? 0x00FF00 : 0x666666);
-        buyButton.fillRoundedRect(-40, -15, 80, 30, 5);
+        buyButton.fillRoundedRect(-50, -15, 100, 30, 5);
         buyButton.lineStyle(2, 0x000000);
-        buyButton.strokeRoundedRect(-40, -15, 80, 30, 5);
+        buyButton.strokeRoundedRect(-50, -15, 100, 30, 5);
         buyButton.x = 280;
         container.add(buyButton);
 
-        const buyText = this.add.text(280, 0, canBuy ? 'BUY' : 'SOLD OUT', {
+        // Determine button text based on specific conditions
+        let buttonText;
+        if (canBuy) {
+            buttonText = 'BUY';
+        } else if (count >= maxCount) {
+            buttonText = 'SOLD OUT';
+        } else {
+            buttonText = 'NEED COINS';
+        }
+
+        const buyText = this.add.text(280, 0, buttonText, {
             fontSize: '14px',
             fontFamily: 'Arial',
             color: buttonTextColor,

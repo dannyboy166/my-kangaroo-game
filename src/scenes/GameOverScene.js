@@ -11,6 +11,7 @@ export default class GameOverScene extends Phaser.Scene {
         this.finalScore = data.score || 0;
         this.audioManager = data.audioManager;
         this.obstacleType = data.obstacleType || 'rock';
+        this.showFunFact = data.showFunFact !== false; // Default true, but can be overridden
         
         // Load/save high score from localStorage
         this.highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
@@ -103,13 +104,15 @@ export default class GameOverScene extends Phaser.Scene {
             this.time.delayedCall(3000, () => particles.destroy());
         }
 
-        // Show fun fact popup after a short delay
-        this.time.delayedCall(300, () => {
-            const popup = new FunFactPopup(this, this.obstacleType, () => {
-                // Callback when popup is closed - can add any cleanup here if needed
+        // Show fun fact popup after a short delay (only if not returning from shop)
+        if (this.showFunFact) {
+            this.time.delayedCall(300, () => {
+                const popup = new FunFactPopup(this, this.obstacleType, () => {
+                    // Callback when popup is closed - can add any cleanup here if needed
+                });
+                this.add.existing(popup);
             });
-            this.add.existing(popup);
-        });
+        }
 
         // Play again button
         const playAgainBtn = this.add.text(400, 380, 'PLAY AGAIN', {

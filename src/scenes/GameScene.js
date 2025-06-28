@@ -1055,7 +1055,7 @@ export default class GameScene extends Phaser.Scene {
         this.audioManager?.playCoinCollect();
 
         // Add coins to persistent storage instead of score
-        this.gameDataManager.addCoins(1);
+        this.gameDataManager.addCoins(5);
 
         // Update coin UI
         this.coinText.setText(`${this.gameDataManager.getCoins()}`);

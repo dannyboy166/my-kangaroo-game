@@ -12,7 +12,7 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
             doubleJump: { name: 'Double Jump', emoji: '🦘', description: 'Jump twice in mid-air!' },
             shield: { name: 'Shield', emoji: '🛡️', description: 'Protect from one hit!' },
             magnet: { name: 'Coin Magnet', emoji: '🧲', description: 'Attract coins automatically!' },
-            helmet: { name: 'Safety Helmet', emoji: '🪖', description: 'Reduce koala collision damage!' }
+            helmet: { name: 'Zip Tie Helmet', emoji: '🪖', description: 'Dont stress about magpies! \n They can\'t swoop you anymore!' }
         };
 
         this.createPopup();
