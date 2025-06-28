@@ -1,6 +1,7 @@
 import StoreManager from '../managers/StoreManager.js';
 import GameDataManager from '../managers/GameDataManager.js';
 import AudioManager from '../managers/AudioManager.js';
+import PurchaseConfirmPopup from '../ui/PurchaseConfirmPopup.js';
 
 export default class StoreScene extends Phaser.Scene {
     constructor() {
@@ -205,7 +206,6 @@ export default class StoreScene extends Phaser.Scene {
         if (canBuy) {
             buyButton.setInteractive(new Phaser.Geom.Rectangle(-40, -15, 80, 30), Phaser.Geom.Rectangle.Contains);
             buyButton.on('pointerdown', () => {
-                // Custom purchase logic using GameDataManager for coins
                 const itemPrice = this.storeManager.getPowerUpPrice(type);
                 const itemCount = this.storeManager.getPowerUpCount(type);
                 const itemMaxCount = type === 'helmet' ? 1 : 3;
@@ -214,37 +214,50 @@ export default class StoreScene extends Phaser.Scene {
                 console.log(`💰 Purchase attempt - Type: ${type}, PlayerCoins: ${playerCoins}, ItemPrice: ${itemPrice}, ItemCount: ${itemCount}, ItemMaxCount: ${itemMaxCount}`);
                 
                 if (playerCoins >= itemPrice && itemCount < itemMaxCount) {
-                    console.log(`✅ Purchase approved for ${type}`);
-                    // Spend coins via GameDataManager
-                    this.gameDataManager.spendCoins(itemPrice);
-                    
-                    // Add powerup via StoreManager (but bypass its coin logic)
-                    switch (type) {
-                        case 'doubleJump':
-                            this.storeManager.doubleJumpCount++;
-                            console.log(`🦘 DoubleJump count now: ${this.storeManager.doubleJumpCount}`);
-                            break;
-                        case 'shield':
-                            this.storeManager.shieldCount++;
-                            console.log(`🛡️ Shield count now: ${this.storeManager.shieldCount}`);
-                            break;
-                        case 'magnet':
-                            this.storeManager.magnetCount++;
-                            console.log(`🧲 Magnet count now: ${this.storeManager.magnetCount}`);
-                            break;
-                        case 'helmet':
-                            this.storeManager.helmetCount++;
-                            console.log(`🪖 Helmet count now: ${this.storeManager.helmetCount}`);
-                            break;
-                    }
-                    this.storeManager.saveData();
-                    
-                    this.audioManager.playButtonClick();
-                    // Refresh the display
-                    container.destroy();
-                    this.createShopItem(type, x, y);
-                    // Update coin display
-                    this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+                    // Show confirmation popup
+                    const confirmPopup = new PurchaseConfirmPopup(
+                        this,
+                        type,
+                        itemPrice,
+                        () => {
+                            // On confirm - do the purchase
+                            console.log(`✅ Purchase confirmed for ${type}`);
+                            this.gameDataManager.spendCoins(itemPrice);
+                            
+                            // Add powerup via StoreManager
+                            switch (type) {
+                                case 'doubleJump':
+                                    this.storeManager.doubleJumpCount++;
+                                    console.log(`🦘 DoubleJump count now: ${this.storeManager.doubleJumpCount}`);
+                                    break;
+                                case 'shield':
+                                    this.storeManager.shieldCount++;
+                                    console.log(`🛡️ Shield count now: ${this.storeManager.shieldCount}`);
+                                    break;
+                                case 'magnet':
+                                    this.storeManager.magnetCount++;
+                                    console.log(`🧲 Magnet count now: ${this.storeManager.magnetCount}`);
+                                    break;
+                                case 'helmet':
+                                    this.storeManager.helmetCount++;
+                                    console.log(`🪖 Helmet count now: ${this.storeManager.helmetCount}`);
+                                    break;
+                            }
+                            this.storeManager.saveData();
+                            
+                            this.audioManager.playButtonClick();
+                            // Refresh the display
+                            container.destroy();
+                            this.createShopItem(type, x, y);
+                            // Update coin display
+                            this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+                        },
+                        () => {
+                            // On cancel - just close popup
+                            console.log(`❌ Purchase cancelled for ${type}`);
+                        }
+                    );
+                    this.add.existing(confirmPopup);
                 } else {
                     console.log(`❌ Purchase denied for ${type} - insufficient coins or max reached`);
                 }

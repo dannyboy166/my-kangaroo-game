@@ -128,7 +128,7 @@ export default class StoreManager {
     getPowerUpDescription(type) {
         const descriptions = {
             doubleJump: 'Jump twice in the air!\nLasts 10 seconds',
-            shield: 'Protects from one hit!\nLasts 8 seconds',
+            shield: 'Protects from one hit!\nLasts 10 seconds',
             magnet: 'Attracts nearby coins!\nLasts 10 seconds',
             helmet: 'Protects from magpie swoops!\nLasts one game'
         };

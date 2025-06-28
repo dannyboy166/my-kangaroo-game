@@ -163,16 +163,8 @@ export default class MenuScene extends Phaser.Scene {
             this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'MenuScene' });
         });
 
-        // Add hover effect to shop button
-        shopButton.on('pointerover', () => {
-            shopButton.setScale(1.1);
-        });
-        shopButton.on('pointerout', () => {
-            shopButton.setScale(1);
-        });
-
         // Add pulsing effect to shop button
-        this.tweens.add({
+        const pulseTween = this.tweens.add({
             targets: shopButton,
             scaleX: 1.05,
             scaleY: 1.05,
@@ -180,6 +172,16 @@ export default class MenuScene extends Phaser.Scene {
             ease: 'Sine.easeInOut',
             yoyo: true,
             repeat: -1
+        });
+
+        // Add hover effect to shop button
+        shopButton.on('pointerover', () => {
+            pulseTween.pause();
+            shopButton.setScale(1.1);
+        });
+        shopButton.on('pointerout', () => {
+            shopButton.setScale(1);
+            pulseTween.resume();
         });
 
         // Add instructions

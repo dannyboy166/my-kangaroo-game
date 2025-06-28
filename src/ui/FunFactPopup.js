@@ -109,32 +109,32 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
     }
 
     createPopup() {
-        // Semi-transparent backdrop
+        // Semi-transparent backdrop - FIXED: Ensure proper bounds
         this.backdrop = this.scene.add.graphics();
         this.backdrop.fillStyle(0x000000, 0.7);
-        this.backdrop.fillRect(0, 0, 800, 600);
-        this.backdrop.setInteractive();
+        this.backdrop.fillRect(-400, -300, 800, 600); // FIXED: Centered on container origin
+        this.backdrop.setInteractive(new Phaser.Geom.Rectangle(-400, -300, 800, 600), Phaser.Geom.Rectangle.Contains);
         this.add(this.backdrop);
 
-        // Clean modern popup background
+        // Clean modern popup background - Smaller size
         this.popupBg = this.scene.add.graphics();
         this.popupBg.fillStyle(0x2C3E50, 1); // Dark blue-gray
-        this.popupBg.fillRoundedRect(-220, -160, 440, 320, 15);
+        this.popupBg.fillRoundedRect(-180, -120, 360, 240, 15);
         
         // Subtle border
         this.popupBg.lineStyle(2, 0x3498DB, 1); // Light blue border
-        this.popupBg.strokeRoundedRect(-220, -160, 440, 320, 15);
+        this.popupBg.strokeRoundedRect(-180, -120, 360, 240, 15);
         this.add(this.popupBg);
 
-        // Add subtle inner glow
+        // Add subtle inner glow - Smaller size
         const innerGlow = this.scene.add.graphics();
         innerGlow.fillStyle(0x3498DB, 0.1);
-        innerGlow.fillRoundedRect(-215, -155, 430, 310, 12);
+        innerGlow.fillRoundedRect(-175, -115, 350, 230, 12);
         this.add(innerGlow);
 
         // Clean title
-        this.titleText = this.scene.add.text(0, -130, 'DID YOU KNOW?', {
-            fontSize: '32px',
+        this.titleText = this.scene.add.text(0, -90, 'DID YOU KNOW?', {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#E74C3C',
             fontStyle: 'bold'
@@ -147,26 +147,26 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         const emoji = this.obstacleEmojis[this.obstacleType] || '🪨';
 
         // Clean fact text
-        this.factText = this.scene.add.text(0, -20, `${emoji} ${randomFact}`, {
-            fontSize: '20px',
+        this.factText = this.scene.add.text(0, -10, `${emoji} ${randomFact}`, {
+            fontSize: '18px',
             fontFamily: 'Arial',
             color: '#ECF0F1',
             align: 'center',
-            wordWrap: { width: 380 },
+            wordWrap: { width: 320 },
             lineSpacing: 6
         }).setOrigin(0.5);
         this.add(this.factText);
 
-        // Clean modern button
+        // Clean modern button - Adjusted position
         this.awesomeBtn = this.scene.add.graphics();
         this.awesomeBtn.fillStyle(0x27AE60, 1); // Green
-        this.awesomeBtn.fillRoundedRect(-90, 90, 180, 50, 8);
+        this.awesomeBtn.fillRoundedRect(-70, 60, 140, 40, 8);
         this.awesomeBtn.lineStyle(2, 0x2ECC71, 1);
-        this.awesomeBtn.strokeRoundedRect(-90, 90, 180, 50, 8);
+        this.awesomeBtn.strokeRoundedRect(-70, 60, 140, 40, 8);
         this.add(this.awesomeBtn);
 
-        this.awesomeBtnText = this.scene.add.text(0, 115, 'AWESOME!', {
-            fontSize: '22px',
+        this.awesomeBtnText = this.scene.add.text(0, 80, 'AWESOME!', {
+            fontSize: '18px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
             fontStyle: 'bold'
@@ -174,7 +174,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         this.add(this.awesomeBtnText);
 
         // Make button interactive
-        const buttonBounds = new Phaser.Geom.Rectangle(-90, 90, 180, 50);
+        const buttonBounds = new Phaser.Geom.Rectangle(-70, 60, 140, 40);
         this.awesomeBtn.setInteractive(buttonBounds, Phaser.Geom.Rectangle.Contains);
         
         this.awesomeBtn.on('pointerdown', () => {
@@ -184,24 +184,26 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         this.awesomeBtn.on('pointerover', () => {
             this.awesomeBtn.clear();
             this.awesomeBtn.fillStyle(0x2ECC71, 1); // Lighter green on hover
-            this.awesomeBtn.fillRoundedRect(-90, 90, 180, 50, 8);
+            this.awesomeBtn.fillRoundedRect(-70, 60, 140, 40, 8);
             this.awesomeBtn.lineStyle(2, 0x27AE60, 1);
-            this.awesomeBtn.strokeRoundedRect(-90, 90, 180, 50, 8);
+            this.awesomeBtn.strokeRoundedRect(-70, 60, 140, 40, 8);
         });
 
         this.awesomeBtn.on('pointerout', () => {
             this.awesomeBtn.clear();
             this.awesomeBtn.fillStyle(0x27AE60, 1); // Original green
-            this.awesomeBtn.fillRoundedRect(-90, 90, 180, 50, 8);
+            this.awesomeBtn.fillRoundedRect(-70, 60, 140, 40, 8);
             this.awesomeBtn.lineStyle(2, 0x2ECC71, 1);
-            this.awesomeBtn.strokeRoundedRect(-90, 90, 180, 50, 8);
+            this.awesomeBtn.strokeRoundedRect(-70, 60, 140, 40, 8);
         });
 
-        // Position the container in the center of the screen
+        // FIXED: Position the container in the center of the screen with proper depth
         this.setPosition(400, 300);
-        this.setDepth(1000); // Ensure it's on top
+        this.setDepth(1000); // Ensure it's on top of everything
+        
+        // FIXED: Set bounds on the container itself to prevent overflow
+        this.setSize(800, 600);
     }
-
 
     animateIn() {
         // Start small and invisible
@@ -220,6 +222,9 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
     }
 
     close() {
+        // FIXED: Ensure all graphics are properly cleaned up
+        this.scene.tweens.killTweensOf(this);
+        
         // Exit animation
         this.scene.tweens.add({
             targets: this,
@@ -229,11 +234,25 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
             duration: 300,
             ease: 'Back.easeIn',
             onComplete: () => {
+                // FIXED: Properly destroy all child elements
+                this.removeAll(true); // Remove and destroy all children
                 this.destroy();
                 if (this.onClose) {
                     this.onClose();
                 }
             }
         });
+    }
+
+    // FIXED: Add proper cleanup method
+    destroy() {
+        // Kill any running tweens
+        this.scene.tweens.killTweensOf(this);
+        
+        // Remove all children and destroy them
+        this.removeAll(true);
+        
+        // Call parent destroy
+        super.destroy();
     }
 }

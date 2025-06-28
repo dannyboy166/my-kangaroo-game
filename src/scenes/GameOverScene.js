@@ -130,10 +130,12 @@ export default class GameOverScene extends Phaser.Scene {
 
         playAgainBtn.on('pointerover', () => {
             playAgainBtn.setTint(0xccffcc);
+            playAgainBtn.setScale(1.1);
         });
 
         playAgainBtn.on('pointerout', () => {
             playAgainBtn.clearTint();
+            playAgainBtn.setScale(1);
         });
 
         // Shop button
@@ -155,10 +157,12 @@ export default class GameOverScene extends Phaser.Scene {
 
         shopBtn.on('pointerover', () => {
             shopBtn.setTint(0xccffff);
+            shopBtn.setScale(1.1);
         });
 
         shopBtn.on('pointerout', () => {
             shopBtn.clearTint();
+            shopBtn.setScale(1);
         });
 
         // Menu button
@@ -180,10 +184,12 @@ export default class GameOverScene extends Phaser.Scene {
 
         menuBtn.on('pointerover', () => {
             menuBtn.setTint(0xffffcc);
+            menuBtn.setScale(1.1);
         });
 
         menuBtn.on('pointerout', () => {
             menuBtn.clearTint();
+            menuBtn.setScale(1);
         });
 
         // Add instruction text
