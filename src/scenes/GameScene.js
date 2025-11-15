@@ -202,11 +202,11 @@ export default class GameScene extends Phaser.Scene {
             });
         }
 
-        // Pixel Adventure obstacle animations
+        // Pixel Adventure obstacle animations (corrected frame counts)
         if (!this.anims.exists('bee_fly')) {
             this.anims.create({
                 key: 'bee_fly',
-                frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 5 }),
+                frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 5 }), // 6 frames
                 frameRate: 10,
                 repeat: -1
             });
@@ -214,7 +214,7 @@ export default class GameScene extends Phaser.Scene {
         if (!this.anims.exists('plant_idle')) {
             this.anims.create({
                 key: 'plant_idle',
-                frames: this.anims.generateFrameNumbers('plant', { start: 0, end: 10 }),
+                frames: this.anims.generateFrameNumbers('plant', { start: 0, end: 10 }), // 11 frames
                 frameRate: 8,
                 repeat: -1
             });
@@ -222,7 +222,7 @@ export default class GameScene extends Phaser.Scene {
         if (!this.anims.exists('snail_walk')) {
             this.anims.create({
                 key: 'snail_walk',
-                frames: this.anims.generateFrameNumbers('snail', { start: 0, end: 12 }),
+                frames: this.anims.generateFrameNumbers('snail', { start: 0, end: 13 }), // 14 frames
                 frameRate: 6,
                 repeat: -1
             });
@@ -230,7 +230,7 @@ export default class GameScene extends Phaser.Scene {
         if (!this.anims.exists('mushroom_idle')) {
             this.anims.create({
                 key: 'mushroom_idle',
-                frames: this.anims.generateFrameNumbers('mushroom', { start: 0, end: 15 }),
+                frames: this.anims.generateFrameNumbers('mushroom', { start: 0, end: 13 }), // 14 frames (FIXED)
                 frameRate: 8,
                 repeat: -1
             });
@@ -238,7 +238,7 @@ export default class GameScene extends Phaser.Scene {
         if (!this.anims.exists('trunk_walk')) {
             this.anims.create({
                 key: 'trunk_walk',
-                frames: this.anims.generateFrameNumbers('trunk', { start: 0, end: 17 }),
+                frames: this.anims.generateFrameNumbers('trunk', { start: 0, end: 13 }), // 14 frames (FIXED)
                 frameRate: 10,
                 repeat: -1
             });
