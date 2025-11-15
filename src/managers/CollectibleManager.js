@@ -36,12 +36,13 @@ export default class CollectibleManager {
         if (this.isGameOver) return;
 
         const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) return;
 
         this.coins.children.entries.slice().forEach((coin) => {
             if (!coin || !coin.active) return;
 
             // Magnet effect
-            if (magnetActive && kangaroo) {
+            if (magnetActive) {
                 const distanceToKangaroo = Phaser.Math.Distance.Between(
                     coin.x, coin.y, kangaroo.x, kangaroo.y
                 );
@@ -56,11 +57,10 @@ export default class CollectibleManager {
                 }
             }
 
-            // Normal movement
-            coin.x -= this.gameSpeed * delta / 1000;
+            // No normal movement - coins are stationary in world (camera creates movement illusion)
 
-            // Clean up off-screen coins
-            if (coin.x < -100) {
+            // Clean up coins that are far behind kangaroo
+            if (coin.x < kangaroo.x - 200) {
                 this.coinCollectionCooldown.delete(coin);
                 coin.destroy();
             }
@@ -91,13 +91,15 @@ export default class CollectibleManager {
         if (this.isGameOver) return;
 
         const config = GAME_CONFIG.COINS;
+        const kangaroo = this.scene.kangaroo;
+        const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.COIN_X;
         const coinY = Phaser.Math.Between(
             config.MIN_Y,
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
 
         const coin = this.scene.physics.add.image(
-            GAME_CONFIG.SPAWN.COIN_X,
+            spawnX,
             coinY,
             'coin'
         );

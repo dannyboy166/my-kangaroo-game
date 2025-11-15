@@ -2,8 +2,8 @@ import { GAME_CONFIG } from '../config/GameConfig.js';
 
 /**
  * EnvironmentManager
- * Handles parallax background layers using professional asset pack
- * All layers properly aligned to GROUND_Y (450)
+ * Handles parallax background layers using TileSprite for seamless scrolling
+ * Works with camera-based scrolling system
  */
 export default class EnvironmentManager {
     /**
@@ -24,133 +24,86 @@ export default class EnvironmentManager {
     }
 
     /**
-     * Create parallax background with proper alignment to GROUND_Y
+     * Create parallax background using TileSprite for seamless infinite scrolling
      */
     createParallaxBackground() {
-        const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 450
         const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH; // 800
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT; // 600
 
-        // All parallax images are 2048px wide, scale to fit canvas width
-        const imageWidth = 2048;
-        const scale = CANVAS_WIDTH / imageWidth;
-
-        // Layer 1: Static sky background (no scrolling)
-        const sky = this.scene.add.image(0, 0, 'parallax_background');
-        sky.setOrigin(0, 0);
+        // Layer 1: Static sky background (no scrolling, fixed to camera)
+        const sky = this.scene.add.image(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 'parallax_background');
         sky.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT);
         sky.setDepth(-100);
+        sky.setScrollFactor(0); // Fixed to camera
 
-        // Layer 2: Distant clouds (slowest parallax)
-        this.addScrollingLayer('parallax_distant_clouds', scale, 0.05, -90, 0);
+        // Layer 2: Distant clouds (slowest parallax, using TileSprite)
+        this.addTileLayer('parallax_distant_clouds', 0.05, -90);
 
         // Layer 3: Clouds (slow parallax)
-        this.addScrollingLayer('parallax_clouds', scale, 0.1, -80, 0);
+        this.addTileLayer('parallax_clouds', 0.1, -80);
 
         // Layer 4: Hill 2 (medium-slow parallax)
-        this.addScrollingLayer('parallax_hill2', scale, 0.3, -60, 0);
+        this.addTileLayer('parallax_hill2', 0.3, -60);
 
         // Layer 5: Hill 1 (medium parallax)
-        this.addScrollingLayer('parallax_hill1', scale, 0.4, -50, 0);
+        this.addTileLayer('parallax_hill1', 0.4, -50);
 
         // Layer 6: Distant trees (medium-fast parallax)
-        this.addScrollingLayer('parallax_distant_trees', scale, 0.5, -40, 0);
+        this.addTileLayer('parallax_distant_trees', 0.5, -40);
 
         // Layer 7: Trees and bushes (faster parallax)
-        this.addScrollingLayer('parallax_trees_bushes', scale, 0.6, -30, 0);
+        this.addTileLayer('parallax_trees_bushes', 0.6, -30);
 
         // No visual ground - kangaroo runs on invisible physics platform
     }
 
     /**
-     * Add a scrolling parallax layer
+     * Add a TileSprite layer with parallax scrolling
      * @param {string} texture - Texture key
-     * @param {number} scale - Scale factor
-     * @param {number} scrollSpeed - Speed multiplier (0-1)
+     * @param {number} scrollFactor - Parallax scroll factor (0-1, where 1 = moves with world)
      * @param {number} depth - Z-depth
-     * @param {number} y - Y position (0 = top, or GROUND_Y for ground layer)
-     * @param {boolean} alignToGround - If true, use origin(0,1) for ground alignment
      */
-    addScrollingLayer(texture, scale, scrollSpeed, depth, y = 0, alignToGround = false) {
-        const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
-
-        // Create two copies for seamless scrolling
-        const sprite1 = this.scene.add.image(0, y, texture);
-        const sprite2 = this.scene.add.image(CANVAS_WIDTH, y, texture);
-
-        // Set origin based on whether it's a ground layer
-        if (alignToGround) {
-            sprite1.setOrigin(0, 1); // Bottom-left for ground
-            sprite2.setOrigin(0, 1);
-        } else {
-            sprite1.setOrigin(0, 0); // Top-left for sky layers
-            sprite2.setOrigin(0, 0);
-        }
-
-        sprite1.setScale(scale);
-        sprite2.setScale(scale);
-        sprite1.setDepth(depth);
-        sprite2.setDepth(depth);
-
-        this.parallaxLayers.push({
-            sprites: [sprite1, sprite2],
-            speed: scrollSpeed,
-            width: CANVAS_WIDTH
-        });
-    }
-
-    /**
-     * Add scrolling ground layer with proper cropping
-     * @param {string} texture - Texture key
-     * @param {number} scale - Scale factor
-     * @param {number} scrollSpeed - Speed multiplier
-     * @param {number} depth - Z-depth
-     * @param {number} groundY - Ground Y position (450)
-     */
-    addScrollingGroundLayer(texture, scale, scrollSpeed, depth, groundY) {
+    addTileLayer(texture, scrollFactor, depth) {
         const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
 
-        // Create two copies for seamless scrolling
-        // Position at top of canvas and let it extend down
-        const sprite1 = this.scene.add.image(0, groundY, texture);
-        const sprite2 = this.scene.add.image(CANVAS_WIDTH, groundY, texture);
+        // Get texture dimensions
+        const textureObj = this.scene.textures.get(texture);
+        const textureWidth = textureObj.getSourceImage().width;
+        const textureHeight = textureObj.getSourceImage().height;
 
-        // Set origin to show the sandy part of the ground image at groundY
-        // The image is very tall (1546px), sandy part is near the top
-        sprite1.setOrigin(0, 0.15); // Show sandy top portion at groundY
-        sprite2.setOrigin(0, 0.15);
+        // Create TileSprite that fills the screen
+        const tileSprite = this.scene.add.tileSprite(
+            0, 0,
+            CANVAS_WIDTH * 3, // Make it wide enough for smooth scrolling
+            CANVAS_HEIGHT,
+            texture
+        );
 
-        sprite1.setScale(scale);
-        sprite2.setScale(scale);
-        sprite1.setDepth(depth);
-        sprite2.setDepth(depth);
+        tileSprite.setOrigin(0, 0);
+        tileSprite.setDepth(depth);
+        tileSprite.setScrollFactor(scrollFactor, 1); // Parallax effect
 
         this.parallaxLayers.push({
-            sprites: [sprite1, sprite2],
-            speed: scrollSpeed,
-            width: CANVAS_WIDTH
+            tileSprite: tileSprite,
+            scrollFactor: scrollFactor
         });
     }
 
     /**
-     * Update parallax scrolling
+     * Update parallax scrolling - TileSprites handle seamless scrolling automatically
      * @param {number} delta - Time elapsed since last frame
      */
     update(delta) {
         if (this.isGameOver) return;
 
-        // Update all scrolling layers
-        this.parallaxLayers.forEach(layer => {
-            layer.sprites.forEach(sprite => {
-                // Move sprite based on game speed and layer speed
-                sprite.x -= this.gameSpeed * layer.speed * delta / 1000;
+        const camera = this.scene.cameras.main;
 
-                // Wrap around when sprite goes off-screen (add 5px overlap to prevent gaps at high speeds)
-                if (sprite.x + layer.width <= 0) {
-                    sprite.x = layer.width - 5;
-                }
-            });
+        // Update each parallax layer based on camera movement
+        this.parallaxLayers.forEach(layer => {
+            // TileSprite position follows camera with parallax offset
+            const scrollX = camera.scrollX * layer.scrollFactor;
+            layer.tileSprite.setPosition(-scrollX, 0);
         });
     }
 
@@ -174,7 +127,11 @@ export default class EnvironmentManager {
      * Clean up
      */
     cleanup() {
-        // Phaser automatically handles sprite cleanup
+        this.parallaxLayers.forEach(layer => {
+            if (layer.tileSprite) {
+                layer.tileSprite.destroy();
+            }
+        });
         this.parallaxLayers = [];
     }
 }

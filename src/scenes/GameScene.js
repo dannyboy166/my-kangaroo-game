@@ -131,7 +131,7 @@ export default class GameScene extends Phaser.Scene {
         const spriteKey = this.helmetEquipped ? 'kangaroo_helmet' : 'kangaroo';
         const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';
 
-        // Create kangaroo sprite
+        // Create kangaroo sprite at world position 150
         const config = GAME_CONFIG.KANGAROO;
         this.kangaroo = this.physics.add.sprite(
             config.X,
@@ -140,13 +140,21 @@ export default class GameScene extends Phaser.Scene {
         );
 
         this.kangaroo.setScale(config.SCALE);
-        this.kangaroo.setCollideWorldBounds(true);
+        this.kangaroo.setCollideWorldBounds(false); // Don't limit to world bounds
         this.kangaroo.body.setSize(config.BODY_WIDTH, config.BODY_HEIGHT);
         this.kangaroo.body.setOffset(config.BODY_OFFSET_X, config.BODY_OFFSET_Y);
         this.kangaroo.body.setGravityY(GAME_CONFIG.PHYSICS.KANGAROO_GRAVITY);
         this.kangaroo.setOrigin(0.5, 1);
         this.kangaroo.setDepth(100); // Ensure kangaroo is always in front of everything
         this.kangaroo.play(runAnimKey);
+
+        // Set constant forward velocity (kangaroo runs forward)
+        this.kangaroo.setVelocityX(this.gameSpeed);
+
+        // Setup camera to follow kangaroo
+        this.cameras.main.startFollow(this.kangaroo, false, 0.1, 0);
+        this.cameras.main.setDeadzone(200, 0); // Keep kangaroo 200px from left edge
+        this.cameras.main.setBounds(0, 0, Number.MAX_SAFE_INTEGER, 600);
     }
 
     /**
@@ -427,10 +435,12 @@ export default class GameScene extends Phaser.Scene {
             this.gameSpeed += config.SPEED_INCREASE_AMOUNT;
             this.lastSpeedIncrease = true;
 
-            // Update all managers with new speed
-            this.obstacleManager.setGameSpeed(this.gameSpeed);
-            this.powerupManager.setGameSpeed(this.gameSpeed);
-            this.collectibleManager.setGameSpeed(this.gameSpeed);
+            // Update kangaroo velocity (camera follows automatically)
+            if (this.kangaroo && this.kangaroo.body) {
+                this.kangaroo.setVelocityX(this.gameSpeed);
+            }
+
+            // Update environment speed for parallax
             this.environmentManager.setGameSpeed(this.gameSpeed);
 
         } else if (flooredScore % config.SPEED_INCREASE_INTERVAL !== 0) {

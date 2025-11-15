@@ -50,13 +50,14 @@ export default class PowerupManager {
         // Update powerup timers
         this.updatePowerupTimers(delta);
 
-        // Move powerups and clean up off-screen ones
+        const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) return;
+
+        // Clean up powerups that are far behind kangaroo (no velocity needed - stationary in world)
         this.powerups.children.entries.slice().forEach((powerup) => {
             if (!powerup || !powerup.active) return;
 
-            powerup.x -= this.gameSpeed * delta / 1000;
-
-            if (powerup.x < -100) {
+            if (powerup.x < kangaroo.x - 200) {
                 powerup.destroy();
             }
         });
@@ -89,6 +90,8 @@ export default class PowerupManager {
         if (this.isGameOver) return;
 
         const config = GAME_CONFIG.POWERUPS;
+        const kangaroo = this.scene.kangaroo;
+        const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.POWERUP_X;
         const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
@@ -98,7 +101,7 @@ export default class PowerupManager {
         );
 
         const powerup = this.scene.physics.add.image(
-            GAME_CONFIG.SPAWN.POWERUP_X,
+            spawnX,
             powerupY,
             randomType
         );

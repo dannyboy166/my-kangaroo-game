@@ -33,6 +33,9 @@ export default class ObstacleManager {
     update(delta) {
         if (this.isGameOver) return;
 
+        const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) return;
+
         this.obstacles.children.entries.slice().forEach((obstacle) => {
             if (!obstacle || !obstacle.active) return;
 
@@ -42,16 +45,12 @@ export default class ObstacleManager {
             } else if (obstacle.isFlyingBee) {
                 // Bee movement: faster horizontal + sine wave vertical
                 this.updateBeeBehavior(obstacle, delta);
-            } else if (obstacle.isRunningEmu) {
-                // Running emu uses custom speed
-                obstacle.x -= obstacle.runSpeed * delta / 1000;
-            } else {
-                // Normal obstacle movement
-                obstacle.x -= this.gameSpeed * delta / 1000;
             }
+            // Note: Obstacles are stationary in world, no velocity needed
+            // Camera movement creates illusion of obstacles moving
 
-            // Clean up off-screen obstacles
-            if (obstacle.x < -100) {
+            // Clean up obstacles that are far behind kangaroo
+            if (obstacle.x < kangaroo.x - 200) {
                 obstacle.destroy();
             }
         });
@@ -189,8 +188,13 @@ export default class ObstacleManager {
      */
     spawnGroundObstacle(type) {
         const config = GAME_CONFIG.OBSTACLES;
+        const kangaroo = this.scene.kangaroo;
+
+        // Spawn ahead of kangaroo's current world position
+        const spawnX = kangaroo ? kangaroo.x + 1000 : GAME_CONFIG.SPAWN.OBSTACLE_X;
+
         const obstacle = this.scene.physics.add.sprite(
-            GAME_CONFIG.SPAWN.OBSTACLE_X,
+            spawnX,
             this.groundY,
             type
         );
@@ -273,9 +277,11 @@ export default class ObstacleManager {
         if (this.isGameOver) return;
 
         const config = GAME_CONFIG.MAGPIE;
+        const kangaroo = this.scene.kangaroo;
+        const spawnX = kangaroo ? kangaroo.x + 1000 : GAME_CONFIG.SPAWN.OBSTACLE_X;
         const startY = Phaser.Math.Between(config.MIN_Y, config.MAX_Y);
         const magpie = this.scene.physics.add.sprite(
-            GAME_CONFIG.SPAWN.OBSTACLE_X,
+            spawnX,
             startY,
             'magpie'
         );
@@ -368,9 +374,7 @@ export default class ObstacleManager {
     updateMagpieBehavior(magpie, delta) {
         const config = GAME_CONFIG.MAGPIE;
 
-        // Move magpie horizontally
-        magpie.x -= this.gameSpeed * delta / 1000;
-
+        // No horizontal movement - magpie is stationary in world (camera creates illusion of movement)
         // Get kangaroo reference from scene
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
@@ -435,9 +439,11 @@ export default class ObstacleManager {
 
         const config = GAME_CONFIG.EMU;
         const obstacleConfig = GAME_CONFIG.OBSTACLES;
+        const kangaroo = this.scene.kangaroo;
+        const spawnX = kangaroo ? kangaroo.x + 1200 : config.SPAWN_X;
 
         const finalEmuSpeed = this.gameSpeed * config.SPEED_MULTIPLIER;
-        const emu = this.scene.physics.add.sprite(config.SPAWN_X, this.groundY, 'emu');
+        const emu = this.scene.physics.add.sprite(spawnX, this.groundY, 'emu');
 
         const baseSize = obstacleConfig.BASE_SIZES.emu || 0.8;
         const variation = obstacleConfig.SIZE_VARIATION;

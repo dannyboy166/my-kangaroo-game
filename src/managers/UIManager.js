@@ -53,6 +53,8 @@ export default class UIManager {
             stroke: '#000000',
             strokeThickness: 2
         });
+        this.scoreText.setScrollFactor(0); // Fix to camera
+        this.scoreText.setDepth(1000); // Always on top
     }
 
     /**
@@ -65,6 +67,8 @@ export default class UIManager {
         const coinIcon = this.scene.add.image(config.COIN_ICON_X, config.COIN_ICON_Y, 'coin');
         coinIcon.setScale(config.COIN_ICON_SCALE);
         coinIcon.setOrigin(0, 0.5);
+        coinIcon.setScrollFactor(0); // Fix to camera
+        coinIcon.setDepth(1000);
 
         // Coin text
         this.coinText = this.scene.add.text(
@@ -80,6 +84,8 @@ export default class UIManager {
             }
         );
         this.coinText.setOrigin(0, 0.5);
+        this.coinText.setScrollFactor(0); // Fix to camera
+        this.coinText.setDepth(1000);
     }
 
     /**
@@ -94,6 +100,8 @@ export default class UIManager {
         this.shieldIcon = this.scene.add.image(30, startY, 'shield');
         this.shieldIcon.setScale(0.15);
         this.shieldIcon.setOrigin(0.1, 0.5);
+        this.shieldIcon.setScrollFactor(0);
+        this.shieldIcon.setDepth(1000);
 
         this.shieldCount = this.scene.add.text(55, startY, '0', {
             fontSize: '18px',
@@ -104,11 +112,15 @@ export default class UIManager {
             fontStyle: 'bold'
         });
         this.shieldCount.setOrigin(0, 0.5);
+        this.shieldCount.setScrollFactor(0);
+        this.shieldCount.setDepth(1000);
 
         // Magnet
         this.magnetIcon = this.scene.add.image(30, startY + spacing, 'magnet');
         this.magnetIcon.setScale(0.12);
         this.magnetIcon.setOrigin(0, 0.5);
+        this.magnetIcon.setScrollFactor(0);
+        this.magnetIcon.setDepth(1000);
 
         this.magnetCount = this.scene.add.text(55, startY + spacing, '0', {
             fontSize: '18px',
@@ -119,11 +131,15 @@ export default class UIManager {
             fontStyle: 'bold'
         });
         this.magnetCount.setOrigin(0, 0.5);
+        this.magnetCount.setScrollFactor(0);
+        this.magnetCount.setDepth(1000);
 
         // Double Jump
         this.doubleIcon = this.scene.add.image(30, startY + (spacing * 2), 'double');
         this.doubleIcon.setScale(0.15);
         this.doubleIcon.setOrigin(0.1, 0.5);
+        this.doubleIcon.setScrollFactor(0);
+        this.doubleIcon.setDepth(1000);
 
         this.doubleCount = this.scene.add.text(55, startY + (spacing * 2), '0', {
             fontSize: '18px',
@@ -134,6 +150,8 @@ export default class UIManager {
             fontStyle: 'bold'
         });
         this.doubleCount.setOrigin(0, 0.5);
+        this.doubleCount.setScrollFactor(0);
+        this.doubleCount.setDepth(1000);
 
         // Update initial counts
         this.updateInventoryDisplay();
@@ -168,6 +186,8 @@ export default class UIManager {
      */
     createProgressBar(x, y, color) {
         const container = this.scene.add.container(x, y);
+        container.setScrollFactor(0); // Fix to camera
+        container.setDepth(1000);
 
         // Background bar
         const bgBar = this.scene.add.graphics();
