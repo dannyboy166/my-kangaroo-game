@@ -107,6 +107,23 @@ export default class ObstacleManager {
             obstacles.push({ type: 'croc', weight: config.WEIGHTS.croc });
         }
 
+        // Add Pixel Adventure obstacles based on score
+        if (this.score >= config.UNLOCK_SCORES.bee) {
+            obstacles.push({ type: 'bee', weight: config.WEIGHTS.bee });
+        }
+        if (this.score >= config.UNLOCK_SCORES.plant) {
+            obstacles.push({ type: 'plant', weight: config.WEIGHTS.plant });
+        }
+        if (this.score >= config.UNLOCK_SCORES.snail) {
+            obstacles.push({ type: 'snail', weight: config.WEIGHTS.snail });
+        }
+        if (this.score >= config.UNLOCK_SCORES.mushroom) {
+            obstacles.push({ type: 'mushroom', weight: config.WEIGHTS.mushroom });
+        }
+        if (this.score >= config.UNLOCK_SCORES.trunk) {
+            obstacles.push({ type: 'trunk', weight: config.WEIGHTS.trunk });
+        }
+
         return obstacles;
     }
 
