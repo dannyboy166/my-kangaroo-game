@@ -156,9 +156,9 @@ export default class EnvironmentManager {
                 // Move sprite based on game speed and layer speed
                 sprite.x -= this.gameSpeed * layer.speed * delta / 1000;
 
-                // Wrap around when sprite goes off-screen
+                // Wrap around when sprite goes off-screen (add 2px overlap to prevent gaps)
                 if (sprite.x + layer.width <= 0) {
-                    sprite.x = layer.width;
+                    sprite.x = layer.width - 2;
                 }
             });
         });
