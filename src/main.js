@@ -11,13 +11,28 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#87CEEB',
+
+    // Performance optimizations
+    fps: {
+        target: 60,           // Target 60 FPS
+        forceSetTimeOut: true // Use setTimeout instead of RAF for more consistent timing
+    },
+
+    render: {
+        pixelArt: false,      // Smoother graphics
+        antialias: true,      // Better quality
+        roundPixels: true     // Crisper rendering
+    },
+
     physics: {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: false // Disable debug mode to hide collision boxes
+            debug: false,     // Debug OFF for performance
+            fps: 60           // Physics at 60 FPS
         }
     },
+
     scene: [
         MenuScene,
         GameScene,
