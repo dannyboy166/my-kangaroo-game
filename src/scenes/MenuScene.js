@@ -1,5 +1,6 @@
 import GameDataManager from '../managers/GameDataManager.js';
 import AudioManager from '../managers/AudioManager.js';
+import { BACKGROUND_THEMES } from '../config/BackgroundConfig.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -69,7 +70,7 @@ export default class MenuScene extends Phaser.Scene {
         // Load ground decoration
         this.load.image('weed', 'assets/images/weed.png');
 
-        // Load parallax background layers
+        // Load parallax background layers - Outback theme
         this.load.image('parallax_background', 'assets/images/parallax/_11_background.png');
         this.load.image('parallax_distant_clouds', 'assets/images/parallax/_10_distant_clouds.png');
         this.load.image('parallax_distant_clouds1', 'assets/images/parallax/_09_distant_clouds1.png');
@@ -80,6 +81,12 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('parallax_distant_trees', 'assets/images/parallax/_03_distant_trees.png');
         this.load.image('parallax_trees_bushes', 'assets/images/parallax/_02_trees_and_bushes.png');
         this.load.image('parallax_ground', 'assets/images/parallax/_01_ground.png');
+
+        // Load beach background layers - Beach theme
+        this.load.image('beach_sky', 'assets/images/beach-background/game_background_3/layers/sky.png');
+        this.load.image('beach_cloud', 'assets/images/beach-background/game_background_3/layers/cloud.png');
+        this.load.image('beach_sea', 'assets/images/beach-background/game_background_3/layers/sea.png');
+        this.load.image('beach_land', 'assets/images/beach-background/game_background_3/layers/land.png');
 
         // Load powerup images
         this.load.image('shield', 'assets/images/shield.png');
@@ -114,48 +121,8 @@ export default class MenuScene extends Phaser.Scene {
             magnet_activate: this.sound.add('magnet_activate')
         });
 
-        // Create parallax background (static for menu)
-        const GROUND_Y = 450; // Match physics ground
-        const scale = 800 / 2048; // Scale parallax images to canvas width
-
-        // Static sky background
-        const sky = this.add.image(0, 0, 'parallax_background');
-        sky.setOrigin(0, 0);
-        sky.setDisplaySize(800, 600);
-        sky.setDepth(-100);
-
-        // Add parallax layers (static, no scrolling in menu)
-        const clouds = this.add.image(0, 0, 'parallax_clouds');
-        clouds.setOrigin(0, 0);
-        clouds.setScale(scale);
-        clouds.setDepth(-80);
-
-        const hill2 = this.add.image(0, 0, 'parallax_hill2');
-        hill2.setOrigin(0, 0);
-        hill2.setScale(scale);
-        hill2.setDepth(-60);
-
-        const hill1 = this.add.image(0, 0, 'parallax_hill1');
-        hill1.setOrigin(0, 0);
-        hill1.setScale(scale);
-        hill1.setDepth(-50);
-
-        const trees = this.add.image(0, 0, 'parallax_distant_trees');
-        trees.setOrigin(0, 0);
-        trees.setScale(scale);
-        trees.setDepth(-40);
-
-        // Simple brown ground
-        const groundGraphics = this.add.graphics();
-        groundGraphics.fillStyle(0x8B4513, 1); // Brown ground
-        groundGraphics.fillRect(0, GROUND_Y, 800, 150);
-
-        // Ground line (darker brown)
-        groundGraphics.lineStyle(3, 0x654321);
-        groundGraphics.moveTo(0, GROUND_Y);
-        groundGraphics.lineTo(800, GROUND_Y);
-        groundGraphics.stroke();
-        groundGraphics.setDepth(-10);
+        // Create background based on selected theme
+        this.createThemeBackground();
 
         // Add title with better positioning
         this.add.text(400, 150, 'KANGAROO HOP', {
@@ -219,7 +186,7 @@ export default class MenuScene extends Phaser.Scene {
         }
 
         // Add shop button
-        const shopButton = this.add.text(400, 330, 'SHOP', {
+        const shopButton = this.add.text(300, 330, 'SHOP', {
             fontSize: '24px',
             fontFamily: 'Arial',
             color: '#00FFFF',
@@ -236,7 +203,7 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         // Add pulsing effect to shop button
-        const pulseTween = this.tweens.add({
+        const shopPulseTween = this.tweens.add({
             targets: shopButton,
             scaleX: 1.05,
             scaleY: 1.05,
@@ -248,12 +215,53 @@ export default class MenuScene extends Phaser.Scene {
 
         // Add hover effect to shop button
         shopButton.on('pointerover', () => {
-            pulseTween.pause();
+            shopPulseTween.pause();
             shopButton.setScale(1.2);
         });
         shopButton.on('pointerout', () => {
             shopButton.setScale(1);
-            pulseTween.resume();
+            shopPulseTween.resume();
+        });
+
+        // Add background theme selector button
+        const currentTheme = this.gameDataManager.getBackgroundTheme();
+        const themeName = BACKGROUND_THEMES[currentTheme]?.name || 'Outback';
+
+        this.bgButton = this.add.text(500, 330, `Theme: ${themeName}`, {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 2,
+            backgroundColor: '#886600',
+            padding: { x: 15, y: 10 }
+        }).setOrigin(0.5).setDepth(1000);
+
+        this.bgButton.setInteractive();
+        this.bgButton.on('pointerdown', () => {
+            this.audioManager.playButtonClick();
+            this.toggleBackgroundTheme();
+        });
+
+        // Add pulsing effect to background button
+        const bgPulseTween = this.tweens.add({
+            targets: this.bgButton,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 1500,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Add hover effect to background button
+        this.bgButton.on('pointerover', () => {
+            bgPulseTween.pause();
+            this.bgButton.setScale(1.2);
+        });
+        this.bgButton.on('pointerout', () => {
+            this.bgButton.setScale(1);
+            bgPulseTween.resume();
         });
 
         // Add instructions
@@ -284,5 +292,52 @@ export default class MenuScene extends Phaser.Scene {
     startGame() {
         this.audioManager.playButtonClick();
         this.scene.start('GameScene', { audioManager: this.audioManager });
+    }
+
+    /**
+     * Create background based on selected theme
+     */
+    createThemeBackground() {
+        const themeId = this.gameDataManager.getBackgroundTheme();
+        const theme = BACKGROUND_THEMES[themeId] || BACKGROUND_THEMES.outback;
+
+        console.log(`🎨 MenuScene: Loading ${theme.name} background`);
+
+        // Create static background layers (no scrolling in menu)
+        theme.layers.forEach(layerConfig => {
+            const yPos = layerConfig.y !== undefined ? layerConfig.y : 300;
+
+            if (layerConfig.type === 'image') {
+                const img = this.add.image(400, yPos, layerConfig.key);
+                img.setDisplaySize(800, 600);
+                img.setDepth(layerConfig.depth);
+            } else if (layerConfig.type === 'tileSprite') {
+                // For menu, show as static image at custom position
+                const tile = this.add.tileSprite(400, yPos, 800, 600, layerConfig.key);
+                tile.setTileScale(layerConfig.tileScaleX, layerConfig.tileScaleY);
+                tile.setDepth(layerConfig.depth);
+            }
+        });
+    }
+
+    /**
+     * Toggle between background themes
+     */
+    toggleBackgroundTheme() {
+        const currentTheme = this.gameDataManager.getBackgroundTheme();
+        const themeKeys = Object.keys(BACKGROUND_THEMES);
+        const currentIndex = themeKeys.indexOf(currentTheme);
+        const nextIndex = (currentIndex + 1) % themeKeys.length;
+        const nextTheme = themeKeys[nextIndex];
+
+        // Save new theme
+        this.gameDataManager.setBackgroundTheme(nextTheme);
+
+        // Update button text
+        const themeName = BACKGROUND_THEMES[nextTheme].name;
+        this.bgButton.setText(`Theme: ${themeName}`);
+
+        // Restart the scene to show new background
+        this.scene.restart();
     }
 }

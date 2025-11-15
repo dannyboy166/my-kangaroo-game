@@ -1,8 +1,11 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
+import { BACKGROUND_THEMES } from '../config/BackgroundConfig.js';
+import GameDataManager from './GameDataManager.js';
 
 /**
  * EnvironmentManager
  * Handles background rendering with TileSprite for infinite parallax scrolling
+ * Supports multiple background themes
  */
 export default class EnvironmentManager {
     /**
@@ -13,41 +16,57 @@ export default class EnvironmentManager {
         this.isGameOver = false;
         this.gameSpeed = GAME_CONFIG.DIFFICULTY.INITIAL_SPEED;
         this.parallaxLayers = []; // Store all parallax layers
+        this.gameDataManager = GameDataManager.getInstance();
     }
 
     /**
-     * Create all environment elements
+     * Create all environment elements using selected theme
      */
     create() {
-        this.createSimpleBackground();
+        const themeId = this.gameDataManager.getBackgroundTheme();
+        const theme = BACKGROUND_THEMES[themeId];
+
+        if (!theme) {
+            console.error(`Theme ${themeId} not found, using default`);
+            this.createBackgroundFromTheme(BACKGROUND_THEMES.outback);
+        } else {
+            this.createBackgroundFromTheme(theme);
+        }
     }
 
     /**
-     * Create multi-layer parallax background
+     * Create background from theme configuration
+     * @param {Object} theme - Theme configuration from BackgroundConfig
      */
-    createSimpleBackground() {
-        const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH; // 800
-        const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT; // 600
+    createBackgroundFromTheme(theme) {
+        const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
+        const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
 
-        // Create sky background image (fixed, no scrolling)
-        const sky = this.scene.add.image(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 'parallax_background');
-        sky.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT);
-        sky.setDepth(-100);
-        sky.setScrollFactor(0); // Fixed to camera
+        console.log(`🎨 Creating background for theme: ${theme.name}`);
 
-        // Layer 1: Distant clouds (slowest - 10% speed)
-        this.addParallaxLayer('parallax_distant_clouds', 0.1, -90, 0.5, 0.5);
+        theme.layers.forEach(layerConfig => {
+            if (layerConfig.type === 'image') {
+                // Fixed background image (no scrolling)
+                const yPos = layerConfig.y !== undefined ? layerConfig.y : CANVAS_HEIGHT / 2;
+                const img = this.scene.add.image(CANVAS_WIDTH / 2, yPos, layerConfig.key);
+                img.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT);
+                img.setDepth(layerConfig.depth);
+                img.setScrollFactor(layerConfig.scrollFactor);
+            } else if (layerConfig.type === 'tileSprite') {
+                // Scrolling parallax layer with custom Y position
+                const yPos = layerConfig.y !== undefined ? layerConfig.y : CANVAS_HEIGHT / 2;
+                this.addParallaxLayer(
+                    layerConfig.key,
+                    layerConfig.scrollSpeed,
+                    layerConfig.depth,
+                    layerConfig.tileScaleX,
+                    layerConfig.tileScaleY,
+                    yPos
+                );
+            }
+        });
 
-        // Layer 2: Distant clouds 1 (slow - 15% speed)
-        this.addParallaxLayer('parallax_distant_clouds1', 0.15, -85, 0.5, 0.5);
-
-        // Layer 3: Regular clouds (medium-slow - 25% speed)
-        this.addParallaxLayer('parallax_clouds', 0.25, -80, 0.5, 0.5);
-
-        // Layer 4: Trees/bushes (faster - 60% speed)
-        this.addParallaxLayer('parallax_trees_bushes', 0.6, -50, 0.4, 0.4);
-
-        console.log('🎨 Multi-layer parallax background created with', this.parallaxLayers.length, 'layers');
+        console.log(`✅ Background created with ${this.parallaxLayers.length} parallax layers`);
     }
 
     /**
@@ -57,14 +76,16 @@ export default class EnvironmentManager {
      * @param {number} depth - Z-depth
      * @param {number} scaleX - Horizontal tile scale
      * @param {number} scaleY - Vertical tile scale
+     * @param {number} yPos - Y position (default: canvas center)
      */
-    addParallaxLayer(texture, scrollSpeed, depth, scaleX, scaleY) {
+    addParallaxLayer(texture, scrollSpeed, depth, scaleX, scaleY, yPos = null) {
         const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
+        const y = yPos !== null ? yPos : CANVAS_HEIGHT / 2;
 
         const layer = this.scene.add.tileSprite(
             CANVAS_WIDTH / 2,
-            CANVAS_HEIGHT / 2,
+            y,
             CANVAS_WIDTH,
             CANVAS_HEIGHT,
             texture

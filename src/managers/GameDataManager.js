@@ -1,7 +1,10 @@
+import { DEFAULT_THEME } from '../config/BackgroundConfig.js';
+
 export default class GameDataManager {
     constructor() {
         this.coins = this.loadCoins();
         this.highScore = this.loadHighScore();
+        this.backgroundTheme = this.loadBackgroundTheme();
         this.saveTimer = null;
     }
 
@@ -60,6 +63,25 @@ export default class GameDataManager {
 
     getHighScore() {
         return this.highScore;
+    }
+
+    // Background theme management
+    loadBackgroundTheme() {
+        const saved = localStorage.getItem('kangaroo_background_theme');
+        return saved || DEFAULT_THEME;
+    }
+
+    saveBackgroundTheme() {
+        localStorage.setItem('kangaroo_background_theme', this.backgroundTheme);
+    }
+
+    setBackgroundTheme(themeId) {
+        this.backgroundTheme = themeId;
+        this.saveBackgroundTheme();
+    }
+
+    getBackgroundTheme() {
+        return this.backgroundTheme;
     }
 
     // Global instance
