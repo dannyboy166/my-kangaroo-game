@@ -113,14 +113,48 @@ export default class MenuScene extends Phaser.Scene {
             magnet_activate: this.sound.add('magnet_activate')
         });
 
-        // Create simple background (no images)
+        // Create parallax background (static for menu)
         const GROUND_Y = 450; // Match physics ground
+        const scale = 800 / 2048; // Scale parallax images to canvas width
 
-        // Sky gradient (light blue)
-        const skyGraphics = this.add.graphics();
-        skyGraphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
-        skyGraphics.fillRect(0, 0, 800, GROUND_Y);
-        skyGraphics.setDepth(-100);
+        // Static sky background
+        const sky = this.add.image(0, 0, 'parallax_background');
+        sky.setOrigin(0, 0);
+        sky.setDisplaySize(800, 600);
+        sky.setDepth(-100);
+
+        // Add parallax layers (static, no scrolling in menu)
+        const clouds = this.add.image(0, 0, 'parallax_clouds');
+        clouds.setOrigin(0, 0);
+        clouds.setScale(scale);
+        clouds.setDepth(-80);
+
+        const hill2 = this.add.image(0, 0, 'parallax_hill2');
+        hill2.setOrigin(0, 0);
+        hill2.setScale(scale);
+        hill2.setDepth(-60);
+
+        const hill1 = this.add.image(0, 0, 'parallax_hill1');
+        hill1.setOrigin(0, 0);
+        hill1.setScale(scale);
+        hill1.setDepth(-50);
+
+        const trees = this.add.image(0, 0, 'parallax_distant_trees');
+        trees.setOrigin(0, 0);
+        trees.setScale(scale);
+        trees.setDepth(-40);
+
+        // Simple brown ground
+        const groundGraphics = this.add.graphics();
+        groundGraphics.fillStyle(0x8B4513, 1); // Brown ground
+        groundGraphics.fillRect(0, GROUND_Y, 800, 150);
+
+        // Ground line (darker brown)
+        groundGraphics.lineStyle(3, 0x654321);
+        groundGraphics.moveTo(0, GROUND_Y);
+        groundGraphics.lineTo(800, GROUND_Y);
+        groundGraphics.stroke();
+        groundGraphics.setDepth(-10);
 
         // Add title with better positioning
         this.add.text(400, 150, 'KANGAROO HOP', {
@@ -169,8 +203,7 @@ export default class MenuScene extends Phaser.Scene {
         this.coinText.setOrigin(0, 0.5);
         this.coinText.setDepth(1000);
 
-        // Create simple ground
-        this.createSimpleGround();
+        // No need for createSimpleGround - using parallax ground layer instead
 
         // Add high score display
         const highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
@@ -246,21 +279,6 @@ export default class MenuScene extends Phaser.Scene {
         console.log('Menu scene loaded');
     }
 
-    createSimpleGround() {
-        const GROUND_Y = 450; // Match physics ground from GameScene
-
-        // Simple ground area (brown)
-        const ground = this.add.graphics();
-        ground.fillStyle(0x8B4513, 1);
-        ground.fillRect(0, GROUND_Y, 800, 150); // Fill from 450 to 600
-
-        // Ground line (darker brown)
-        ground.lineStyle(3, 0x654321);
-        ground.moveTo(0, GROUND_Y);
-        ground.lineTo(800, GROUND_Y);
-        ground.stroke();
-        ground.setDepth(-50);
-    }
 
     startGame() {
         this.audioManager.playButtonClick();
