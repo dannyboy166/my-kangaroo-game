@@ -53,7 +53,17 @@ export const BACKGROUND_THEMES = {
                 scrollSpeed: 0.6,
                 depth: -50,
                 tileScaleX: 0.4,
-                tileScaleY: 0.4
+                tileScaleY: 0.4,
+                y: 300
+            },
+            {
+                key: 'parallax_ground',
+                type: 'tileSprite',
+                scrollSpeed: 1.0, // Scrolls at camera speed to match obstacles
+                depth: -20,
+                tileScaleX: 0.25,
+                tileScaleY: 0.25,
+                y: 520 // Align with GROUND_Y
             }
         ]
     },

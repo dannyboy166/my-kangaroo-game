@@ -95,6 +95,17 @@ export default class EnvironmentManager {
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
         const y = yPos !== null ? yPos : CANVAS_HEIGHT / 2;
 
+        console.log(`📍 Adding parallax layer: ${texture}`, {
+            x: CANVAS_WIDTH / 2,
+            y: y,
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+            depth: depth,
+            scrollSpeed: scrollSpeed,
+            scaleX: scaleX,
+            scaleY: scaleY
+        });
+
         const layer = this.scene.add.tileSprite(
             CANVAS_WIDTH / 2,
             y,
@@ -106,6 +117,27 @@ export default class EnvironmentManager {
         layer.setDepth(depth);
         layer.setScrollFactor(0); // Fixed to camera, we'll manually scroll
         layer.setTileScale(scaleX, scaleY);
+
+        // DEBUG: Check if texture loaded
+        if (!this.scene.textures.exists(texture)) {
+            console.error(`❌ Texture ${texture} not found!`);
+        } else {
+            const img = this.scene.textures.get(texture).getSourceImage();
+            console.log(`✅ Texture ${texture} loaded, dimensions:`, img.width, 'x', img.height);
+            console.log(`   TileSprite bounds:`, {
+                x: layer.x,
+                y: layer.y,
+                displayWidth: layer.displayWidth,
+                displayHeight: layer.displayHeight,
+                visible: layer.visible,
+                alpha: layer.alpha
+            });
+        }
+
+        // Ground layer is ready (debug tint removed)
+        if (texture === 'parallax_ground' || texture === 'beach_land') {
+            console.log('✅ Ground layer created successfully');
+        }
 
         this.parallaxLayers.push({
             sprite: layer,
