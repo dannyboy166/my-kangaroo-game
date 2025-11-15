@@ -250,7 +250,7 @@ export default class GameScene extends Phaser.Scene {
      * Create invisible physics ground
      */
     createPhysicsGround() {
-        const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 450
+        const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 520
         this.groundBody = this.physics.add.staticGroup();
         const groundCollider = this.groundBody.create(400, GROUND_Y + 1, null);
         groundCollider.setSize(2000, 2);

@@ -23,7 +23,7 @@ export const GAME_CONFIG = {
         INITIAL_SPEED: 300,
         SPEED_INCREASE_INTERVAL: 50, // Score points
         SPEED_INCREASE_AMOUNT: 5,
-        GROUND_Y: 450
+        GROUND_Y: 520
     },
 
     // Obstacle spawning

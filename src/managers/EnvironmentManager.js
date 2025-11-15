@@ -59,17 +59,7 @@ export default class EnvironmentManager {
         // Layer 7: Trees and bushes (faster parallax)
         this.addScrollingLayer('parallax_trees_bushes', scale, 0.6, -30, 0);
 
-        // Layer 8: Simple solid ground
-        const groundGraphics = this.scene.add.graphics();
-        groundGraphics.fillStyle(0x8B4513, 1); // Brown ground
-        groundGraphics.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
-
-        // Ground line (darker brown)
-        groundGraphics.lineStyle(3, 0x654321);
-        groundGraphics.moveTo(0, GROUND_Y);
-        groundGraphics.lineTo(CANVAS_WIDTH, GROUND_Y);
-        groundGraphics.stroke();
-        groundGraphics.setDepth(-10);
+        // No visual ground - kangaroo runs on invisible physics platform
     }
 
     /**
@@ -156,9 +146,9 @@ export default class EnvironmentManager {
                 // Move sprite based on game speed and layer speed
                 sprite.x -= this.gameSpeed * layer.speed * delta / 1000;
 
-                // Wrap around when sprite goes off-screen (add 2px overlap to prevent gaps)
+                // Wrap around when sprite goes off-screen (add 5px overlap to prevent gaps at high speeds)
                 if (sprite.x + layer.width <= 0) {
-                    sprite.x = layer.width - 2;
+                    sprite.x = layer.width - 5;
                 }
             });
         });
