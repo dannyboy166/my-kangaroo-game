@@ -68,7 +68,18 @@ export default class MenuScene extends Phaser.Scene {
         
         // Load ground decoration
         this.load.image('weed', 'assets/images/weed.png');
-        
+
+        // Load parallax background layers
+        this.load.image('parallax_background', 'assets/images/parallax/_11_background.png');
+        this.load.image('parallax_distant_clouds', 'assets/images/parallax/_10_distant_clouds.png');
+        this.load.image('parallax_clouds', 'assets/images/parallax/_08_clouds.png');
+        this.load.image('parallax_hill2', 'assets/images/parallax/_06_hill2.png');
+        this.load.image('parallax_hill1', 'assets/images/parallax/_05_hill1.png');
+        this.load.image('parallax_bushes', 'assets/images/parallax/_04_bushes.png');
+        this.load.image('parallax_distant_trees', 'assets/images/parallax/_03_distant_trees.png');
+        this.load.image('parallax_trees_bushes', 'assets/images/parallax/_02_trees and bushes.png');
+        this.load.image('parallax_ground', 'assets/images/parallax/_01_ground.png');
+
         // Load powerup images
         this.load.image('shield', 'assets/images/shield.png');
         this.load.image('magnet', 'assets/images/magnet.png');
@@ -102,10 +113,14 @@ export default class MenuScene extends Phaser.Scene {
             magnet_activate: this.sound.add('magnet_activate')
         });
 
-        // Add background color gradient effect
-        const graphics = this.add.graphics();
-        graphics.fillGradientStyle(0x39cef9, 0x39cef9, 0x7dd9fc, 0x7dd9fc, 1);
-        graphics.fillRect(0, 0, 800, 600);
+        // Create simple background (no images)
+        const GROUND_Y = 450; // Match physics ground
+
+        // Sky gradient (light blue)
+        const skyGraphics = this.add.graphics();
+        skyGraphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
+        skyGraphics.fillRect(0, 0, 800, GROUND_Y);
+        skyGraphics.setDepth(-100);
 
         // Add title with better positioning
         this.add.text(400, 150, 'KANGAROO HOP', {
@@ -114,7 +129,7 @@ export default class MenuScene extends Phaser.Scene {
             color: '#FF6B35',
             stroke: '#000000',
             strokeThickness: 4
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(1000); // High depth to be in front
 
         // Add subtitle
         const startText = this.add.text(400, 230, 'Press SPACE or Click to Start!', {
@@ -123,7 +138,7 @@ export default class MenuScene extends Phaser.Scene {
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(1000);
 
         // Add pulsing effect to start text
         this.tweens.add({
@@ -142,7 +157,8 @@ export default class MenuScene extends Phaser.Scene {
         const coinIcon = this.add.image(30, 30, 'coin');
         coinIcon.setScale(0.17);
         coinIcon.setOrigin(0, 0.5);
-        
+        coinIcon.setDepth(1000);
+
         this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
             fontFamily: 'Arial',
@@ -151,12 +167,10 @@ export default class MenuScene extends Phaser.Scene {
             strokeThickness: 2
         });
         this.coinText.setOrigin(0, 0.5);
+        this.coinText.setDepth(1000);
 
-        // Create a more natural ground scene
-        this.createGroundScene();
-
-        // Add some atmospheric elements
-        this.createBackgroundElements();
+        // Create simple ground
+        this.createSimpleGround();
 
         // Add high score display
         const highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
@@ -167,7 +181,7 @@ export default class MenuScene extends Phaser.Scene {
                 color: '#FFD700',
                 stroke: '#000000',
                 strokeThickness: 2
-            }).setOrigin(0.5);
+            }).setOrigin(0.5).setDepth(1000);
         }
 
         // Add shop button
@@ -179,7 +193,7 @@ export default class MenuScene extends Phaser.Scene {
             strokeThickness: 2,
             backgroundColor: '#008888',
             padding: { x: 20, y: 10 }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(1000);
 
         shopButton.setInteractive();
         shopButton.on('pointerdown', () => {
@@ -215,7 +229,7 @@ export default class MenuScene extends Phaser.Scene {
             color: '#CCCCCC',
             stroke: '#000000',
             strokeThickness: 1
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(1000);
 
         // Input handling - only for non-interactive areas
         this.input.keyboard.on('keydown-SPACE', this.startGame, this);
@@ -232,119 +246,20 @@ export default class MenuScene extends Phaser.Scene {
         console.log('Menu scene loaded');
     }
 
-    createGroundScene() {
-        // Add ground line
+    createSimpleGround() {
+        const GROUND_Y = 450; // Match physics ground from GameScene
+
+        // Simple ground area (brown)
         const ground = this.add.graphics();
-        ground.lineStyle(6, 0xfc8d15);
-        ground.moveTo(0, 500);
-        ground.lineTo(800, 500);
+        ground.fillStyle(0x8B4513, 1);
+        ground.fillRect(0, GROUND_Y, 800, 150); // Fill from 450 to 600
+
+        // Ground line (darker brown)
+        ground.lineStyle(3, 0x654321);
+        ground.moveTo(0, GROUND_Y);
+        ground.lineTo(800, GROUND_Y);
         ground.stroke();
-
-        // Add ground texture
-        ground.fillStyle(0xfc8d15);
-        ground.fillRect(0, 500, 800, 100);
-
-        // Add natural obstacles at proper scale and positioning
-        this.add.image(120, 500, 'emu').setScale(0.5).setOrigin(0.5, 1);
-        this.add.image(680, 500, 'cactus').setScale(0.6).setOrigin(0.5, 1);
-        this.add.image(350, 500, 'camel').setScale(0.8).setOrigin(0.5, 1);
-
-        // Add weeds for ground decoration - random positions across floor
-        const numMenuWeeds = 4;
-        const groundY = 500; // Ground level
-        const floorHeight = 100; // Floor is 100px tall (500 to 600)
-        const weedZoneHeight = floorHeight * 0.3; // Top 30% of floor
-
-        console.log('🌿 Adding menu weeds...');
-        for (let i = 0; i < numMenuWeeds; i++) {
-            const x = Phaser.Math.Between(30, 770); // Random x across screen
-            const y = Phaser.Math.Between(groundY, groundY + weedZoneHeight); // Top 30% of floor (500-530)
-            const scale = Phaser.Math.FloatBetween(0.6, 1.0); // Random scale (2x to 3x larger than before)
-            
-            const weed = this.add.image(x, y, 'weed');
-            weed.setScale(scale);
-            weed.setOrigin(0.5, 1);
-            weed.setDepth(10); // In front of ground but behind animals
-            console.log(`🌿 Menu weed ${i + 1}: x=${x}, y=${y}, scale=${scale.toFixed(2)}`);
-        }
-
-        // Add small coins scattered on the ground (much smaller and more natural)
-        this.add.image(250, 400, 'coin').setScale(0.15);
-
-        
-        // Add subtle glow effect to ground coins
-        const coins = [
-            this.add.image(250, 400, 'coin').setScale(0.15),
-
-        ];
-
-        coins.forEach(coin => {
-            this.tweens.add({
-                targets: coin,
-                alpha: 0.7,
-                duration: 1500,
-                ease: 'Sine.easeInOut',
-                yoyo: true,
-                repeat: -1
-            });
-        });
-    }
-
-    createBackgroundElements() {
-        // Add some clouds in the sky
-        const cloud1 = this.add.graphics();
-        cloud1.fillStyle(0xFFFFFF, 0.8);
-        cloud1.fillCircle(0, 0, 25);
-        cloud1.fillCircle(15, 0, 20);
-        cloud1.fillCircle(-15, 0, 20);
-        cloud1.fillCircle(8, -8, 15);
-        cloud1.x = 150;
-        cloud1.y = 80;
-
-        const cloud2 = this.add.graphics();
-        cloud2.fillStyle(0xFFFFFF, 0.6);
-        cloud2.fillCircle(0, 0, 20);
-        cloud2.fillCircle(12, 0, 16);
-        cloud2.fillCircle(-12, 0, 16);
-        cloud2.x = 650;
-        cloud2.y = 120;
-
-        // Add subtle floating animation to clouds
-        this.tweens.add({
-            targets: [cloud1, cloud2],
-            x: '+=20',
-            duration: 8000,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
-
-        // Add a sun
-        const sun = this.add.graphics();
-        sun.fillStyle(0xFFD700, 0.9);
-        sun.fillCircle(0, 0, 30);
-        sun.lineStyle(3, 0xFFD700, 0.7);
-        for (let i = 0; i < 8; i++) {
-            const angle = (i * 45) * Math.PI / 180;
-            const x1 = Math.cos(angle) * 35;
-            const y1 = Math.sin(angle) * 35;
-            const x2 = Math.cos(angle) * 45;
-            const y2 = Math.sin(angle) * 45;
-            sun.moveTo(x1, y1);
-            sun.lineTo(x2, y2);
-            sun.stroke();
-        }
-        sun.x = 700;
-        sun.y = 70;
-
-        // Add subtle rotation to sun
-        this.tweens.add({
-            targets: sun,
-            rotation: Math.PI * 2,
-            duration: 20000,
-            repeat: -1,
-            ease: 'Linear'
-        });
+        ground.setDepth(-50);
     }
 
     startGame() {

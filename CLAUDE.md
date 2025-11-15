@@ -65,36 +65,47 @@ The game follows a **manager-based architecture** for better separation of conce
    - Physics settings, spawn timings, obstacle properties
    - Easy to tune game balance without touching code
 
-2. **ObstacleManager** (`src/managers/ObstacleManager.js`)
+2. **EnvironmentManager** (`src/managers/EnvironmentManager.js`)
+   - Handles simple background rendering (sky gradient and ground)
+   - No parallax or scrolling elements - static background only
+   - Creates sky gradient (light blue) and brown ground area
+   - Ground positioned at GROUND_Y (450px)
+
+3. **ObstacleManager** (`src/managers/ObstacleManager.js`)
    - Handles all obstacle spawning logic
    - Manages obstacle movement and behavior
    - Special AI for magpies (swooping) and emus (running)
    - Gap obstacle patterns for increased difficulty
 
-3. **PowerupManager** (`src/managers/PowerupManager.js`)
+4. **PowerupManager** (`src/managers/PowerupManager.js`)
    - Spawns and manages powerup items
    - Handles powerup activation (shield, magnet, double jump)
    - Visual orb system (rotating indicators around kangaroo)
    - Integrates with StoreManager for purchased powerups
 
-4. **CollectibleManager** (`src/managers/CollectibleManager.js`)
+5. **CollectibleManager** (`src/managers/CollectibleManager.js`)
    - Coin spawning and movement
    - Magnet attraction logic
    - Coin collection with visual effects
 
-5. **AudioManager** (`src/managers/AudioManager.js`)
+6. **AudioManager** (`src/managers/AudioManager.js`)
    - Centralized audio playback
    - Sound effects for all game events
 
-6. **GameDataManager** (`src/managers/GameDataManager.js`)
+7. **GameDataManager** (`src/managers/GameDataManager.js`)
    - Persistent data storage (localStorage)
    - Coin balance tracking
    - High score management
 
-7. **StoreManager** (`src/managers/StoreManager.js`)
+8. **StoreManager** (`src/managers/StoreManager.js`)
    - In-game shop inventory
    - Powerup purchase and consumption
    - Helmet (magpie protection) system
+
+9. **UIManager** (`src/managers/UIManager.js`)
+   - Handles all in-game UI elements
+   - Score display, coin counter, powerup indicators
+   - Inventory display for purchased items
 
 ### Scene Flow
 
@@ -113,8 +124,11 @@ MenuScene → GameScene ↔ StoreScene → GameOverScene → MenuScene
 - **Engine**: Phaser Arcade Physics
 - **Gravity**: 800 (global), 900 (kangaroo-specific)
 - **Jump Velocity**: -950 (normal), -750 (double jump)
+- **Ground Level**: y = 450 (GAME_CONFIG.DIFFICULTY.GROUND_Y)
+- **Physics Ground**: Thin collider at y = 451 (2px height)
 - **Collision Detection**: Overlap-based for precise hit detection
 - **World Bounds**: Kangaroo constrained to canvas
+- **Animation System**: Uses `body.blocked.down` for reliable ground detection (prevents flickering during mid-air collisions)
 
 ### Obstacle System
 - **Base Obstacles**: Rock, cactus, log (available from start)
@@ -227,8 +241,11 @@ shutdown() {
 ## Asset Management
 
 ### Sprite Sheets
-- **Kangaroo**: 128x128 frames (12 frames for running animation)
-- **Kangaroo Helmet**: Same as above with helmet variant
+- **Kangaroo**: 768x256 total (6 columns x 2 rows), each frame 128x128
+  - 12 frames for running animation
+  - Artwork sits at bottom ~64px of each frame with empty space above
+  - Origin set to (0.5, 1) - bottom-center anchor point
+- **Kangaroo Helmet**: Same dimensions and layout as normal kangaroo
 - **Emu**: 128x128 frames (4 frames for running)
 - **Magpie**: 128x128 frames (4 frames for flying)
 
@@ -236,7 +253,12 @@ shutdown() {
 - **Obstacles**: PNG files (rock, cactus, log, etc.)
 - **Coins**: Single PNG with scale animation
 - **Powerups**: Shield, magnet, double jump icons
-- **Ground Decoration**: Weed sprites for parallax
+
+### Background System
+- **Visual Background**: Simple gradient sky (light blue) created with graphics
+- **Ground**: Brown rectangle from y=450 to y=600 with darker brown border line
+- **No parallax**: Static backgrounds only - no scrolling elements or decorations
+- **MenuScene**: Same simple background system as GameScene for consistency
 
 ### Audio
 All sound effects in `assets/audio/sfx/`:
@@ -285,24 +307,35 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Known Issues & Technical Debt
 
-1. **GameScene.js is still large** (~1700 lines)
-   - Future: Extract UI management into UIManager
-   - Future: Extract background/decoration into EnvironmentManager
-
-2. **No mobile responsive scaling**
+1. **No mobile responsive scaling**
    - Canvas is fixed 800x600
    - Could add viewport scaling logic
 
-3. **No online leaderboard**
+2. **No online leaderboard**
    - Currently localStorage only
    - Could integrate backend API
+
+## Recent Changes (2025-11-15)
+
+### Physics & Positioning Fixes
+- Fixed ground alignment: Physics ground moved from y=550 to y=451 to match visual ground at y=450
+- Changed physics ground from 100px thick to 2px thin collider for more precise platform behavior
+- Fixed animation flickering: Changed ground detection from `blocked.down || touching.down` to just `blocked.down` to prevent mid-air coin collection from triggering run animation
+
+### Background Simplification
+- Removed all parallax background images and scrolling systems
+- Replaced with simple gradient sky and solid brown ground
+- Removed ground decorations (weeds, texture dots, clouds, sun)
+- EnvironmentManager now only handles static background rendering
+- MenuScene simplified to match GameScene background style
 
 ## Future Enhancement Ideas
 
 ### Visual Polish
 - Particle effects for collisions
 - Dust clouds on landing
-- Parallax background layers
+- Re-add parallax background layers (with proper alignment)
+- Ground decorations and atmospheric elements
 - Animated obstacles
 
 ### Gameplay Features
@@ -346,6 +379,9 @@ physics: {
 - **"Cannot read property of undefined"**: Check asset loading in MenuScene
 - **Collision not working**: Verify collision box setup in ObstacleManager
 - **Powerup not activating**: Check StoreManager inventory counts
+- **Kangaroo floating above ground**: Check physics ground position matches visual ground at y=450
+- **Animation flickering mid-air**: Ensure ground detection only uses `body.blocked.down`, not `touching.down`
+- **Obstacles not aligned with ground**: Verify all obstacle spawn positions use GROUND_Y constant
 
 ## Git Workflow
 
@@ -367,8 +403,22 @@ physics: {
 - **Phaser Examples**: https://phaser.io/examples
 - **Game Design**: Keep it simple, accessible, fun
 
+## Important Constants
+
+### Ground & Physics
+- **GROUND_Y**: 450 (defined in GAME_CONFIG.DIFFICULTY.GROUND_Y)
+- **Canvas Size**: 800x600
+- **Physics Ground**: y=451, height=2px (thin platform collider)
+- **Visual Ground**: Brown rectangle from y=450 to y=600
+- All obstacles, kangaroo, and collectibles must align to GROUND_Y
+
+### Sprite Origins
+- **Kangaroo**: setOrigin(0.5, 1) - bottom-center anchor
+- **Obstacles**: Most use setOrigin(0.5, 1) - check ObstacleManager for specifics
+- **Coins/Powerups**: Check CollectibleManager and PowerupManager
+
 ---
 
 **Last Updated**: 2025-11-15
-**Game Version**: 2.0 (Refactored Architecture)
+**Game Version**: 2.1 (Physics Fixed, Background Simplified)
 **Phaser Version**: 3.90.0

@@ -83,12 +83,12 @@ export const GAME_CONFIG = {
             emu: 15,
             camel: 10,
             croc: 10,
-            // Pixel Adventure obstacles (TESTING - high weight to see them)
-            bee: 30,
-            plant: 30,
-            snail: 30,
-            mushroom: 30,
-            trunk: 30
+            // Pixel Adventure obstacles (DISABLED - not Australian themed)
+            bee: 0,
+            plant: 0,
+            snail: 0,
+            mushroom: 0,
+            trunk: 0
         },
 
         // Variant spawn chances (e.g., spider_rock vs rock)

@@ -145,6 +145,7 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo.body.setOffset(config.BODY_OFFSET_X, config.BODY_OFFSET_Y);
         this.kangaroo.body.setGravityY(GAME_CONFIG.PHYSICS.KANGAROO_GRAVITY);
         this.kangaroo.setOrigin(0.5, 1);
+        this.kangaroo.setDepth(100); // Ensure kangaroo is always in front of everything
         this.kangaroo.play(runAnimKey);
     }
 
@@ -249,9 +250,10 @@ export default class GameScene extends Phaser.Scene {
      * Create invisible physics ground
      */
     createPhysicsGround() {
+        const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 450
         this.groundBody = this.physics.add.staticGroup();
-        const groundCollider = this.groundBody.create(700, 550, null);
-        groundCollider.setSize(2000, 100);
+        const groundCollider = this.groundBody.create(400, GROUND_Y + 1, null);
+        groundCollider.setSize(2000, 2);
         groundCollider.setVisible(false);
     }
 
@@ -390,7 +392,8 @@ export default class GameScene extends Phaser.Scene {
      * Update player animation based on state
      */
     updatePlayerAnimation() {
-        const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
+        // Only check blocked.down for more reliable ground detection
+        const isOnGround = this.kangaroo.body.blocked.down;
         const currentAnim = this.kangaroo.anims.currentAnim?.key;
 
         const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';

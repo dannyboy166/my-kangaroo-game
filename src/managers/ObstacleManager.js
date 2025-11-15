@@ -39,6 +39,9 @@ export default class ObstacleManager {
             // Special handling for magpie swooping behavior
             if (obstacle.texture.key === 'magpie') {
                 this.updateMagpieBehavior(obstacle, delta);
+            } else if (obstacle.isFlyingBee) {
+                // Bee movement: faster horizontal + sine wave vertical
+                this.updateBeeBehavior(obstacle, delta);
             } else if (obstacle.isRunningEmu) {
                 // Running emu uses custom speed
                 obstacle.x -= obstacle.runSpeed * delta / 1000;
@@ -339,6 +342,11 @@ export default class ObstacleManager {
         // Start flying animation
         bee.play('bee_fly');
 
+        // Mark as flying bee for special movement
+        bee.isFlyingBee = true;
+        bee.beeStartY = startY;
+        bee.beeTime = 0;
+
         this.obstacles.add(bee);
 
         // Disable gravity
@@ -399,6 +407,24 @@ export default class ObstacleManager {
                 magpie.rotation = 0;
             }
         }
+    }
+
+    /**
+     * Update bee flight behavior
+     * @param {Phaser.GameObjects.Sprite} bee - The bee sprite
+     * @param {number} delta - Time elapsed
+     */
+    updateBeeBehavior(bee, delta) {
+        // Move bee horizontally faster than normal obstacles (1.3x game speed)
+        bee.x -= this.gameSpeed * 1.3 * delta / 1000;
+
+        // Increment bee animation time
+        bee.beeTime += delta / 1000;
+
+        // Apply sine wave vertical movement
+        // Period: 2 seconds, amplitude: 30 pixels
+        const verticalOffset = Math.sin(bee.beeTime * Math.PI) * 30;
+        bee.y = bee.beeStartY + verticalOffset;
     }
 
     /**
