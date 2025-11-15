@@ -50,7 +50,13 @@ export const GAME_CONFIG = {
             emu: 0.8,
             croc: 0.55,
             camel: 1.0,
-            koala: 0.8
+            koala: 0.8,
+            // Pixel Adventure obstacles
+            bee: 1.2,
+            plant: 1.0,
+            snail: 1.0,
+            mushroom: 0.9,
+            trunk: 0.8
         },
 
         // Score thresholds for unlocking new obstacles
@@ -58,7 +64,13 @@ export const GAME_CONFIG = {
             koala: 1000,
             emu: 2000,
             camel: 3000,
-            croc: 4000
+            croc: 4000,
+            // Pixel Adventure obstacles unlock later for variety
+            bee: 500,
+            plant: 1500,
+            snail: 2500,
+            mushroom: 3500,
+            trunk: 4500
         },
 
         // Weighted spawn chances for each obstacle type
@@ -70,7 +82,13 @@ export const GAME_CONFIG = {
             koala: 20,
             emu: 15,
             camel: 10,
-            croc: 10
+            croc: 10,
+            // Pixel Adventure obstacles (lighter weights for variety)
+            bee: 15,
+            plant: 12,
+            snail: 10,
+            mushroom: 10,
+            trunk: 8
         },
 
         // Variant spawn chances (e.g., spider_rock vs rock)

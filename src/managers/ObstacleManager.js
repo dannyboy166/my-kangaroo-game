@@ -187,7 +187,29 @@ export default class ObstacleManager {
         // Set collision boxes based on obstacle type
         this.setCollisionBox(obstacle, type);
 
+        // Play animation for animated obstacles
+        this.playObstacleAnimation(obstacle, type);
+
         this.obstacles.add(obstacle);
+    }
+
+    /**
+     * Play animation for obstacle if it has one
+     * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
+     * @param {string} type - Obstacle type
+     */
+    playObstacleAnimation(obstacle, type) {
+        const animationMap = {
+            bee: 'bee_fly',
+            plant: 'plant_idle',
+            snail: 'snail_walk',
+            mushroom: 'mushroom_idle',
+            trunk: 'trunk_walk'
+        };
+
+        if (animationMap[type]) {
+            obstacle.play(animationMap[type]);
+        }
     }
 
     /**

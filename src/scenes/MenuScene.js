@@ -40,7 +40,29 @@ export default class MenuScene extends Phaser.Scene {
             frameWidth: 128, // 512 ÷ 4 frames = 128 per frame
             frameHeight: 128
         });
-        
+
+        // Load Pixel Adventure obstacles (animated sprite sheets)
+        this.load.spritesheet('bee', 'assets/images/pixel-adventure-obstacles/bee.png', {
+            frameWidth: 36,
+            frameHeight: 34
+        });
+        this.load.spritesheet('plant', 'assets/images/pixel-adventure-obstacles/plant.png', {
+            frameWidth: 44,
+            frameHeight: 42
+        });
+        this.load.spritesheet('snail', 'assets/images/pixel-adventure-obstacles/snail.png', {
+            frameWidth: 38,
+            frameHeight: 24
+        });
+        this.load.spritesheet('mushroom', 'assets/images/pixel-adventure-obstacles/mushroom.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+        this.load.spritesheet('trunk', 'assets/images/pixel-adventure-obstacles/trunk.png', {
+            frameWidth: 64,
+            frameHeight: 32
+        });
+
         // Load coin
         this.load.image('coin', 'assets/images/coin.png');
         

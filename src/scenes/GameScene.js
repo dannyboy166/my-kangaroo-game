@@ -201,6 +201,48 @@ export default class GameScene extends Phaser.Scene {
                 repeat: -1
             });
         }
+
+        // Pixel Adventure obstacle animations
+        if (!this.anims.exists('bee_fly')) {
+            this.anims.create({
+                key: 'bee_fly',
+                frames: this.anims.generateFrameNumbers('bee', { start: 0, end: 5 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('plant_idle')) {
+            this.anims.create({
+                key: 'plant_idle',
+                frames: this.anims.generateFrameNumbers('plant', { start: 0, end: 10 }),
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('snail_walk')) {
+            this.anims.create({
+                key: 'snail_walk',
+                frames: this.anims.generateFrameNumbers('snail', { start: 0, end: 12 }),
+                frameRate: 6,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('mushroom_idle')) {
+            this.anims.create({
+                key: 'mushroom_idle',
+                frames: this.anims.generateFrameNumbers('mushroom', { start: 0, end: 15 }),
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('trunk_walk')) {
+            this.anims.create({
+                key: 'trunk_walk',
+                frames: this.anims.generateFrameNumbers('trunk', { start: 0, end: 17 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
     }
 
     /**
