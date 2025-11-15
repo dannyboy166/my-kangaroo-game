@@ -69,7 +69,7 @@ export const BACKGROUND_THEMES = {
                 depth: -85,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
-                y: 300 // Upper portion
+                y: 200 // Upper portion
             },
             {
                 key: 'beach_sea',
@@ -83,7 +83,7 @@ export const BACKGROUND_THEMES = {
             {
                 key: 'beach_land',
                 type: 'tileSprite',
-                scrollSpeed: 1,
+                scrollSpeed: 1.0, // Move at camera speed to match obstacles
                 depth: -50,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,

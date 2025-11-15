@@ -45,16 +45,16 @@ export default class EnvironmentManager {
         console.log(`🎨 Creating background for theme: ${theme.name}`);
 
         theme.layers.forEach(layerConfig => {
+            const yPos = layerConfig.y !== undefined ? layerConfig.y : CANVAS_HEIGHT / 2;
+
             if (layerConfig.type === 'image') {
                 // Fixed background image (no scrolling)
-                const yPos = layerConfig.y !== undefined ? layerConfig.y : CANVAS_HEIGHT / 2;
                 const img = this.scene.add.image(CANVAS_WIDTH / 2, yPos, layerConfig.key);
                 img.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT);
                 img.setDepth(layerConfig.depth);
                 img.setScrollFactor(layerConfig.scrollFactor);
             } else if (layerConfig.type === 'tileSprite') {
                 // Scrolling parallax layer with custom Y position
-                const yPos = layerConfig.y !== undefined ? layerConfig.y : CANVAS_HEIGHT / 2;
                 this.addParallaxLayer(
                     layerConfig.key,
                     layerConfig.scrollSpeed,
