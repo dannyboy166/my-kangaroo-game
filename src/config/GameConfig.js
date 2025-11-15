@@ -65,12 +65,12 @@ export const GAME_CONFIG = {
             emu: 2000,
             camel: 3000,
             croc: 4000,
-            // Pixel Adventure obstacles unlock later for variety
-            bee: 500,
-            plant: 1500,
-            snail: 2500,
-            mushroom: 3500,
-            trunk: 4500
+            // Pixel Adventure obstacles (TESTING - unlock early)
+            bee: 0,        // Available from start
+            plant: 0,      // Available from start
+            snail: 0,      // Available from start
+            mushroom: 0,   // Available from start
+            trunk: 0       // Available from start
         },
 
         // Weighted spawn chances for each obstacle type
@@ -83,12 +83,12 @@ export const GAME_CONFIG = {
             emu: 15,
             camel: 10,
             croc: 10,
-            // Pixel Adventure obstacles (lighter weights for variety)
-            bee: 15,
-            plant: 12,
-            snail: 10,
-            mushroom: 10,
-            trunk: 8
+            // Pixel Adventure obstacles (TESTING - high weight to see them)
+            bee: 30,
+            plant: 30,
+            snail: 30,
+            mushroom: 30,
+            trunk: 30
         },
 
         // Variant spawn chances (e.g., spider_rock vs rock)
