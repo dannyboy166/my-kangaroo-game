@@ -72,12 +72,13 @@ export default class MenuScene extends Phaser.Scene {
         // Load parallax background layers
         this.load.image('parallax_background', 'assets/images/parallax/_11_background.png');
         this.load.image('parallax_distant_clouds', 'assets/images/parallax/_10_distant_clouds.png');
+        this.load.image('parallax_distant_clouds1', 'assets/images/parallax/_09_distant_clouds1.png');
         this.load.image('parallax_clouds', 'assets/images/parallax/_08_clouds.png');
         this.load.image('parallax_hill2', 'assets/images/parallax/_06_hill2.png');
         this.load.image('parallax_hill1', 'assets/images/parallax/_05_hill1.png');
         this.load.image('parallax_bushes', 'assets/images/parallax/_04_bushes.png');
         this.load.image('parallax_distant_trees', 'assets/images/parallax/_03_distant_trees.png');
-        this.load.image('parallax_trees_bushes', 'assets/images/parallax/_02_trees and bushes.png');
+        this.load.image('parallax_trees_bushes', 'assets/images/parallax/_02_trees_and_bushes.png');
         this.load.image('parallax_ground', 'assets/images/parallax/_01_ground.png');
 
         // Load powerup images

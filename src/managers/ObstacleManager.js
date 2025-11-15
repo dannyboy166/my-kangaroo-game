@@ -36,6 +36,17 @@ export default class ObstacleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
+        // Debug logging every 180 frames
+        if (!this.debugCounter) this.debugCounter = 0;
+        this.debugCounter++;
+        if (this.debugCounter % 180 === 0) {
+            console.log('🚧 Obstacle Manager Status:', {
+                activeObstacles: this.obstacles.children.entries.length,
+                score: this.score.toFixed(0),
+                memoryNote: 'Using Phaser Groups for object pooling - efficient!'
+            });
+        }
+
         this.obstacles.children.entries.slice().forEach((obstacle) => {
             if (!obstacle || !obstacle.active) return;
 
@@ -49,8 +60,13 @@ export default class ObstacleManager {
             // Note: Obstacles are stationary in world, no velocity needed
             // Camera movement creates illusion of obstacles moving
 
-            // Clean up obstacles that are far behind kangaroo
-            if (obstacle.x < kangaroo.x - 200) {
+            // Clean up obstacles that are off-screen (behind camera view)
+            const camera = this.scene.cameras.main;
+            const cameraLeftEdge = camera.scrollX;
+            if (obstacle.x < cameraLeftEdge - 100) {
+                if (Math.random() < 0.1) { // Log 10% of deletions to avoid spam
+                    console.log('🗑️ Obstacle deleted (off-screen):', obstacle.texture.key);
+                }
                 obstacle.destroy();
             }
         });

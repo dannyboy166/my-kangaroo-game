@@ -151,10 +151,19 @@ export default class GameScene extends Phaser.Scene {
         // Set constant forward velocity (kangaroo runs forward)
         this.kangaroo.setVelocityX(this.gameSpeed);
 
-        // Setup camera to follow kangaroo
-        this.cameras.main.startFollow(this.kangaroo, false, 0.1, 0);
-        this.cameras.main.setDeadzone(200, 0); // Keep kangaroo 200px from left edge
+        console.log('🦘 Kangaroo created:', {
+            x: this.kangaroo.x,
+            y: this.kangaroo.y,
+            velocityX: this.kangaroo.body.velocity.x,
+            gravity: this.kangaroo.body.gravity.y,
+            hasBody: !!this.kangaroo.body
+        });
+
+        // Setup camera to follow kangaroo smoothly
+        // Kangaroo stays on left side of screen (around x=200-250 in camera view)
+        this.cameras.main.startFollow(this.kangaroo, true, 0.1, 0); // Smooth horizontal follow, instant vertical
         this.cameras.main.setBounds(0, 0, Number.MAX_SAFE_INTEGER, 600);
+        this.cameras.main.setFollowOffset(-250, 0); // Keep kangaroo 250px from left edge of camera
     }
 
     /**
@@ -259,10 +268,26 @@ export default class GameScene extends Phaser.Scene {
      */
     createPhysicsGround() {
         const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 520
+
+        // Create a rectangle shape for the ground using add.rectangle
+        const groundWidth = 1000000;
+        const groundHeight = 50;
+        const groundX = groundWidth / 2; // Center it
+
+        const ground = this.add.rectangle(groundX, GROUND_Y + groundHeight/2, groundWidth, groundHeight, 0x00ff00, 0); // Alpha 0 = invisible
+        this.physics.add.existing(ground, true); // true = static body
+
+        // Store in a group for collision management
         this.groundBody = this.physics.add.staticGroup();
-        const groundCollider = this.groundBody.create(400, GROUND_Y + 1, null);
-        groundCollider.setSize(2000, 2);
-        groundCollider.setVisible(false);
+        this.groundBody.add(ground);
+
+        console.log('🟩 Ground created:', {
+            x: ground.x,
+            y: ground.y,
+            width: ground.body.width,
+            height: ground.body.height,
+            GROUND_Y: GROUND_Y
+        });
     }
 
     /**
@@ -291,7 +316,9 @@ export default class GameScene extends Phaser.Scene {
      */
     setupCollisions() {
         // Kangaroo collides with ground
-        this.physics.add.collider(this.kangaroo, this.groundBody);
+        console.log('🔗 Setting up collision between kangaroo and ground');
+        const collider = this.physics.add.collider(this.kangaroo, this.groundBody);
+        console.log('🔗 Collider created:', collider);
 
         // Obstacles collide with ground
         this.physics.add.collider(this.obstacleManager.getObstacles(), this.groundBody);

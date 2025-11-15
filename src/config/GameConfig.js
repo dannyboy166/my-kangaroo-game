@@ -147,7 +147,7 @@ export const GAME_CONFIG = {
 
     // Kangaroo configuration
     KANGAROO: {
-        X: 150,
+        X: 50, // Start further left, runs to ~30% of screen before camera follows
         SCALE: 1.2,
         BODY_WIDTH: 70,
         BODY_HEIGHT: 48,

@@ -38,6 +38,17 @@ export default class CollectibleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
+        // Debug logging every 180 frames
+        if (!this.debugCounter) this.debugCounter = 0;
+        this.debugCounter++;
+        if (this.debugCounter % 180 === 0) {
+            console.log('🪙 Collectible Manager Status:', {
+                activeCoins: this.coins.children.entries.length,
+                magnetActive: magnetActive,
+                memoryNote: 'Coins auto-pooled by Phaser Groups'
+            });
+        }
+
         this.coins.children.entries.slice().forEach((coin) => {
             if (!coin || !coin.active) return;
 
@@ -59,8 +70,10 @@ export default class CollectibleManager {
 
             // No normal movement - coins are stationary in world (camera creates movement illusion)
 
-            // Clean up coins that are far behind kangaroo
-            if (coin.x < kangaroo.x - 200) {
+            // Clean up coins that are off-screen (behind camera view)
+            const camera = this.scene.cameras.main;
+            const cameraLeftEdge = camera.scrollX;
+            if (coin.x < cameraLeftEdge - 100) {
                 this.coinCollectionCooldown.delete(coin);
                 coin.destroy();
             }

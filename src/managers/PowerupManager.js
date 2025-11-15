@@ -47,17 +47,30 @@ export default class PowerupManager {
     update(delta) {
         if (this.isGameOver) return;
 
+        // Debug logging every 180 frames
+        if (!this.debugCounter) this.debugCounter = 0;
+        this.debugCounter++;
+        if (this.debugCounter % 180 === 0) {
+            console.log('⚡ Powerup Manager Status:', {
+                activePowerups: this.powerups.children.entries.length,
+                activeEffects: Object.keys(this.activePowerups).filter(k => this.activePowerups[k].active).length,
+                memoryNote: 'Visual effects cleaned up on deactivation'
+            });
+        }
+
         // Update powerup timers
         this.updatePowerupTimers(delta);
 
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
-        // Clean up powerups that are far behind kangaroo (no velocity needed - stationary in world)
+        // Clean up powerups that are off-screen (behind camera view)
+        const camera = this.scene.cameras.main;
+        const cameraLeftEdge = camera.scrollX;
         this.powerups.children.entries.slice().forEach((powerup) => {
             if (!powerup || !powerup.active) return;
 
-            if (powerup.x < kangaroo.x - 200) {
+            if (powerup.x < cameraLeftEdge - 100) {
                 powerup.destroy();
             }
         });
