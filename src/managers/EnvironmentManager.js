@@ -5,7 +5,19 @@ import GameDataManager from './GameDataManager.js';
 /**
  * EnvironmentManager
  * Handles background rendering with TileSprite for infinite parallax scrolling
- * Supports multiple background themes
+ * Supports multiple background themes (Outback, Beach)
+ *
+ * ===== HOW PARALLAX SCROLLING WORKS =====
+ * Each background layer is a TileSprite that repeats infinitely.
+ * The layer's scrollSpeed controls how fast it moves relative to the camera:
+ *   - scrollSpeed 0.0  = Fixed (doesn't move, like distant sky)
+ *   - scrollSpeed 0.1  = Very slow (far distant clouds)
+ *   - scrollSpeed 0.3  = Slow (middle distance elements)
+ *   - scrollSpeed 0.6  = Medium (trees/bushes)
+ *   - scrollSpeed 1.0  = Full speed (foreground ground, matches obstacles)
+ *
+ * Lower scrollSpeed = appears further away (parallax effect)
+ * This creates depth perception and makes the world feel 3D!
  */
 export default class EnvironmentManager {
     /**
@@ -109,8 +121,12 @@ export default class EnvironmentManager {
         if (this.isGameOver) return;
 
         const camera = this.scene.cameras.main;
+        const kangaroo = this.scene.kangaroo;
 
-        // Update each parallax layer
+        // Update each parallax layer based on camera scrollX
+        // All layers use camera position multiplied by their scrollSpeed
+        // scrollSpeed 1.0 = moves at camera speed (appears stationary, like obstacles)
+        // scrollSpeed 0.5 = moves at half camera speed (parallax effect)
         this.parallaxLayers.forEach(layer => {
             layer.sprite.tilePositionX = camera.scrollX * layer.scrollSpeed;
         });

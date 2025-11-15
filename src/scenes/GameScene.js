@@ -9,7 +9,20 @@ import UIManager from '../managers/UIManager.js';
 
 /**
  * GameScene
- * Main gameplay scene - now streamlined with manager-based architecture
+ * Main gameplay scene - streamlined with manager-based architecture
+ *
+ * ===== INFINITE RUNNER CAMERA SYSTEM =====
+ * This game uses a camera-following system where:
+ * 1. Kangaroo sprite moves forward in WORLD SPACE (x position increases)
+ * 2. Camera smoothly follows kangaroo horizontally
+ * 3. Camera offset keeps kangaroo ~250px from left edge (visible to player)
+ * 4. Obstacles spawn at fixed world X positions ahead of kangaroo
+ * 5. Background layers scroll at different speeds (parallax effect)
+ *
+ * Player sees: Kangaroo "running in place" while world scrolls by
+ * Reality: Kangaroo moving forward, camera following, creating scrolling illusion
+ *
+ * This is how ALL infinite runners work (Temple Run, Subway Surfers, etc.)
  */
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -122,6 +135,12 @@ export default class GameScene extends Phaser.Scene {
 
     /**
      * Create player kangaroo sprite
+     *
+     * KEY CONCEPT: The kangaroo moves forward in world space!
+     * - Starts at world X = 50
+     * - Constantly moves forward (velocity X = gameSpeed)
+     * - Camera follows, so player sees kangaroo "stay in place"
+     * - This creates the infinite runner scrolling effect
      */
     createPlayer() {
         // Create kangaroo animations if they don't exist
@@ -131,39 +150,39 @@ export default class GameScene extends Phaser.Scene {
         const spriteKey = this.helmetEquipped ? 'kangaroo_helmet' : 'kangaroo';
         const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';
 
-        // Create kangaroo sprite at world position 150
+        // Create kangaroo sprite at starting world position
         const config = GAME_CONFIG.KANGAROO;
         this.kangaroo = this.physics.add.sprite(
-            config.X,
-            GAME_CONFIG.DIFFICULTY.GROUND_Y,
+            config.X, // World X position (starts at 50)
+            GAME_CONFIG.DIFFICULTY.GROUND_Y, // Ground level (520px)
             spriteKey
         );
 
+        // Configure physics body
         this.kangaroo.setScale(config.SCALE);
-        this.kangaroo.setCollideWorldBounds(false); // Don't limit to world bounds
+        this.kangaroo.setCollideWorldBounds(false); // Allow infinite forward movement
         this.kangaroo.body.setSize(config.BODY_WIDTH, config.BODY_HEIGHT);
         this.kangaroo.body.setOffset(config.BODY_OFFSET_X, config.BODY_OFFSET_Y);
         this.kangaroo.body.setGravityY(GAME_CONFIG.PHYSICS.KANGAROO_GRAVITY);
-        this.kangaroo.setOrigin(0.5, 1);
-        this.kangaroo.setDepth(100); // Ensure kangaroo is always in front of everything
+        this.kangaroo.setOrigin(0.5, 1); // Bottom-center anchor (feet on ground)
+        this.kangaroo.setDepth(100); // Always in front of background
         this.kangaroo.play(runAnimKey);
 
-        // Set constant forward velocity (kangaroo runs forward)
+        // CRITICAL: Set constant forward velocity (this makes kangaroo run forward in world space)
         this.kangaroo.setVelocityX(this.gameSpeed);
 
         console.log('🦘 Kangaroo created:', {
-            x: this.kangaroo.x,
-            y: this.kangaroo.y,
+            worldX: this.kangaroo.x,
+            groundY: this.kangaroo.y,
             velocityX: this.kangaroo.body.velocity.x,
-            gravity: this.kangaroo.body.gravity.y,
-            hasBody: !!this.kangaroo.body
+            gravity: this.kangaroo.body.gravity.y
         });
 
         // Setup camera to follow kangaroo smoothly
-        // Kangaroo stays on left side of screen (around x=200-250 in camera view)
-        this.cameras.main.startFollow(this.kangaroo, true, 0.1, 0); // Smooth horizontal follow, instant vertical
-        this.cameras.main.setBounds(0, 0, Number.MAX_SAFE_INTEGER, 600);
-        this.cameras.main.setFollowOffset(-250, 0); // Keep kangaroo 250px from left edge of camera
+        // This makes the kangaroo appear to "stay in place" while world scrolls
+        this.cameras.main.startFollow(this.kangaroo, true, 0.1, 0); // Smooth horizontal, instant vertical
+        this.cameras.main.setBounds(0, 0, Number.MAX_SAFE_INTEGER, 600); // Infinite right boundary
+        this.cameras.main.setFollowOffset(-250, 0); // Kangaroo appears 250px from left edge of screen
     }
 
     /**
@@ -265,28 +284,41 @@ export default class GameScene extends Phaser.Scene {
 
     /**
      * Create invisible physics ground
+     *
+     * The ground is a static (non-moving) platform in world space.
+     * - Very wide (1,000,000px) to extend infinitely as kangaroo runs
+     * - Positioned at GROUND_Y (520px)
+     * - Invisible (alpha 0) since visual ground comes from background layers
+     * - Static body (doesn't move or fall)
      */
     createPhysicsGround() {
-        const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 520
+        const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 520px
 
-        // Create a rectangle shape for the ground using add.rectangle
-        const groundWidth = 1000000;
-        const groundHeight = 50;
-        const groundX = groundWidth / 2; // Center it
+        // Create an extremely wide rectangle for the ground platform
+        const groundWidth = 1000000; // Wide enough for extended gameplay
+        const groundHeight = 50; // Thick enough for reliable collision
+        const groundX = groundWidth / 2; // Center it in world space
 
-        const ground = this.add.rectangle(groundX, GROUND_Y + groundHeight/2, groundWidth, groundHeight, 0x00ff00, 0); // Alpha 0 = invisible
-        this.physics.add.existing(ground, true); // true = static body
+        // Create invisible rectangle (visual ground comes from background layers)
+        const ground = this.add.rectangle(
+            groundX,
+            GROUND_Y + groundHeight/2, // Y position (center of rectangle)
+            groundWidth,
+            groundHeight,
+            0x00ff00, // Green (won't be visible anyway)
+            0 // Alpha 0 = completely invisible
+        );
+        this.physics.add.existing(ground, true); // true = static body (doesn't move)
 
         // Store in a group for collision management
         this.groundBody = this.physics.add.staticGroup();
         this.groundBody.add(ground);
 
-        console.log('🟩 Ground created:', {
-            x: ground.x,
-            y: ground.y,
+        console.log('🟩 Physics ground created:', {
+            worldX: ground.x,
+            topY: GROUND_Y,
             width: ground.body.width,
-            height: ground.body.height,
-            GROUND_Y: GROUND_Y
+            height: ground.body.height
         });
     }
 
@@ -466,6 +498,9 @@ export default class GameScene extends Phaser.Scene {
             if (this.kangaroo && this.kangaroo.body) {
                 this.kangaroo.setVelocityX(this.gameSpeed);
             }
+
+            // Update obstacle speeds to match new game speed
+            this.obstacleManager.setGameSpeed(this.gameSpeed);
 
             // Update environment speed for parallax
             this.environmentManager.setGameSpeed(this.gameSpeed);

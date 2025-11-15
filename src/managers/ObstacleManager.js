@@ -57,8 +57,8 @@ export default class ObstacleManager {
                 // Bee movement: faster horizontal + sine wave vertical
                 this.updateBeeBehavior(obstacle, delta);
             }
-            // Note: Obstacles are stationary in world, no velocity needed
-            // Camera movement creates illusion of obstacles moving
+            // Note: All obstacles move forward at gameSpeed to stay fixed relative to ground
+            // Kangaroo also moves at gameSpeed, so obstacles appear stationary in screen space
 
             // Clean up obstacles that are off-screen (behind camera view)
             const camera = this.scene.cameras.main;
@@ -226,6 +226,10 @@ export default class ObstacleManager {
         obstacle.body.setImmovable(true);
         obstacle.body.setGravityY(0);
 
+        // Obstacles are stationary in world space (velocity 0)
+        // Camera movement makes them scroll backward relative to kangaroo
+        obstacle.setVelocityX(0);
+
         // Set collision boxes based on obstacle type
         this.setCollisionBox(obstacle, type);
 
@@ -306,6 +310,7 @@ export default class ObstacleManager {
         magpie.setOrigin(0.5, 0.5);
         magpie.body.setImmovable(true);
         magpie.setVelocityY(0);
+        magpie.setVelocityX(0); // Stationary in world space
         magpie.body.pushable = false;
         magpie.body.setSize(magpie.width * 0.7, magpie.height * 0.5);
 
@@ -358,6 +363,7 @@ export default class ObstacleManager {
         bee.setOrigin(0.5, 0.5);
         bee.body.setImmovable(true);
         bee.setVelocityY(0);
+        bee.setVelocityX(0); // Stationary in world space
         bee.body.pushable = false;
         bee.body.setSize(bee.width * 0.6, bee.height * 0.6);
 
@@ -390,8 +396,7 @@ export default class ObstacleManager {
     updateMagpieBehavior(magpie, delta) {
         const config = GAME_CONFIG.MAGPIE;
 
-        // No horizontal movement - magpie is stationary in world (camera creates illusion of movement)
-        // Get kangaroo reference from scene
+        // Magpie moves forward with kangaroo (base velocity), only Y movement controlled here
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
@@ -435,8 +440,8 @@ export default class ObstacleManager {
      * @param {number} delta - Time elapsed
      */
     updateBeeBehavior(bee, delta) {
-        // Move bee horizontally faster than normal obstacles (1.3x game speed)
-        bee.x -= this.gameSpeed * 1.3 * delta / 1000;
+        // Bee already has base velocity (gameSpeed) set in spawn
+        // No additional horizontal movement needed - bee moves with ground
 
         // Increment bee animation time
         bee.beeTime += delta / 1000;
@@ -472,6 +477,9 @@ export default class ObstacleManager {
         emu.body.setGravityY(0);
         emu.body.setSize(emu.width * 0.6, emu.height * 0.8);
         emu.body.setOffset(0, emu.height * 0.2);
+
+        // Stationary in world space (like all obstacles)
+        emu.setVelocityX(0);
 
         emu.play('emu_run');
         emu.isRunningEmu = true;
@@ -525,6 +533,8 @@ export default class ObstacleManager {
      */
     setGameSpeed(speed) {
         this.gameSpeed = speed;
+        // Note: Obstacles remain stationary in world space (velocity 0)
+        // Only used for spawning new obstacles with updated animations
     }
 
     /**

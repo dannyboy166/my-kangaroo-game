@@ -63,13 +63,15 @@ The game follows a **manager-based architecture** for better separation of conce
 1. **GameConfig.js** (`src/config/`)
    - Central configuration for all game constants
    - Physics settings, spawn timings, obstacle properties
+   - Coordinate system reference and scrolling explanation
    - Easy to tune game balance without touching code
 
 2. **EnvironmentManager** (`src/managers/EnvironmentManager.js`)
-   - Handles simple background rendering (sky gradient and ground)
-   - No parallax or scrolling elements - static background only
-   - Creates sky gradient (light blue) and brown ground area
-   - Ground positioned at GROUND_Y (450px)
+   - Handles multi-layer parallax background scrolling
+   - Supports multiple themes (Outback, Beach) via BackgroundConfig
+   - Uses TileSprites for infinite repeating backgrounds
+   - Parallax layers create depth (slower = appears further away)
+   - Ground positioned at GROUND_Y (520px)
 
 3. **ObstacleManager** (`src/managers/ObstacleManager.js`)
    - Handles all obstacle spawning logic
@@ -124,11 +126,12 @@ MenuScene → GameScene ↔ StoreScene → GameOverScene → MenuScene
 - **Engine**: Phaser Arcade Physics
 - **Gravity**: 800 (global), 900 (kangaroo-specific)
 - **Jump Velocity**: -950 (normal), -750 (double jump)
-- **Ground Level**: y = 450 (GAME_CONFIG.DIFFICULTY.GROUND_Y)
-- **Physics Ground**: Thin collider at y = 451 (2px height)
+- **Ground Level**: y = 520 (GAME_CONFIG.DIFFICULTY.GROUND_Y)
+- **Physics Ground**: Wide platform (1,000,000px x 50px) at GROUND_Y, invisible
 - **Collision Detection**: Overlap-based for precise hit detection
-- **World Bounds**: Kangaroo constrained to canvas
+- **World Bounds**: Kangaroo NOT constrained (infinite forward movement)
 - **Animation System**: Uses `body.blocked.down` for reliable ground detection (prevents flickering during mid-air collisions)
+- **Scrolling System**: Camera-based infinite runner (kangaroo moves forward in world space, camera follows)
 
 ### Obstacle System
 - **Base Obstacles**: Rock, cactus, log (available from start)
@@ -255,10 +258,16 @@ shutdown() {
 - **Powerups**: Shield, magnet, double jump icons
 
 ### Background System
-- **Visual Background**: Simple gradient sky (light blue) created with graphics
-- **Ground**: Brown rectangle from y=450 to y=600 with darker brown border line
-- **No parallax**: Static backgrounds only - no scrolling elements or decorations
-- **MenuScene**: Same simple background system as GameScene for consistency
+- **Multi-Theme Support**: Outback and Beach themes (configurable in BackgroundConfig.js)
+- **Parallax Scrolling**: Multiple TileSprite layers that repeat infinitely
+- **Depth Illusion**: Layers scroll at different speeds (0.1 to 1.0)
+  - scrollSpeed 0.0 = Fixed (distant sky)
+  - scrollSpeed 0.1-0.3 = Far background (clouds, distant elements)
+  - scrollSpeed 0.6 = Mid-ground (trees, bushes)
+  - scrollSpeed 1.0 = Foreground ground (matches obstacle movement)
+- **Visual Ground**: Comes from foreground parallax layer at y=520
+- **Physics Ground**: Separate invisible platform for collision detection
+- **Theme Selection**: Stored in GameDataManager (persistent across sessions)
 
 ### Audio
 All sound effects in `assets/audio/sfx/`:
@@ -317,17 +326,26 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes (2025-11-15)
 
-### Physics & Positioning Fixes
-- Fixed ground alignment: Physics ground moved from y=550 to y=451 to match visual ground at y=450
-- Changed physics ground from 100px thick to 2px thin collider for more precise platform behavior
-- Fixed animation flickering: Changed ground detection from `blocked.down || touching.down` to just `blocked.down` to prevent mid-air coin collection from triggering run animation
+### Code Structure & Documentation Overhaul
+- **Fixed GROUND_Y Consistency**: All references now correctly use 520px (was incorrectly documented as 450px)
+- **Added Comprehensive Comments**:
+  - GameConfig.js: Added coordinate system reference and infinite runner explanation
+  - EnvironmentManager.js: Added detailed parallax scrolling explanation
+  - GameScene.js: Added camera system documentation and world space concepts
+  - BackgroundConfig.js: Added layer system explanation
+- **Fixed Background Configuration**: Beach land layer now correctly positioned at y=520
+- **Improved Code Clarity**: All manager files now have clear, educational comments explaining how systems work
 
-### Background Simplification
-- Removed all parallax background images and scrolling systems
-- Replaced with simple gradient sky and solid brown ground
-- Removed ground decorations (weeds, texture dots, clouds, sun)
-- EnvironmentManager now only handles static background rendering
-- MenuScene simplified to match GameScene background style
+### Background System
+- **Multi-Theme Parallax**: Outback and Beach themes with multiple scrolling layers
+- **TileSprite Implementation**: Infinite repeating backgrounds using Phaser TileSprites
+- **Parallax Depth**: Layers scroll at different speeds (0.1 to 1.0) to create depth illusion
+- **Camera-Synchronized**: Foreground layers (scrollSpeed 1.0) perfectly match obstacle movement
+
+### Physics & Animation
+- **Animation System**: Uses `body.blocked.down` for reliable ground detection
+- **Physics Ground**: Wide invisible platform (1,000,000px) for infinite gameplay
+- **Camera Following**: Smooth horizontal following with offset to keep kangaroo visible
 
 ## Future Enhancement Ideas
 
@@ -379,9 +397,11 @@ physics: {
 - **"Cannot read property of undefined"**: Check asset loading in MenuScene
 - **Collision not working**: Verify collision box setup in ObstacleManager
 - **Powerup not activating**: Check StoreManager inventory counts
-- **Kangaroo floating above ground**: Check physics ground position matches visual ground at y=450
+- **Kangaroo floating above ground**: Check physics ground position matches GROUND_Y (520px)
 - **Animation flickering mid-air**: Ensure ground detection only uses `body.blocked.down`, not `touching.down`
 - **Obstacles not aligned with ground**: Verify all obstacle spawn positions use GROUND_Y constant
+- **Background not scrolling**: Check EnvironmentManager update() is called and parallax layers have correct scrollSpeed
+- **Background layers misaligned**: Verify Y positions in BackgroundConfig.js align with GROUND_Y (520px)
 
 ## Git Workflow
 
@@ -406,11 +426,18 @@ physics: {
 ## Important Constants
 
 ### Ground & Physics
-- **GROUND_Y**: 450 (defined in GAME_CONFIG.DIFFICULTY.GROUND_Y)
+- **GROUND_Y**: 520 (defined in GAME_CONFIG.DIFFICULTY.GROUND_Y)
 - **Canvas Size**: 800x600
-- **Physics Ground**: y=451, height=2px (thin platform collider)
-- **Visual Ground**: Brown rectangle from y=450 to y=600
+- **Physics Ground**: Wide platform (1,000,000px x 50px) at y=520 (invisible)
+- **Visual Ground**: Comes from background parallax layers (Beach/Outback themes)
 - All obstacles, kangaroo, and collectibles must align to GROUND_Y
+
+### Camera System
+- **Kangaroo Start Position**: x=50 (world space)
+- **Camera Follow Mode**: Smooth horizontal (lerp 0.1), instant vertical
+- **Camera Offset**: -250px (keeps kangaroo 250px from left edge of screen)
+- **Camera Bounds**: Infinite right boundary (Number.MAX_SAFE_INTEGER)
+- **Scrolling Method**: Kangaroo moves forward, camera follows (industry-standard infinite runner)
 
 ### Sprite Origins
 - **Kangaroo**: setOrigin(0.5, 1) - bottom-center anchor
@@ -420,5 +447,5 @@ physics: {
 ---
 
 **Last Updated**: 2025-11-15
-**Game Version**: 2.1 (Physics Fixed, Background Simplified)
+**Game Version**: 2.2 (Code Structure & Documentation Overhaul)
 **Phaser Version**: 3.90.0

@@ -1,6 +1,14 @@
 /**
  * Background Theme Configuration
  * Defines different background themes that players can choose
+ *
+ * How the parallax system works:
+ * - Each layer is a TileSprite that repeats infinitely
+ * - scrollSpeed determines parallax effect (0 = fixed, 1.0 = moves with camera)
+ * - Lower scrollSpeed = appears further away (slower movement)
+ * - scrollSpeed 1.0 = foreground layer (matches obstacle/ground movement)
+ * - depth controls layering (lower = further back)
+ * - Y positions are aligned to GROUND_Y (520px from GameConfig.js)
  */
 
 export const BACKGROUND_THEMES = {
@@ -69,7 +77,7 @@ export const BACKGROUND_THEMES = {
                 depth: -85,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
-                y: 200 // Upper portion
+                y: 300 // Upper portion
             },
             {
                 key: 'beach_sea',
@@ -83,11 +91,11 @@ export const BACKGROUND_THEMES = {
             {
                 key: 'beach_land',
                 type: 'tileSprite',
-                scrollSpeed: 1.0, // Move at camera speed to match obstacles
+                scrollSpeed: 1.0, // Scrolls at camera speed to match obstacles
                 depth: -50,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
-                y: 475 // Position higher so sandy part aligns with ground at y=450
+                y: 450 // Aligns with GROUND_Y (520px from GameConfig)
             }
         ]
     }

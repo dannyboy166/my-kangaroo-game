@@ -1,6 +1,23 @@
 /**
  * Game Configuration Constants
  * Central location for all game balance and configuration values
+ *
+ * ===== COORDINATE SYSTEM REFERENCE =====
+ * Canvas: 800px wide x 600px tall
+ * Ground Level (GROUND_Y): 520px (where kangaroo and obstacles stand)
+ * Origin: Top-left corner (0, 0)
+ * Y increases downward (standard canvas coordinates)
+ *
+ * ===== HOW THE SCROLLING WORKS =====
+ * This game uses "infinite runner" camera-based scrolling:
+ * 1. Kangaroo moves forward in world space (increasing X position)
+ * 2. Camera follows kangaroo smoothly
+ * 3. Obstacles spawn ahead in world space at fixed positions
+ * 4. Everything moves relative to the camera, creating the illusion of running
+ * 5. Background layers use parallax scrolling (slower = appears further away)
+ *
+ * This is the industry-standard approach used by games like:
+ * - Temple Run, Subway Surfers, Jetpack Joyride, etc.
  */
 
 export const GAME_CONFIG = {
