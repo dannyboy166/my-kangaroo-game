@@ -171,6 +171,8 @@ export default class ObstacleManager {
 
         if (randomType === 'magpie') {
             this.spawnMagpie();
+        } else if (randomType === 'bee') {
+            this.spawnBee();
         } else if (randomType === 'emu') {
             this.spawnRunningEmu();
         } else {
@@ -307,6 +309,45 @@ export default class ObstacleManager {
                 magpie.body.setVelocityY(0);
                 magpie.body.setGravity(0, 0);
                 magpie.body.setBounce(0);
+            }
+        });
+    }
+
+    /**
+     * Spawn a flying bee obstacle
+     */
+    spawnBee() {
+        if (this.isGameOver) return;
+
+        const config = GAME_CONFIG.OBSTACLES;
+        const baseSize = config.BASE_SIZES.bee || 2.0;
+        const startY = Phaser.Math.Between(100, 250); // Fly at mid-height
+
+        const bee = this.scene.physics.add.sprite(
+            GAME_CONFIG.SPAWN.OBSTACLE_X,
+            startY,
+            'bee'
+        );
+
+        bee.setScale(baseSize);
+        bee.setOrigin(0.5, 0.5);
+        bee.body.setImmovable(true);
+        bee.setVelocityY(0);
+        bee.body.pushable = false;
+        bee.body.setSize(bee.width * 0.6, bee.height * 0.6);
+
+        // Start flying animation
+        bee.play('bee_fly');
+
+        this.obstacles.add(bee);
+
+        // Disable gravity
+        this.scene.time.delayedCall(0, () => {
+            if (bee.body) {
+                bee.body.setAllowGravity(false);
+                bee.body.setVelocityY(0);
+                bee.body.setGravity(0, 0);
+                bee.body.setBounce(0);
             }
         });
     }

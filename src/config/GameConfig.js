@@ -51,12 +51,12 @@ export const GAME_CONFIG = {
             croc: 0.55,
             camel: 1.0,
             koala: 0.8,
-            // Pixel Adventure obstacles
-            bee: 1.2,
-            plant: 1.0,
-            snail: 1.0,
-            mushroom: 0.9,
-            trunk: 0.8
+            // Pixel Adventure obstacles (increased sizes)
+            bee: 2.0,
+            plant: 2.0,
+            snail: 2.0,
+            mushroom: 2.0,
+            trunk: 1.5
         },
 
         // Score thresholds for unlocking new obstacles
