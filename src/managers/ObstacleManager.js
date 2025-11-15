@@ -36,14 +36,17 @@ export default class ObstacleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
-        // Debug logging every 180 frames
+        // Debug logging every 60 frames
         if (!this.debugCounter) this.debugCounter = 0;
         this.debugCounter++;
-        if (this.debugCounter % 180 === 0) {
-            console.log('🚧 Obstacle Manager Status:', {
+        if (this.debugCounter % 60 === 0) {
+            const firstObstacle = this.obstacles.children.entries.find(o => o.active);
+            console.log('🚧 Obstacle Speed Debug:', {
                 activeObstacles: this.obstacles.children.entries.length,
-                score: this.score.toFixed(0),
-                memoryNote: 'Using Phaser Groups for object pooling - efficient!'
+                firstObstacleX: firstObstacle ? firstObstacle.x.toFixed(0) : 'N/A',
+                firstObstacleVelocityX: firstObstacle ? firstObstacle.body.velocity.x.toFixed(0) : 'N/A',
+                firstObstacleType: firstObstacle ? firstObstacle.texture.key : 'N/A',
+                gameSpeed: this.gameSpeed.toFixed(0)
             });
         }
 

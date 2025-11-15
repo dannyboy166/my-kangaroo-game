@@ -59,7 +59,7 @@ export const BACKGROUND_THEMES = {
             {
                 key: 'parallax_ground',
                 type: 'tileSprite',
-                scrollSpeed: 1.0, // Scrolls at camera speed to match obstacles
+                scrollSpeed: 1.0, // Matches camera scroll rate for perfect obstacle alignment
                 depth: -20,
                 tileScaleX: 0.25,
                 tileScaleY: 0.25,
@@ -105,7 +105,7 @@ export const BACKGROUND_THEMES = {
                 depth: -50,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
-                y: 450 // Aligns with GROUND_Y (520px from GameConfig)
+                y: 520 // Aligns with GROUND_Y (520px from GameConfig)
             }
         ]
     }

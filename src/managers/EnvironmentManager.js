@@ -157,22 +157,26 @@ export default class EnvironmentManager {
 
         // Update each parallax layer based on camera scrollX
         // All layers use camera position multiplied by their scrollSpeed
-        // scrollSpeed 1.0 = moves at camera speed (appears stationary, like obstacles)
+        // scrollSpeed 1.0 = moves at camera speed (appears stationary like obstacles in world space)
         // scrollSpeed 0.5 = moves at half camera speed (parallax effect)
         this.parallaxLayers.forEach(layer => {
             layer.sprite.tilePositionX = camera.scrollX * layer.scrollSpeed;
         });
 
-        // Debug logging every 180 frames (~3 seconds)
+        // Debug logging every 60 frames (~1 second)
         if (!this.debugCounter) this.debugCounter = 0;
         this.debugCounter++;
-        if (this.debugCounter % 180 === 0) {
-            console.log('🎨 Environment Manager Status:', {
-                parallaxLayers: this.parallaxLayers.length,
-                allLayersActive: this.parallaxLayers.every(l => l.sprite.active),
+        if (this.debugCounter % 60 === 0) {
+            // Find ground layer - check last layer (ground should be last/top)
+            const groundLayer = this.parallaxLayers[this.parallaxLayers.length - 1];
+            console.log('🎨 Ground vs Obstacles Speed Debug:', {
                 cameraScrollX: camera.scrollX.toFixed(0),
-                gameOver: this.isGameOver,
-                memoryNote: 'TileSprites reuse same texture - no spawning/deleting needed!'
+                groundTextureKey: groundLayer ? groundLayer.sprite.texture.key : 'N/A',
+                groundTilePositionX: groundLayer ? groundLayer.sprite.tilePositionX.toFixed(0) : 'N/A',
+                groundScrollSpeed: groundLayer ? groundLayer.scrollSpeed : 'N/A',
+                kangarooWorldX: kangaroo ? kangaroo.x.toFixed(0) : 'N/A',
+                kangarooVelocityX: kangaroo ? kangaroo.body.velocity.x.toFixed(0) : 'N/A',
+                gameSpeed: this.gameSpeed.toFixed(0)
             });
         }
     }

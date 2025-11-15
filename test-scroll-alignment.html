@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ground Scroll Alignment Test</title>
+    <style>
+        body {
+            margin: 20px;
+            font-family: monospace;
+            background: #222;
+            color: #0f0;
+        }
+        #status {
+            padding: 10px;
+            border: 1px solid #0f0;
+            margin-bottom: 20px;
+        }
+        .perfect { color: #0f0; font-weight: bold; }
+        .close { color: #ff0; }
+        .wrong { color: #f00; }
+    </style>
+</head>
+<body>
+    <h1>Ground Scroll Speed Mathematical Analysis</h1>
+
+    <div id="status">
+        <h2>Camera System Configuration:</h2>
+        <pre>
+Camera Follow: startFollow(kangaroo, true, 0.1, 0)
+- Horizontal lerp: 0.1 (smooth following)
+- Vertical lerp: 0 (instant following)
+- Offset: -250px (kangaroo appears 250px from left edge)
+        </pre>
+
+        <h2>Mathematical Formula:</h2>
+        <pre>
+For ground to match obstacle apparent movement:
+- Obstacles are stationary in world space (velocityX = 0)
+- Camera follows kangaroo at lerp rate 0.1
+- Ground scrolling: tilePositionX = camera.scrollX * scrollSpeed
+- For perfect alignment: scrollSpeed = 1.0
+
+This is because:
+1. Camera.scrollX increases as kangaroo moves forward
+2. Obstacles appear to move backward at rate = camera scroll rate
+3. Ground needs to scroll at same rate as camera
+4. Therefore: scrollSpeed = 1.0 (1:1 ratio)
+        </pre>
+
+        <h2>Configuration Status:</h2>
+        <pre id="config-status"></pre>
+    </div>
+
+    <script>
+        // Check the current configuration
+        fetch('/src/config/BackgroundConfig.js')
+            .then(response => response.text())
+            .then(text => {
+                const outbackMatch = text.match(/outback:[\s\S]*?parallax_ground.*?scrollSpeed:\s*([\d.]+)/);
+                const beachMatch = text.match(/beach:[\s\S]*?beach_land.*?scrollSpeed:\s*([\d.]+)/);
+
+                const outbackSpeed = outbackMatch ? parseFloat(outbackMatch[1]) : null;
+                const beachSpeed = beachMatch ? parseFloat(beachMatch[1]) : null;
+
+                let status = '';
+
+                // Check Outback theme
+                if (outbackSpeed === 1.0) {
+                    status += '<span class="perfect">✓ Outback ground scrollSpeed: 1.0 (PERFECT!)</span>\n';
+                } else if (Math.abs(outbackSpeed - 1.0) < 0.5) {
+                    status += `<span class="close">~ Outback ground scrollSpeed: ${outbackSpeed} (close but not exact)</span>\n`;
+                } else {
+                    status += `<span class="wrong">✗ Outback ground scrollSpeed: ${outbackSpeed} (incorrect)</span>\n`;
+                }
+
+                // Check Beach theme
+                if (beachSpeed === 1.0) {
+                    status += '<span class="perfect">✓ Beach land scrollSpeed: 1.0 (PERFECT!)</span>\n';
+                } else if (Math.abs(beachSpeed - 1.0) < 0.5) {
+                    status += `<span class="close">~ Beach land scrollSpeed: ${beachSpeed} (close but not exact)</span>\n`;
+                } else {
+                    status += `<span class="wrong">✗ Beach land scrollSpeed: ${beachSpeed} (incorrect)</span>\n`;
+                }
+
+                status += '\n<span style="color: #fff;">The mathematically correct scrollSpeed is 1.0</span>\n';
+                status += '<span style="color: #888;">This makes the ground scroll at exactly the same rate as the camera,</span>\n';
+                status += '<span style="color: #888;">which matches the apparent backward movement of obstacles.</span>';
+
+                document.getElementById('config-status').innerHTML = status;
+            })
+            .catch(err => {
+                document.getElementById('config-status').innerHTML = '<span class="wrong">Error loading config: ' + err + '</span>';
+            });
+    </script>
+</body>
+</html>
