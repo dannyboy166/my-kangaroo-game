@@ -21,7 +21,7 @@ const config = {
     render: {
         pixelArt: false,      // Smoother graphics
         antialias: true,      // Better quality
-        roundPixels: true     // Crisper rendering
+        roundPixels: false    // Allow sub-pixel rendering for smooth movement
     },
 
     physics: {

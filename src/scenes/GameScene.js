@@ -189,7 +189,8 @@ export default class GameScene extends Phaser.Scene {
 
         // Setup camera to follow kangaroo smoothly
         // This makes the kangaroo appear to "stay in place" while world scrolls
-        this.cameras.main.startFollow(this.kangaroo, true, 0.1, 0); // Smooth horizontal, instant vertical
+        // CRITICAL: Use 1.0 lerp for instant following to prevent rubber-band stutter
+        this.cameras.main.startFollow(this.kangaroo, true, 1.0, 1.0); // Instant horizontal and vertical
         this.cameras.main.setBounds(0, 0, Number.MAX_SAFE_INTEGER, 600); // Infinite right boundary
         this.cameras.main.setFollowOffset(-250, 0); // Kangaroo appears 250px from left edge of screen
     }

@@ -55,7 +55,7 @@ export default class CollectibleManager {
         this.coins.children.entries.slice().forEach((coin) => {
             if (!coin || !coin.active) return;
 
-            // Magnet effect - manually pull coins toward kangaroo
+            // Magnet effect - use velocity for smooth attraction
             if (magnetActive) {
                 const distanceToKangaroo = Phaser.Math.Distance.Between(
                     coin.x, coin.y, kangaroo.x, kangaroo.y
@@ -67,9 +67,19 @@ export default class CollectibleManager {
                     const angle = Phaser.Math.Angle.Between(
                         coin.x, coin.y, kangaroo.x, kangaroo.y
                     );
-                    // Move coin toward kangaroo (manual position update)
-                    coin.x += Math.cos(angle) * config.FORCE * delta / 1000;
-                    coin.y += Math.sin(angle) * config.FORCE * delta / 1000;
+                    // Use physics velocity for smoother movement
+                    coin.body.setVelocity(
+                        Math.cos(angle) * config.FORCE,
+                        Math.sin(angle) * config.FORCE
+                    );
+                } else {
+                    // Reset velocity when out of range
+                    coin.body.setVelocity(0, 0);
+                }
+            } else {
+                // Ensure coins stay static when no magnet
+                if (coin.body.velocity.x !== 0 || coin.body.velocity.y !== 0) {
+                    coin.body.setVelocity(0, 0);
                 }
             }
 

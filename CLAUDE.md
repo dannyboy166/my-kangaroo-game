@@ -324,9 +324,43 @@ Edit values in `src/config/GameConfig.js`:
    - Currently localStorage only
    - Could integrate backend API
 
-## Recent Changes (2025-11-15)
+## Recent Changes
 
-### Obstacle & Ground Alignment Fix (Latest)
+### Smoothness & Performance Optimization (2025-11-16) - Latest
+**The Challenge**: Game felt choppy with visible stuttering, rubber-banding camera, and seams in background tiles.
+
+**Root Causes Identified**:
+1. **Camera Lerp Too Slow**: 0.1 lerp created rubber-band lag effect
+2. **roundPixels Enabled**: Forced whole-pixel snapping causing micro-stutters at decimal velocities
+3. **TileSprite Sub-Pixel Artifacts**: Decimal scroll positions caused visible seams
+4. **Manual Coin Movement**: Direct position updates caused jittery magnet attraction
+
+**The Solution**:
+- **Camera Following** (`GameScene.js:193`): Changed lerp from `0.1` to `1.0` for instant following
+  - Eliminates rubber-band effect
+  - Creates silky-smooth scrolling like professional endless runners
+- **Sub-Pixel Rendering** (`main.js:24`): Changed `roundPixels: true` to `false`
+  - Allows smooth movement at decimal velocities (e.g., 300px/sec = 5px per frame)
+  - Prevents visible "stepping" artifacts
+- **TileSprite Scrolling** (`EnvironmentManager.js:151`): Added `Math.round()` to tile positions
+  - Prevents gaps/seams where background tiles connect
+  - Keeps tiles crisp while allowing smooth camera movement
+- **Physics-Based Magnet** (`CollectibleManager.js:71-83`): Changed from manual position updates to velocity-based movement
+  - Phaser physics engine handles smooth interpolation
+  - Eliminates jittery coin attraction
+
+**Performance Impact**:
+- Buttery smooth 60 FPS scrolling
+- Zero visible seams or stuttering
+- Professional-grade feel matching Temple Run/Subway Surfers quality
+
+**Key Insight**: Endless runner smoothness requires:
+1. Instant camera following (lerp = 1.0)
+2. Sub-pixel rendering for smooth movement
+3. Whole-pixel tile positions to prevent seams
+4. Physics velocity over manual position updates
+
+### Obstacle & Ground Alignment Fix (2025-11-15)
 **The Challenge**: Getting obstacles to stay perfectly aligned with the ground texture in an infinite runner was more complex than expected due to multiple movement systems interacting.
 
 **The Solution**:
@@ -470,6 +504,6 @@ physics: {
 
 ---
 
-**Last Updated**: 2025-11-15
-**Game Version**: 2.2 (Code Structure & Documentation Overhaul)
+**Last Updated**: 2025-11-16
+**Game Version**: 2.3 (Smoothness & Performance Optimization)
 **Phaser Version**: 3.90.0

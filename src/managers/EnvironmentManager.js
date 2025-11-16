@@ -147,7 +147,8 @@ export default class EnvironmentManager {
             // When tiles are scaled, we need to compensate the scroll speed
             // Formula: tilePositionX = camera.scrollX * scrollSpeed / tileScaleX
             const scaleCompensation = layer.tileScaleX || 1.0;
-            layer.sprite.tilePositionX = camera.scrollX * layer.scrollSpeed / scaleCompensation;
+            // Round to whole pixels to prevent sub-pixel rendering glitches/seams
+            layer.sprite.tilePositionX = Math.round(camera.scrollX * layer.scrollSpeed / scaleCompensation);
         });
     }
 
