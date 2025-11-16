@@ -28,42 +28,45 @@ export const BACKGROUND_THEMES = {
                 type: 'tileSprite',
                 scrollSpeed: 0.1,
                 depth: -90,
-                tileScaleX: 0.5,
-                tileScaleY: 0.5
+                tileScaleX: 1.0,    // No scaling! 1024x512 POT
+                tileScaleY: 1.0,
+                y: 400  // Moved down
             },
             {
                 key: 'parallax_distant_clouds1',
                 type: 'tileSprite',
                 scrollSpeed: 0.15,
                 depth: -85,
-                tileScaleX: 0.5,
-                tileScaleY: 0.5
+                tileScaleX: 1.0,    // No scaling! 1024x512 POT
+                tileScaleY: 1.0,
+                y: 350  // Moved down
             },
             {
                 key: 'parallax_clouds',
                 type: 'tileSprite',
                 scrollSpeed: 0.25,
                 depth: -80,
-                tileScaleX: 0.5,
-                tileScaleY: 0.5
+                tileScaleX: 1.0,    // No scaling! 1024x512 POT
+                tileScaleY: 1.0,
+                y: 300  // Moved down
             },
             {
                 key: 'parallax_trees_bushes',
                 type: 'tileSprite',
                 scrollSpeed: 0.6,
                 depth: -50,
-                tileScaleX: 0.4,
-                tileScaleY: 0.4,
-                y: 300
+                tileScaleX: 1.0,    // No scaling! 1024x512 POT
+                tileScaleY: 1.0,
+                y: 400  // Middle-ground (trees sit above ground)
             },
             {
                 key: 'parallax_ground',
                 type: 'tileSprite',
                 scrollSpeed: 1.0, // Matches camera scroll rate for perfect obstacle alignment
                 depth: -20,
-                tileScaleX: 0.25,
-                tileScaleY: 0.25,
-                y: 520 // Align with GROUND_Y
+                tileScaleX: 1.0,  // No scaling! 1024x512 POT
+                tileScaleY: 1.0,
+                y: 480 // Moved up from 520
             }
         ]
     },

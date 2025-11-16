@@ -823,7 +823,7 @@ export default class GameScene extends Phaser.Scene {
                 obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.35);
             } else if (randomType === 'cactus') {
                 // Custom collision box for cactus
-                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+                obstacle.body.setSize(obstacle.width * 0.6, obstacle.height * 0.8);
                 obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.2);
             } else if (randomType === 'snake_log') {
                 // Shorter collision box for snake log - bottom 60% height, 70% width

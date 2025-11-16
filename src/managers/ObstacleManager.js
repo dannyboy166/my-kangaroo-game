@@ -20,7 +20,10 @@ export default class ObstacleManager {
 
     create() {
         this.obstacles = this.scene.physics.add.group();
-        this.scheduleNextObstacle();
+
+        // DEBUG: Obstacles disabled for testing
+        console.log('🚫 Obstacle spawning disabled for debug testing');
+        // this.scheduleNextObstacle(); // COMMENTED OUT - RE-ENABLE AFTER TESTING
     }
 
     update(delta) {
