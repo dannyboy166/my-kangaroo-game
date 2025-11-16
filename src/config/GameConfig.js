@@ -4,7 +4,7 @@
  *
  * ===== COORDINATE SYSTEM REFERENCE =====
  * Canvas: 800px wide x 600px tall
- * Ground Level (GROUND_Y): 520px (where kangaroo and obstacles stand)
+ * Ground Level (GROUND_Y): 500px (where kangaroo and obstacles stand)
  * Origin: Top-left corner (0, 0)
  * Y increases downward (standard canvas coordinates)
  *
@@ -41,7 +41,7 @@ export const GAME_CONFIG = {
         SPEED_INCREASE_INTERVAL: 30, // Score points (was 50 - now faster!)
         SPEED_INCREASE_AMOUNT: 10,   // Speed increase (was 5 - now doubles!)
         MAX_SPEED: 500,              // Speed cap to keep game playable
-        GROUND_Y: 520
+        GROUND_Y: 500                // Moved down a bit (was 480)
     },
 
     // Obstacle spawning

@@ -55,9 +55,9 @@ export const BACKGROUND_THEMES = {
                 type: 'tileSprite',
                 scrollSpeed: 0.6,
                 depth: -50,
-                tileScaleX: 1.0,    // No scaling! 1024x512 POT
-                tileScaleY: 1.0,
-                y: 400  // Middle-ground (trees sit above ground)
+                tileScaleX: 0.7,    // Smaller = looks further away
+                tileScaleY: 0.7,
+                y: 450  // Moved down (was 400)
             },
             {
                 key: 'parallax_ground',
@@ -66,7 +66,7 @@ export const BACKGROUND_THEMES = {
                 depth: -20,
                 tileScaleX: 1.0,  // No scaling! 1024x512 POT
                 tileScaleY: 1.0,
-                y: 480 // Moved up from 520
+                y: 440 // Moved up (was 480)
             }
         ]
     },
@@ -108,7 +108,7 @@ export const BACKGROUND_THEMES = {
                 depth: -50,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
-                y: 480 // Aligns with GROUND_Y (480px from GameConfig)
+                y: 440 // Moved up 40px to match kangaroo (was 480)
             }
         ]
     }
