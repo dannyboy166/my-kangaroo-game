@@ -122,6 +122,26 @@ export default class CollectibleManager {
         const config = GAME_CONFIG.COINS;
         const kangaroo = this.scene.kangaroo;
         const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.COIN_X;
+
+        // Check if there's an obstacle nearby at this spawn position
+        const obstacleManager = this.scene.obstacleManager;
+        if (obstacleManager) {
+            const obstacles = obstacleManager.getObstacles();
+            const tooCloseToObstacle = obstacles.children.entries.some(obstacle => {
+                if (!obstacle.active) return false;
+
+                // Check if obstacle is within 200px horizontally
+                const horizontalDistance = Math.abs(obstacle.x - spawnX);
+                return horizontalDistance < 200;
+            });
+
+            // Skip coin spawn if too close to obstacle
+            if (tooCloseToObstacle) {
+                console.log('💰 Skipped coin spawn - too close to obstacle');
+                return;
+            }
+        }
+
         const coinY = Phaser.Math.Between(
             config.MIN_Y,
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
