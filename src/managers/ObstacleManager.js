@@ -1,13 +1,11 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
 
 /**
- * ObstacleManager
- * Handles all obstacle spawning, movement, and behavior logic
+ * ObstacleManager - DEAD SIMPLE
+ *
+ * Obstacles sit in world space. Don't move. Camera moves past them.
  */
 export default class ObstacleManager {
-    /**
-     * @param {Phaser.Scene} scene - The game scene
-     */
     constructor(scene) {
         this.scene = scene;
         this.obstacles = null;
@@ -18,547 +16,113 @@ export default class ObstacleManager {
         this.groundY = GAME_CONFIG.DIFFICULTY.GROUND_Y;
     }
 
-    /**
-     * Initialize the obstacle physics group
-     */
     create() {
         this.obstacles = this.scene.physics.add.group();
         this.scheduleNextObstacle();
     }
 
-    /**
-     * Update obstacle positions and behaviors
-     * @param {number} delta - Time elapsed since last frame
-     */
     update(delta) {
         if (this.isGameOver) return;
 
+        const camera = this.scene.cameras.main;
+        const cameraLeftEdge = camera.scrollX;
         const kangaroo = this.scene.kangaroo;
-        if (!kangaroo) return;
 
-        // Debug logging every 60 frames
+        // Debug every 60 frames
         if (!this.debugCounter) this.debugCounter = 0;
         this.debugCounter++;
-        if (this.debugCounter % 60 === 0) {
+        if (this.debugCounter % 60 === 0 && this.obstacles.children.entries.length > 0) {
             const firstObstacle = this.obstacles.children.entries.find(o => o.active);
-            console.log('🚧 Obstacle Speed Debug:', {
-                activeObstacles: this.obstacles.children.entries.length,
-                firstObstacleX: firstObstacle ? firstObstacle.x.toFixed(0) : 'N/A',
-                firstObstacleVelocityX: firstObstacle ? firstObstacle.body.velocity.x.toFixed(0) : 'N/A',
-                firstObstacleType: firstObstacle ? firstObstacle.texture.key : 'N/A',
-                gameSpeed: this.gameSpeed.toFixed(0)
+            console.log('🎯 Speed Check:', {
+                kangarooVelX: kangaroo ? kangaroo.body.velocity.x.toFixed(0) : 'N/A',
+                obstacleVelX: firstObstacle ? firstObstacle.body.velocity.x.toFixed(0) : 'N/A',
+                gameSpeed: this.gameSpeed.toFixed(0),
+                cameraScrollX: camera.scrollX.toFixed(0)
             });
         }
 
+        // Clean up off-screen obstacles
         this.obstacles.children.entries.slice().forEach((obstacle) => {
             if (!obstacle || !obstacle.active) return;
 
-            // Special handling for magpie swooping behavior
-            if (obstacle.texture.key === 'magpie') {
-                this.updateMagpieBehavior(obstacle, delta);
-            } else if (obstacle.isFlyingBee) {
-                // Bee movement: faster horizontal + sine wave vertical
-                this.updateBeeBehavior(obstacle, delta);
-            }
-            // Note: All obstacles move forward at gameSpeed to stay fixed relative to ground
-            // Kangaroo also moves at gameSpeed, so obstacles appear stationary in screen space
-
-            // Clean up obstacles that are off-screen (behind camera view)
-            const camera = this.scene.cameras.main;
-            const cameraLeftEdge = camera.scrollX;
             if (obstacle.x < cameraLeftEdge - 100) {
-                if (Math.random() < 0.1) { // Log 10% of deletions to avoid spam
-                    console.log('🗑️ Obstacle deleted (off-screen):', obstacle.texture.key);
-                }
                 obstacle.destroy();
             }
         });
     }
 
-    /**
-     * Schedule the next obstacle spawn
-     */
     scheduleNextObstacle() {
         if (this.isGameOver) return;
 
         const config = GAME_CONFIG.OBSTACLES;
-        const isHardMode = this.score >= 1000;
-        const minDelay = isHardMode ? config.MIN_SPAWN_DELAY_HARD : config.MIN_SPAWN_DELAY;
-        const maxDelay = isHardMode ? config.MAX_SPAWN_DELAY_HARD : config.MAX_SPAWN_DELAY;
+        const delay = Phaser.Math.Between(config.MIN_SPAWN_DELAY, config.MAX_SPAWN_DELAY);
 
-        const delay = Phaser.Math.Between(minDelay, maxDelay);
+        console.log(`⏰ Next obstacle scheduled in ${delay}ms`);
 
         this.obstacleTimer = this.scene.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.scene.isActive()) {
-                // 40% chance to spawn a gap instead of single obstacle (only after score 1500)
-                if (this.score >= config.GAP_SCORE_THRESHOLD && Math.random() < config.GAP_CHANCE) {
-                    this.spawnGap();
-                } else {
-                    this.spawnObstacle();
-                }
+                console.log('⏰ Timer fired, spawning obstacle...');
+                this.spawnObstacle();
                 this.scheduleNextObstacle();
+            } else {
+                console.log('⏰ Timer fired but game is over or scene inactive');
             }
         });
     }
 
-    /**
-     * Get available obstacle types based on current score
-     * @returns {Array} Array of obstacle types with weights
-     */
-    getObstacleTypes() {
-        const config = GAME_CONFIG.OBSTACLES;
-        const obstacles = [
-            { type: 'rock', weight: config.WEIGHTS.rock },
-            { type: 'log', weight: config.WEIGHTS.log },
-            { type: 'cactus', weight: config.WEIGHTS.cactus },
-            { type: 'magpie', weight: config.WEIGHTS.magpie }
-        ];
-
-        // Add new obstacles based on score
-        if (this.score >= config.UNLOCK_SCORES.koala) {
-            obstacles.push({ type: 'koala', weight: config.WEIGHTS.koala });
-        }
-        if (this.score >= config.UNLOCK_SCORES.emu) {
-            obstacles.push({ type: 'emu', weight: config.WEIGHTS.emu });
-        }
-        if (this.score >= config.UNLOCK_SCORES.camel) {
-            obstacles.push({ type: 'camel', weight: config.WEIGHTS.camel });
-        }
-        if (this.score >= config.UNLOCK_SCORES.croc) {
-            obstacles.push({ type: 'croc', weight: config.WEIGHTS.croc });
-        }
-
-        // Add Pixel Adventure obstacles based on score
-        if (this.score >= config.UNLOCK_SCORES.bee) {
-            obstacles.push({ type: 'bee', weight: config.WEIGHTS.bee });
-        }
-        if (this.score >= config.UNLOCK_SCORES.plant) {
-            obstacles.push({ type: 'plant', weight: config.WEIGHTS.plant });
-        }
-        if (this.score >= config.UNLOCK_SCORES.snail) {
-            obstacles.push({ type: 'snail', weight: config.WEIGHTS.snail });
-        }
-        if (this.score >= config.UNLOCK_SCORES.mushroom) {
-            obstacles.push({ type: 'mushroom', weight: config.WEIGHTS.mushroom });
-        }
-        if (this.score >= config.UNLOCK_SCORES.trunk) {
-            obstacles.push({ type: 'trunk', weight: config.WEIGHTS.trunk });
-        }
-
-        return obstacles;
-    }
-
-    /**
-     * Select random obstacle type based on weighted probability
-     * @param {Array} obstacleTypes - Available obstacle types
-     * @returns {string} Selected obstacle type
-     */
-    selectRandomObstacle(obstacleTypes) {
-        const totalWeight = obstacleTypes.reduce((sum, item) => sum + item.weight, 0);
-        let random = Math.random() * totalWeight;
-        let selectedType = null;
-
-        for (let i = 0; i < obstacleTypes.length; i++) {
-            random -= obstacleTypes[i].weight;
-            if (random <= 0) {
-                selectedType = obstacleTypes[i].type;
-                break;
-            }
-        }
-
-        if (!selectedType) {
-            selectedType = obstacleTypes[0].type;
-        }
-
-        // Apply variant logic: 60% chance for variants
-        const config = GAME_CONFIG.OBSTACLES;
-        if (selectedType === 'rock') {
-            return Math.random() < config.VARIANT_CHANCE ? 'spider_rock' : 'rock';
-        } else if (selectedType === 'log') {
-            return Math.random() < config.VARIANT_CHANCE ? 'snake_log' : 'log';
-        }
-
-        return selectedType;
-    }
-
-    /**
-     * Spawn a single obstacle
-     */
     spawnObstacle() {
         if (this.isGameOver) return;
 
-        const obstacleTypes = this.getObstacleTypes();
-        const randomType = this.selectRandomObstacle(obstacleTypes);
-
-        if (randomType === 'magpie') {
-            this.spawnMagpie();
-        } else if (randomType === 'bee') {
-            this.spawnBee();
-        } else if (randomType === 'emu') {
-            this.spawnRunningEmu();
-        } else {
-            this.spawnGroundObstacle(randomType);
-        }
+        const types = ['rock', 'cactus', 'log'];
+        const type = Phaser.Utils.Array.GetRandom(types);
+        this.spawnGroundObstacle(type);
     }
 
-    /**
-     * Spawn a ground-based obstacle
-     * @param {string} type - Obstacle type
-     */
     spawnGroundObstacle(type) {
-        const config = GAME_CONFIG.OBSTACLES;
-        const kangaroo = this.scene.kangaroo;
-
-        // Spawn ahead of kangaroo's current world position
-        const spawnX = kangaroo ? kangaroo.x + 1000 : GAME_CONFIG.SPAWN.OBSTACLE_X;
-
-        const obstacle = this.scene.physics.add.sprite(
-            spawnX,
-            this.groundY,
-            type
-        );
-
-        // Calculate random size
-        const baseSize = config.BASE_SIZES[type] || 0.5;
-        const variation = config.SIZE_VARIATION;
-        const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
-        const finalSize = baseSize * randomMultiplier;
-
-        obstacle.setScale(finalSize);
-        obstacle.setOrigin(0.5, 1);
-        obstacle.body.setImmovable(true);
-        obstacle.body.setGravityY(0);
-
-        // Obstacles are stationary in world space (velocity 0)
-        // Camera movement makes them scroll backward relative to kangaroo
-        obstacle.setVelocityX(0);
-
-        // Set collision boxes based on obstacle type
-        this.setCollisionBox(obstacle, type);
-
-        // Play animation for animated obstacles
-        this.playObstacleAnimation(obstacle, type);
-
-        this.obstacles.add(obstacle);
-    }
-
-    /**
-     * Play animation for obstacle if it has one
-     * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
-     * @param {string} type - Obstacle type
-     */
-    playObstacleAnimation(obstacle, type) {
-        const animationMap = {
-            bee: 'bee_fly',
-            plant: 'plant_idle',
-            snail: 'snail_walk',
-            mushroom: 'mushroom_idle',
-            trunk: 'trunk_walk'
-        };
-
-        if (animationMap[type]) {
-            obstacle.play(animationMap[type]);
-        }
-    }
-
-    /**
-     * Set collision box for obstacle based on type
-     * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
-     * @param {string} type - Obstacle type
-     */
-    setCollisionBox(obstacle, type) {
-        switch(type) {
-            case 'camel':
-                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.7);
-                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.25);
-                break;
-            case 'koala':
-                obstacle.body.setSize(obstacle.width * 0.3, obstacle.height * 0.7);
-                obstacle.body.setOffset(obstacle.width * 0.35, obstacle.height * 0.23);
-                break;
-            case 'spider_rock':
-                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.6);
-                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.35);
-                break;
-            case 'cactus':
-                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
-                obstacle.body.setOffset(obstacle.width * 0.1, obstacle.height * 0.2);
-                break;
-            case 'snake_log':
-                obstacle.body.setSize(obstacle.width * 0.7, obstacle.height * 0.6);
-                obstacle.body.setOffset(obstacle.width * 0.15, obstacle.height * 0.35);
-                break;
-            default:
-                obstacle.body.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
-        }
-    }
-
-    /**
-     * Spawn a flying magpie obstacle
-     */
-    spawnMagpie() {
-        if (this.isGameOver) return;
-
-        const config = GAME_CONFIG.MAGPIE;
-        const kangaroo = this.scene.kangaroo;
-        const spawnX = kangaroo ? kangaroo.x + 1000 : GAME_CONFIG.SPAWN.OBSTACLE_X;
-        const startY = Phaser.Math.Between(config.MIN_Y, config.MAX_Y);
-        const magpie = this.scene.physics.add.sprite(
-            spawnX,
-            startY,
-            'magpie'
-        );
-
-        magpie.setScale(config.SCALE);
-        magpie.setOrigin(0.5, 0.5);
-        magpie.body.setImmovable(true);
-        magpie.setVelocityY(0);
-        magpie.setVelocityX(0); // Stationary in world space
-        magpie.body.pushable = false;
-        magpie.body.setSize(magpie.width * 0.7, magpie.height * 0.5);
-
-        // Start flying animation
-        magpie.play('magpie_fly');
-
-        // AI behavior properties
-        magpie.swoopStarted = false;
-        magpie.willSwoop = this.score >= config.SWOOP_CHANCE_THRESHOLD ?
-            Math.random() < config.SWOOP_CHANCE : false;
-        magpie.straightenTime = 0;
-        magpie.isClimbingBack = false;
-        magpie.swoopSpeed = this.gameSpeed * config.SWOOP_SPEED_MULTIPLIER;
-        magpie.climbSpeed = this.gameSpeed * config.CLIMB_SPEED_MULTIPLIER;
-        magpie.downTime = Math.max(
-            config.MIN_DOWN_TIME,
-            config.DOWN_TIME_FACTOR - (this.gameSpeed * 0.5)
-        );
-
-        this.obstacles.add(magpie);
-
-        // Disable gravity
-        this.scene.time.delayedCall(0, () => {
-            if (magpie.body) {
-                magpie.body.setAllowGravity(false);
-                magpie.body.setVelocityY(0);
-                magpie.body.setGravity(0, 0);
-                magpie.body.setBounce(0);
-            }
-        });
-    }
-
-    /**
-     * Spawn a flying bee obstacle
-     */
-    spawnBee() {
-        if (this.isGameOver) return;
-
-        const config = GAME_CONFIG.OBSTACLES;
-        const baseSize = config.BASE_SIZES.bee || 2.0;
-        const startY = Phaser.Math.Between(100, 250); // Fly at mid-height
-
-        const bee = this.scene.physics.add.sprite(
-            GAME_CONFIG.SPAWN.OBSTACLE_X,
-            startY,
-            'bee'
-        );
-
-        bee.setScale(baseSize);
-        bee.setOrigin(0.5, 0.5);
-        bee.body.setImmovable(true);
-        bee.setVelocityY(0);
-        bee.setVelocityX(0); // Stationary in world space
-        bee.body.pushable = false;
-        bee.body.setSize(bee.width * 0.6, bee.height * 0.6);
-
-        // Start flying animation
-        bee.play('bee_fly');
-
-        // Mark as flying bee for special movement
-        bee.isFlyingBee = true;
-        bee.beeStartY = startY;
-        bee.beeTime = 0;
-
-        this.obstacles.add(bee);
-
-        // Disable gravity
-        this.scene.time.delayedCall(0, () => {
-            if (bee.body) {
-                bee.body.setAllowGravity(false);
-                bee.body.setVelocityY(0);
-                bee.body.setGravity(0, 0);
-                bee.body.setBounce(0);
-            }
-        });
-    }
-
-    /**
-     * Update magpie swooping behavior
-     * @param {Phaser.GameObjects.Sprite} magpie - The magpie sprite
-     * @param {number} delta - Time elapsed
-     */
-    updateMagpieBehavior(magpie, delta) {
-        const config = GAME_CONFIG.MAGPIE;
-
-        // Magpie moves forward with kangaroo (base velocity), only Y movement controlled here
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
-        const distanceToKangaroo = magpie.x - kangaroo.x;
-        const magpieHeight = magpie.y;
-        const heightFromGround = this.groundY - magpieHeight;
-        const swoopDistance = config.BASE_SWOOP_DISTANCE + heightFromGround;
+        // Spawn 800px ahead of kangaroo in world coordinates
+        const spawnX = kangaroo.x + 800;
 
-        if (!magpie.swoopStarted && distanceToKangaroo <= swoopDistance && magpie.willSwoop) {
-            magpie.swoopStarted = true;
-        }
+        const obstacle = this.scene.physics.add.sprite(spawnX, this.groundY, type);
 
-        if (magpie.swoopStarted && !magpie.isClimbingBack) {
-            const targetY = this.groundY - 20;
-            if (magpie.y < targetY) {
-                magpie.y += magpie.swoopSpeed * delta / 1000;
-                magpie.rotation = -Math.PI / 4; // Dive rotation
-            } else {
-                magpie.rotation = 0;
-                magpie.straightenTime += delta;
-                if (magpie.straightenTime >= magpie.downTime) {
-                    magpie.isClimbingBack = true;
-                }
-            }
-        }
+        // Setup
+        const baseSize = GAME_CONFIG.OBSTACLES.BASE_SIZES[type] || 0.5;
+        obstacle.setScale(baseSize);
+        obstacle.setOrigin(0.5, 1);
 
-        if (magpie.isClimbingBack) {
-            const originalY = Phaser.Math.Between(config.MIN_Y, config.MAX_Y);
-            if (magpie.y > originalY) {
-                magpie.y -= magpie.climbSpeed * delta / 1000;
-                magpie.rotation = Math.PI / 6; // Climb rotation
-            } else {
-                magpie.rotation = 0;
-            }
-        }
+        // Add to group FIRST
+        this.obstacles.add(obstacle);
+
+        // THEN set physics (after adding to group)
+        obstacle.body.setAllowGravity(false);
+        obstacle.body.setImmovable(false);
+
+        // Set velocity LAST
+        obstacle.setVelocityX(-this.gameSpeed);
+
+        console.log(`🚧 Spawned ${type} at X:${spawnX.toFixed(0)}, velocity: ${obstacle.body.velocity.x}`);
     }
 
-    /**
-     * Update bee flight behavior
-     * @param {Phaser.GameObjects.Sprite} bee - The bee sprite
-     * @param {number} delta - Time elapsed
-     */
-    updateBeeBehavior(bee, delta) {
-        // Bee already has base velocity (gameSpeed) set in spawn
-        // No additional horizontal movement needed - bee moves with ground
+    setGameSpeed(speed) {
+        this.gameSpeed = speed;
 
-        // Increment bee animation time
-        bee.beeTime += delta / 1000;
-
-        // Apply sine wave vertical movement
-        // Period: 2 seconds, amplitude: 30 pixels
-        const verticalOffset = Math.sin(bee.beeTime * Math.PI) * 30;
-        bee.y = bee.beeStartY + verticalOffset;
-    }
-
-    /**
-     * Spawn a running emu obstacle
-     */
-    spawnRunningEmu() {
-        if (this.isGameOver) return;
-
-        const config = GAME_CONFIG.EMU;
-        const obstacleConfig = GAME_CONFIG.OBSTACLES;
-        const kangaroo = this.scene.kangaroo;
-        const spawnX = kangaroo ? kangaroo.x + 1200 : config.SPAWN_X;
-
-        const finalEmuSpeed = this.gameSpeed * config.SPEED_MULTIPLIER;
-        const emu = this.scene.physics.add.sprite(spawnX, this.groundY, 'emu');
-
-        const baseSize = obstacleConfig.BASE_SIZES.emu || 0.8;
-        const variation = obstacleConfig.SIZE_VARIATION;
-        const randomMultiplier = 1 + (Math.random() * 2 - 1) * variation;
-        const finalSize = baseSize * randomMultiplier;
-
-        emu.setScale(finalSize);
-        emu.setOrigin(0.5, 1);
-        emu.body.setImmovable(true);
-        emu.body.setGravityY(0);
-        emu.body.setSize(emu.width * 0.6, emu.height * 0.8);
-        emu.body.setOffset(0, emu.height * 0.2);
-
-        // Stationary in world space (like all obstacles)
-        emu.setVelocityX(0);
-
-        emu.play('emu_run');
-        emu.isRunningEmu = true;
-        emu.runSpeed = finalEmuSpeed;
-
-        this.obstacles.add(emu);
-    }
-
-    /**
-     * Spawn a gap of two obstacles close together
-     */
-    spawnGap() {
-        if (this.isGameOver) return;
-
-        // Spawn first obstacle
-        this.spawnGapObstacle();
-
-        // Schedule second obstacle
-        const config = GAME_CONFIG.OBSTACLES;
-        const isHardMode = this.score >= 3000;
-        const minDelay = isHardMode ? config.GAP_MIN_DELAY_HARD : config.GAP_MIN_DELAY;
-        const maxDelay = isHardMode ? config.GAP_MAX_DELAY_HARD : config.GAP_MAX_DELAY;
-        const gapDelay = Phaser.Math.Between(minDelay, maxDelay);
-
-        this.scene.time.delayedCall(gapDelay, () => {
-            if (!this.isGameOver && this.scene.scene.isActive()) {
-                this.spawnGapObstacle();
-            }
+        // Update all active obstacles to match new speed
+        this.obstacles.children.entries.forEach((obstacle) => {
+            if (!obstacle || !obstacle.active) return;
+            obstacle.setVelocityX(-speed);
         });
     }
 
-    /**
-     * Spawn an obstacle for gap pattern (excludes emus)
-     */
-    spawnGapObstacle() {
-        if (this.isGameOver) return;
-
-        const obstacleTypes = this.getObstacleTypes().filter(type => type.type !== 'emu');
-        const randomType = this.selectRandomObstacle(obstacleTypes);
-
-        if (randomType === 'magpie') {
-            this.spawnMagpie();
-        } else {
-            this.spawnGroundObstacle(randomType);
-        }
-    }
-
-    /**
-     * Update game speed
-     * @param {number} speed - New game speed
-     */
-    setGameSpeed(speed) {
-        this.gameSpeed = speed;
-        // Note: Obstacles remain stationary in world space (velocity 0)
-        // Only used for spawning new obstacles with updated animations
-    }
-
-    /**
-     * Update current score
-     * @param {number} score - New score
-     */
     setScore(score) {
         this.score = score;
     }
 
-    /**
-     * Set game over state
-     * @param {boolean} value - Game over state
-     */
     setGameOver(value) {
         this.isGameOver = value;
     }
 
-    /**
-     * Clean up timers and obstacles
-     */
     cleanup() {
         if (this.obstacleTimer) {
             this.obstacleTimer.destroy();
@@ -569,10 +133,6 @@ export default class ObstacleManager {
         }
     }
 
-    /**
-     * Get obstacles group
-     * @returns {Phaser.Physics.Arcade.Group}
-     */
     getObstacles() {
         return this.obstacles;
     }

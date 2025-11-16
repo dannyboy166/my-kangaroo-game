@@ -95,6 +95,13 @@ export default class EnvironmentManager {
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
         const y = yPos !== null ? yPos : CANVAS_HEIGHT / 2;
 
+        // Ground layer (scrollSpeed 1.0) becomes a moving physics sprite
+        // Other layers stay as camera-fixed parallax
+        if (scrollSpeed >= 1.0) {
+            this.createGroundSprite(texture, scaleX, scaleY, y);
+            return; // Don't add to parallax layers
+        }
+
         console.log(`📍 Adding parallax layer: ${texture}`, {
             x: CANVAS_WIDTH / 2,
             y: y,
@@ -115,29 +122,8 @@ export default class EnvironmentManager {
         );
         layer.setOrigin(0.5, 0.5);
         layer.setDepth(depth);
-        layer.setScrollFactor(0); // Fixed to camera, we'll manually scroll
+        layer.setScrollFactor(0); // Fixed to camera
         layer.setTileScale(scaleX, scaleY);
-
-        // DEBUG: Check if texture loaded
-        if (!this.scene.textures.exists(texture)) {
-            console.error(`❌ Texture ${texture} not found!`);
-        } else {
-            const img = this.scene.textures.get(texture).getSourceImage();
-            console.log(`✅ Texture ${texture} loaded, dimensions:`, img.width, 'x', img.height);
-            console.log(`   TileSprite bounds:`, {
-                x: layer.x,
-                y: layer.y,
-                displayWidth: layer.displayWidth,
-                displayHeight: layer.displayHeight,
-                visible: layer.visible,
-                alpha: layer.alpha
-            });
-        }
-
-        // Ground layer is ready (debug tint removed)
-        if (texture === 'parallax_ground' || texture === 'beach_land') {
-            console.log('✅ Ground layer created successfully');
-        }
 
         this.parallaxLayers.push({
             sprite: layer,
@@ -146,39 +132,56 @@ export default class EnvironmentManager {
     }
 
     /**
-     * Update all parallax layers based on camera position
+     * Create ground as a moving sprite (like obstacles)
+     */
+    createGroundSprite(texture, scaleX, scaleY, y) {
+        const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) {
+            console.error('Cannot create ground - kangaroo not found');
+            return;
+        }
+
+        // Create a HUGE ground sprite that moves at -300
+        const groundWidth = 100000;
+        const groundX = kangaroo.x + groundWidth / 2; // Center ahead of kangaroo
+
+        const ground = this.scene.add.tileSprite(
+            groundX,
+            y,
+            groundWidth,
+            600,
+            texture
+        );
+        ground.setOrigin(0.5, 0.5);
+        ground.setDepth(-20);
+        ground.setScrollFactor(1); // World space
+        ground.setTileScale(scaleX, scaleY);
+
+        // Add physics to make it move
+        this.scene.physics.add.existing(ground);
+        ground.body.setAllowGravity(false);
+        ground.body.setVelocityX(-300); // SAME AS OBSTACLES!
+
+        this.groundSprite = ground;
+
+        console.log('✅ Ground sprite created - MOVES AT -300 (like obstacles)');
+    }
+
+    /**
+     * Update parallax layers (clouds, trees, etc.)
+     * Ground is now a physics sprite that moves automatically
      * @param {number} delta - Time elapsed since last frame
      */
     update(delta) {
         if (this.isGameOver) return;
 
         const camera = this.scene.cameras.main;
-        const kangaroo = this.scene.kangaroo;
 
-        // Update each parallax layer based on camera scrollX
-        // All layers use camera position multiplied by their scrollSpeed
-        // scrollSpeed 1.0 = moves at camera speed (appears stationary like obstacles in world space)
-        // scrollSpeed 0.5 = moves at half camera speed (parallax effect)
+        // Only update parallax layers (clouds, trees)
+        // Ground is a physics sprite that moves at -300
         this.parallaxLayers.forEach(layer => {
             layer.sprite.tilePositionX = camera.scrollX * layer.scrollSpeed;
         });
-
-        // Debug logging every 60 frames (~1 second)
-        if (!this.debugCounter) this.debugCounter = 0;
-        this.debugCounter++;
-        if (this.debugCounter % 60 === 0) {
-            // Find ground layer - check last layer (ground should be last/top)
-            const groundLayer = this.parallaxLayers[this.parallaxLayers.length - 1];
-            console.log('🎨 Ground vs Obstacles Speed Debug:', {
-                cameraScrollX: camera.scrollX.toFixed(0),
-                groundTextureKey: groundLayer ? groundLayer.sprite.texture.key : 'N/A',
-                groundTilePositionX: groundLayer ? groundLayer.sprite.tilePositionX.toFixed(0) : 'N/A',
-                groundScrollSpeed: groundLayer ? groundLayer.scrollSpeed : 'N/A',
-                kangarooWorldX: kangaroo ? kangaroo.x.toFixed(0) : 'N/A',
-                kangarooVelocityX: kangaroo ? kangaroo.body.velocity.x.toFixed(0) : 'N/A',
-                gameSpeed: this.gameSpeed.toFixed(0)
-            });
-        }
     }
 
     /**

@@ -77,11 +77,11 @@ export default class GameScene extends Phaser.Scene {
         // Reset game state
         this.resetGameState();
 
+        // Create player FIRST (ground needs kangaroo position)
+        this.createPlayer();
+
         // Create environment (background, ground, decorations)
         this.environmentManager.create();
-
-        // Create player
-        this.createPlayer();
 
         // Create physics ground
         this.createPhysicsGround();
@@ -352,8 +352,8 @@ export default class GameScene extends Phaser.Scene {
         const collider = this.physics.add.collider(this.kangaroo, this.groundBody);
         console.log('🔗 Collider created:', collider);
 
-        // Obstacles collide with ground
-        this.physics.add.collider(this.obstacleManager.getObstacles(), this.groundBody);
+        // REMOVED: Obstacles DON'T collide with ground (they have gravity off and fixed Y position)
+        // this.physics.add.collider(this.obstacleManager.getObstacles(), this.groundBody);
 
         // Kangaroo overlaps with obstacles
         this.physics.add.overlap(
@@ -479,35 +479,26 @@ export default class GameScene extends Phaser.Scene {
     }
 
     /**
-     * Update score and difficulty progression
+     * Update score - TESTING: NO SPEED INCREASES
      * @param {number} delta - Time since last frame
      */
     updateScore(delta) {
         // Increase score
         this.score += 0.5;
 
-        // Increase game speed every 50 points
-        const config = GAME_CONFIG.DIFFICULTY;
-        const flooredScore = Math.floor(this.score);
-
-        if (flooredScore % config.SPEED_INCREASE_INTERVAL === 0 && !this.lastSpeedIncrease) {
-            this.gameSpeed += config.SPEED_INCREASE_AMOUNT;
-            this.lastSpeedIncrease = true;
-
-            // Update kangaroo velocity (camera follows automatically)
-            if (this.kangaroo && this.kangaroo.body) {
-                this.kangaroo.setVelocityX(this.gameSpeed);
-            }
-
-            // Update obstacle speeds to match new game speed
-            this.obstacleManager.setGameSpeed(this.gameSpeed);
-
-            // Update environment speed for parallax
-            this.environmentManager.setGameSpeed(this.gameSpeed);
-
-        } else if (flooredScore % config.SPEED_INCREASE_INTERVAL !== 0) {
-            this.lastSpeedIncrease = false;
-        }
+        // DISABLED FOR TESTING: Keep speed constant at 300
+        // const config = GAME_CONFIG.DIFFICULTY;
+        // const flooredScore = Math.floor(this.score);
+        // if (flooredScore % config.SPEED_INCREASE_INTERVAL === 0 && !this.lastSpeedIncrease) {
+        //     this.gameSpeed += config.SPEED_INCREASE_AMOUNT;
+        //     this.lastSpeedIncrease = true;
+        //     if (this.kangaroo && this.kangaroo.body) {
+        //         this.kangaroo.setVelocityX(this.gameSpeed);
+        //     }
+        //     this.obstacleManager.setGameSpeed(this.gameSpeed);
+        // } else if (flooredScore % config.SPEED_INCREASE_INTERVAL !== 0) {
+        //     this.lastSpeedIncrease = false;
+        // }
 
         // Update managers with current score
         this.obstacleManager.setScore(this.score);
