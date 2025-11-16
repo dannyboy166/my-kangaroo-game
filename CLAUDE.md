@@ -326,6 +326,29 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes (2025-11-15)
 
+### Obstacle & Ground Alignment Fix (Latest)
+**The Challenge**: Getting obstacles to stay perfectly aligned with the ground texture in an infinite runner was more complex than expected due to multiple movement systems interacting.
+
+**The Solution**:
+- **Ground Layer**: Changed from camera-fixed parallax to a physics sprite moving at -300 velocity
+- **Obstacles**: Spawn at velocity -300, perfectly synchronized with ground movement
+- **Critical Fix**: Set obstacle velocity AFTER adding to physics group (group was resetting it)
+- **Removed**: Obstacle-ground collision (was stopping obstacle movement)
+- **Parallax Layers**: Clouds/trees remain camera-fixed for depth effect
+
+**Key Insight**: In this hybrid infinite runner:
+1. Kangaroo moves forward (+300 velocity)
+2. Ground sprite moves backward (-300 velocity)
+3. Obstacles move backward (-300 velocity)
+4. Camera follows kangaroo
+5. Result: Ground and obstacles perfectly synchronized visually
+
+**Technical Details**:
+- Ground created as 100,000px wide TileSprite in world space
+- Physics group add order matters: add to group → set physics → set velocity
+- `setImmovable(false)` required for obstacles to maintain velocity
+- Speed increases temporarily disabled for testing (constant 300)
+
 ### Code Structure & Documentation Overhaul
 - **Fixed GROUND_Y Consistency**: All references now correctly use 520px (was incorrectly documented as 450px)
 - **Added Comprehensive Comments**:
@@ -340,12 +363,13 @@ Edit values in `src/config/GameConfig.js`:
 - **Multi-Theme Parallax**: Outback and Beach themes with multiple scrolling layers
 - **TileSprite Implementation**: Infinite repeating backgrounds using Phaser TileSprites
 - **Parallax Depth**: Layers scroll at different speeds (0.1 to 1.0) to create depth illusion
-- **Camera-Synchronized**: Foreground layers (scrollSpeed 1.0) perfectly match obstacle movement
+- **Hybrid System**: Parallax layers camera-fixed, ground layer moves as physics sprite
 
 ### Physics & Animation
 - **Animation System**: Uses `body.blocked.down` for reliable ground detection
-- **Physics Ground**: Wide invisible platform (1,000,000px) for infinite gameplay
+- **Physics Ground**: Wide invisible platform (1,000,000px) for infinite gameplay (kangaroo collision only)
 - **Camera Following**: Smooth horizontal following with offset to keep kangaroo visible
+- **Obstacle Movement**: Velocity -300, gravity disabled, no ground collision
 
 ## Future Enhancement Ideas
 
