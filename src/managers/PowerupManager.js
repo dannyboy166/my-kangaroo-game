@@ -115,8 +115,18 @@ export default class PowerupManager {
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
 
-        // Create using the group's create method instead
-        const powerup = this.powerups.create(spawnX, powerupY, randomType);
+        // Map powerup types to animations
+        const animMap = {
+            'shield': 'powerup_star',      // Star for shield
+            'magnet': 'powerup_rainbow',   // Rainbow ball for magnet
+            'double': 'powerup_gem'        // Gem for double jump
+        };
+
+        // Create using the group's create method with first frame of sprite sheet
+        const powerup = this.powerups.create(spawnX, powerupY, 'powerup_items', 0);
+
+        // Play animation
+        powerup.play(animMap[randomType]);
 
         // Visual setup
         powerup.setScale(config.SCALE);

@@ -69,7 +69,14 @@ export default class MenuScene extends Phaser.Scene {
             frameWidth: 64,
             frameHeight: 64
         });
-        
+
+        // Load powerup items sprite sheet (animated items from itch.io - Dani Maccari)
+        // 32x32 per frame, 8 frames per row, 15 rows total
+        this.load.spritesheet('powerup_items', 'assets/images/powerup_items.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
         // Load ground decoration
         this.load.image('weed', 'assets/images/weed.png');
 
@@ -116,6 +123,37 @@ export default class MenuScene extends Phaser.Scene {
                 key: 'coin_spin',
                 frames: this.anims.generateFrameNumbers('coin', { start: 0, end: 24 }), // 25 frames (0-24)
                 frameRate: 20,
+                repeat: -1
+            });
+        }
+
+        // Create powerup animations from sprite sheet
+        // Star animation (row 6, frames 48-55) - for SHIELD
+        if (!this.anims.exists('powerup_star')) {
+            this.anims.create({
+                key: 'powerup_star',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 48, end: 55 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Gem animation (row 5, frames 40-47) - for DOUBLE JUMP
+        if (!this.anims.exists('powerup_gem')) {
+            this.anims.create({
+                key: 'powerup_gem',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 40, end: 47 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Rainbow ball animation (row 7, frames 56-63) - for MAGNET
+        if (!this.anims.exists('powerup_rainbow')) {
+            this.anims.create({
+                key: 'powerup_rainbow',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 56, end: 63 }),
+                frameRate: 10,
                 repeat: -1
             });
         }

@@ -171,7 +171,7 @@ export const GAME_CONFIG = {
         MAX_SPAWN_DELAY: 25000,
         MIN_Y: 200,
         MAX_Y_OFFSET: 50, // From ground
-        SCALE: 0.3,
+        SCALE: 1.0,      // Increased from 0.3 for new 32x32 animated sprites
         DURATION: 10000, // 10 seconds
 
         // Powerup orb configuration
