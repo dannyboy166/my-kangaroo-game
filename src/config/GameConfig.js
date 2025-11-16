@@ -160,7 +160,7 @@ export const GAME_CONFIG = {
         MAX_SPAWN_DELAY: 3150,
         MIN_Y: 200,
         MAX_Y_OFFSET: 50, // From ground
-        SCALE: 0.3,
+        SCALE: 1,      // Increased from 0.3 for new 64x64 coin sprite
         VALUE: 5,
         SCORE_BONUS: 10
     },
@@ -252,7 +252,7 @@ export const GAME_CONFIG = {
         SCORE_Y: 60,
         COIN_ICON_X: 30,
         COIN_ICON_Y: 30,
-        COIN_ICON_SCALE: 0.17,
+        COIN_ICON_SCALE: 0.5, // Increased from 0.17 for new 64x64 coin sprite
         COIN_TEXT_X: 70,
         INVENTORY_START_Y: 120,
         INVENTORY_SPACING: 40,

@@ -27,6 +27,17 @@ export default class CollectibleManager {
      */
     create() {
         this.coins = this.scene.physics.add.group();
+
+        // Create coin animation if it doesn't exist (already created in MenuScene)
+        if (!this.scene.anims.exists('coin_spin')) {
+            this.scene.anims.create({
+                key: 'coin_spin',
+                frames: this.scene.anims.generateFrameNumbers('coin', { start: 0, end: 24 }),
+                frameRate: 20, // 20 FPS for smooth rotation
+                repeat: -1 // Loop forever
+            });
+        }
+
         this.scheduleNextCoin();
     }
 
@@ -147,13 +158,16 @@ export default class CollectibleManager {
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
 
-        // Create using the group's create method instead
-        const coin = this.coins.create(spawnX, coinY, 'coin');
+        // Create using the group's create method with first frame
+        const coin = this.coins.create(spawnX, coinY, 'coin', 0);
 
         // Visual setup
         coin.setScale(config.SCALE);
         coin.setOrigin(0.5);
         coin.setScrollFactor(1); // Move with camera like obstacles
+
+        // Play spinning animation
+        coin.play('coin_spin');
 
         // Physics setup - STATIC in world space
         // CRITICAL: Set these AFTER create() to prevent group from overriding
@@ -190,9 +204,10 @@ export default class CollectibleManager {
         coin.body.setEnable(false);
         this.coins.remove(coin);
 
-        // Simple collection effect
-        const effectCoin = this.scene.add.image(coin.x, coin.y, 'coin');
+        // Simple collection effect with animated coin
+        const effectCoin = this.scene.add.sprite(coin.x, coin.y, 'coin', 0);
         effectCoin.setScale(config.SCALE);
+        effectCoin.play('coin_spin');
 
         this.scene.tweens.add({
             targets: effectCoin,

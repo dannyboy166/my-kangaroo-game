@@ -63,8 +63,9 @@ export default class UIManager {
     createCoinDisplay() {
         const config = GAME_CONFIG.UI;
 
-        // Coin icon
-        const coinIcon = this.scene.add.image(config.COIN_ICON_X, config.COIN_ICON_Y, 'coin');
+        // Coin icon (animated)
+        const coinIcon = this.scene.add.sprite(config.COIN_ICON_X, config.COIN_ICON_Y, 'coin', 0);
+        coinIcon.play('coin_spin');
         coinIcon.setScale(config.COIN_ICON_SCALE);
         coinIcon.setOrigin(0, 0.5);
         coinIcon.setScrollFactor(0); // Fix to camera

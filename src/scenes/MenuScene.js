@@ -64,8 +64,11 @@ export default class MenuScene extends Phaser.Scene {
             frameHeight: 32
         });
 
-        // Load coin
-        this.load.image('coin', 'assets/images/coin.png');
+        // Load coin sprite sheet (25 frames, 64x64 each in horizontal strip - better performance!)
+        this.load.spritesheet('coin', 'assets/images/coin/coin-64x64.png', {
+            frameWidth: 64,
+            frameHeight: 64
+        });
         
         // Load ground decoration
         this.load.image('weed', 'assets/images/weed.png');
@@ -107,6 +110,16 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        // Create coin animation from sprite sheet
+        if (!this.anims.exists('coin_spin')) {
+            this.anims.create({
+                key: 'coin_spin',
+                frames: this.anims.generateFrameNumbers('coin', { start: 0, end: 24 }), // 25 frames (0-24)
+                frameRate: 20,
+                repeat: -1
+            });
+        }
+
         // Initialize audio manager
         this.audioManager.init(this);
         this.audioManager.setSounds({
@@ -156,8 +169,9 @@ export default class MenuScene extends Phaser.Scene {
 
 
         // Add coin UI (top left) - keep this as it's functional
-        const coinIcon = this.add.image(30, 30, 'coin');
-        coinIcon.setScale(0.17);
+        const coinIcon = this.add.sprite(30, 30, 'coin', 0);
+        coinIcon.play('coin_spin');
+        coinIcon.setScale(0.5); // Increased from 0.17 for new 64x64 coin sprite
         coinIcon.setOrigin(0, 0.5);
         coinIcon.setDepth(1000);
 

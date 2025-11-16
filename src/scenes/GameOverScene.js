@@ -35,8 +35,9 @@ export default class GameOverScene extends Phaser.Scene {
         graphics.fillRect(0, 0, 800, 600);
 
         // Add coin UI (top left)
-        const coinIcon = this.add.image(30, 30, 'coin');
-        coinIcon.setScale(0.17);
+        const coinIcon = this.add.sprite(30, 30, 'coin', 0);
+        coinIcon.play('coin_spin');
+        coinIcon.setScale(0.5); // Increased from 0.17 for new 64x64 coin sprite
         coinIcon.setOrigin(0, 0.5);
         
         this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
