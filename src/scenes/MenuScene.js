@@ -128,31 +128,42 @@ export default class MenuScene extends Phaser.Scene {
         }
 
         // Create powerup animations from sprite sheet
-        // Star animation (row 6, frames 48-55) - for SHIELD
+        // TESTING DIFFERENT FRAMES - trying to find the right ones
+        // Option 1: frames 16-23 (row 2 - amo)
         if (!this.anims.exists('powerup_star')) {
             this.anims.create({
                 key: 'powerup_star',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 48, end: 55 }),
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 16, end: 23 }),
                 frameRate: 10,
                 repeat: -1
             });
         }
 
-        // Gem animation (row 5, frames 40-47) - for DOUBLE JUMP
+        // Option 2: frames 24-31 (row 3 - box 1)
         if (!this.anims.exists('powerup_gem')) {
             this.anims.create({
                 key: 'powerup_gem',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 40, end: 47 }),
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 24, end: 31 }),
                 frameRate: 10,
                 repeat: -1
             });
         }
 
-        // Rainbow ball animation (row 7, frames 56-63) - for MAGNET
-        if (!this.anims.exists('powerup_rainbow')) {
+        // Option 3: frames 0-7 (row 0 - gold coin) for double jump
+        if (!this.anims.exists('powerup_coin')) {
             this.anims.create({
-                key: 'powerup_rainbow',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 56, end: 63 }),
+                key: 'powerup_coin',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 0, end: 7 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Heart animation (row 1, frames 8-13) - for MAGNET (skip last 2 blank frames)
+        if (!this.anims.exists('powerup_heart')) {
+            this.anims.create({
+                key: 'powerup_heart',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 8, end: 13 }),
                 frameRate: 10,
                 repeat: -1
             });

@@ -167,11 +167,11 @@ export const GAME_CONFIG = {
 
     // Powerup system
     POWERUPS: {
-        MIN_SPAWN_DELAY: 16000,
-        MAX_SPAWN_DELAY: 25000,
+        MIN_SPAWN_DELAY: 2000,   // TESTING: Was 16000 - spawn every 2-4 seconds
+        MAX_SPAWN_DELAY: 4000,   // TESTING: Was 25000
         MIN_Y: 200,
         MAX_Y_OFFSET: 50, // From ground
-        SCALE: 1.0,      // Increased from 0.3 for new 32x32 animated sprites
+        SCALE: 2.0,      // TESTING: Increased to 2.0 for better visibility (32x32 sprites)
         DURATION: 10000, // 10 seconds
 
         // Powerup orb configuration
@@ -184,7 +184,7 @@ export const GAME_CONFIG = {
 
             // Orb properties by type
             PROPERTIES: {
-                shield: { color: 0x00FF00, radius: 20 },
+                shield: { color: 0xFF69B4, radius: 20 },  // Pink (hot pink) to match heart
                 magnet: { color: 0xFF00FF, radius: 18 },
                 double: { color: 0x00FFFF, radius: 16 }
             },

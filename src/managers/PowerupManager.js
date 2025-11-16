@@ -117,9 +117,9 @@ export default class PowerupManager {
 
         // Map powerup types to animations
         const animMap = {
-            'shield': 'powerup_star',      // Star for shield
-            'magnet': 'powerup_rainbow',   // Rainbow ball for magnet
-            'double': 'powerup_gem'        // Gem for double jump
+            'shield': 'powerup_heart',     // Heart for shield
+            'magnet': 'powerup_gem',       // Gem/box for magnet
+            'double': 'powerup_coin'       // Gold coin for double jump
         };
 
         // Create using the group's create method with first frame of sprite sheet
