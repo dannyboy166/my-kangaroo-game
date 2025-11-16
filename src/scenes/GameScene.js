@@ -517,12 +517,17 @@ export default class GameScene extends Phaser.Scene {
         const config = GAME_CONFIG.DIFFICULTY;
         const flooredScore = Math.floor(this.score);
         if (flooredScore % config.SPEED_INCREASE_INTERVAL === 0 && !this.lastSpeedIncrease) {
-            this.gameSpeed += config.SPEED_INCREASE_AMOUNT;
-            this.lastSpeedIncrease = true;
+            // Increase speed but cap at MAX_SPEED
+            if (this.gameSpeed < config.MAX_SPEED) {
+                this.gameSpeed = Math.min(this.gameSpeed + config.SPEED_INCREASE_AMOUNT, config.MAX_SPEED);
+                this.lastSpeedIncrease = true;
 
-            // Update kangaroo's forward velocity (only thing that moves!)
-            if (this.kangaroo && this.kangaroo.body) {
-                this.kangaroo.setVelocityX(this.gameSpeed);
+                // Update kangaroo's forward velocity (only thing that moves!)
+                if (this.kangaroo && this.kangaroo.body) {
+                    this.kangaroo.setVelocityX(this.gameSpeed);
+                }
+
+                console.log(`⚡ Speed increased to ${this.gameSpeed} (max: ${config.MAX_SPEED})`);
             }
 
             // Note: Obstacles don't need speed updates - they're static!

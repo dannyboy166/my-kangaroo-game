@@ -38,9 +38,10 @@ export const GAME_CONFIG = {
     // Game speed and difficulty
     DIFFICULTY: {
         INITIAL_SPEED: 300,
-        SPEED_INCREASE_INTERVAL: 50, // Score points
-        SPEED_INCREASE_AMOUNT: 5,
-        GROUND_Y: 520  // Moved up from 520
+        SPEED_INCREASE_INTERVAL: 30, // Score points (was 50 - now faster!)
+        SPEED_INCREASE_AMOUNT: 10,   // Speed increase (was 5 - now doubles!)
+        MAX_SPEED: 500,              // Speed cap to keep game playable
+        GROUND_Y: 520
     },
 
     // Obstacle spawning
@@ -84,37 +85,37 @@ export const GAME_CONFIG = {
         // offsetX/offsetY are relative to sprite origin (0.5, 1) = bottom-center
         COLLISION_BOXES: {
             // rock: 128x128 @ scale 0.8 = 102x102 actual size
-            rock: { width: 85, height: 85, offsetX: 20, offsetY: 12 },
-            spider_rock: { width: 80, height: 80, offsetX: 13, offsetY: 13 },
+            rock: { width: 85, height: 85, offsetX: 20, offsetY: 2 },
+            spider_rock: { width: 100, height: 80, offsetX: 10, offsetY: 40 },
 
             // cactus: 100x154 @ scale 0.75 = 75x115 actual size
-            cactus: { width: 60, height: 100, offsetX: 20, offsetY: 10 },
+            cactus: { width: 60, height: 100, offsetX: 20, offsetY: 0 },
 
             // log: 256x140 @ scale 0.5 = 128x70 actual size
-            log: { width: 210, height: 50, offsetX: 9, offsetY: 15 },
-            snake_log: { width: 110, height: 50, offsetX: 9, offsetY: 15 },
+            log: { width: 210, height: 100, offsetX: 9, offsetY: 15 },
+            snake_log: { width: 190, height: 80, offsetX: 25, offsetY: 35 },
 
             // emu: 128x128 @ scale 0.8 = 102x102 actual size
-            emu: { width: 80, height: 85, offsetX: 11, offsetY: 12 },
+            emu: { width: 80, height: 100, offsetX: 20, offsetY: 2 },
 
             // croc: 256x128 @ scale 0.55 = 141x70 actual size
-            croc: { width: 120, height: 55, offsetX: 10, offsetY: 10 },
+            croc: { width: 240, height: 85, offsetX: 10, offsetY: 20 },
 
             // camel: 128x128 @ scale 1.0 = 128x128 actual size
-            camel: { width: 100, height: 110, offsetX: 14, offsetY: 12 },
+            camel: { width: 100, height: 110, offsetX: 14, offsetY: 2 },
 
             // koala: 128x256 @ scale 0.8 = 102x205 actual size (tall sprite)
-            koala: { width: 80, height: 100, offsetX: 11, offsetY: 15 },
+            koala: { width: 80, height: 200, offsetX: 30, offsetY: 40 },
 
             // magpie: 128x128 @ scale 0.8 = 102x102 actual size
-            magpie: { width: 80, height: 70, offsetX: 11, offsetY: 20 },
+            magpie: { width: 80, height: 70, offsetX: 11, offsetY: 10 },
 
             // Pixel Adventure obstacles @ scale 2.0 (large sprites)
-            bee: { width: 100, height: 90, offsetX: 14, offsetY: 20 },
-            plant: { width: 90, height: 120, offsetX: 19, offsetY: 15 },
-            snail: { width: 110, height: 90, offsetX: 9, offsetY: 20 },
-            mushroom: { width: 100, height: 100, offsetX: 14, offsetY: 14 },
-            trunk: { width: 95, height: 110, offsetX: 16, offsetY: 12 }
+            bee: { width: 100, height: 90, offsetX: 14, offsetY: 10 },
+            plant: { width: 90, height: 120, offsetX: 19, offsetY: 5 },
+            snail: { width: 110, height: 90, offsetX: 9, offsetY: 10 },
+            mushroom: { width: 100, height: 100, offsetX: 14, offsetY: 4 },
+            trunk: { width: 95, height: 110, offsetX: 16, offsetY: 2 }
         },
 
         // Score thresholds for unlocking new obstacles
