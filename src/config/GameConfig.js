@@ -76,6 +76,47 @@ export const GAME_CONFIG = {
             trunk: 1.5
         },
 
+        // Collision box customization for each obstacle type
+        // Format: { width: number, height: number, offsetX: number, offsetY: number }
+        // These are sized to match ~80% of visible sprite content (fair hitboxes)
+        // Sprite dimensions: rock(128x128), cactus(100x154), log(256x140), emu(128x128)
+        //                    croc(256x128), camel(128x128), koala(128x256), magpie(128x128)
+        // offsetX/offsetY are relative to sprite origin (0.5, 1) = bottom-center
+        COLLISION_BOXES: {
+            // rock: 128x128 @ scale 0.8 = 102x102 actual size
+            rock: { width: 85, height: 85, offsetX: 20, offsetY: 12 },
+            spider_rock: { width: 80, height: 80, offsetX: 13, offsetY: 13 },
+
+            // cactus: 100x154 @ scale 0.75 = 75x115 actual size
+            cactus: { width: 60, height: 100, offsetX: 20, offsetY: 10 },
+
+            // log: 256x140 @ scale 0.5 = 128x70 actual size
+            log: { width: 210, height: 50, offsetX: 9, offsetY: 15 },
+            snake_log: { width: 110, height: 50, offsetX: 9, offsetY: 15 },
+
+            // emu: 128x128 @ scale 0.8 = 102x102 actual size
+            emu: { width: 80, height: 85, offsetX: 11, offsetY: 12 },
+
+            // croc: 256x128 @ scale 0.55 = 141x70 actual size
+            croc: { width: 120, height: 55, offsetX: 10, offsetY: 10 },
+
+            // camel: 128x128 @ scale 1.0 = 128x128 actual size
+            camel: { width: 100, height: 110, offsetX: 14, offsetY: 12 },
+
+            // koala: 128x256 @ scale 0.8 = 102x205 actual size (tall sprite)
+            koala: { width: 80, height: 100, offsetX: 11, offsetY: 15 },
+
+            // magpie: 128x128 @ scale 0.8 = 102x102 actual size
+            magpie: { width: 80, height: 70, offsetX: 11, offsetY: 20 },
+
+            // Pixel Adventure obstacles @ scale 2.0 (large sprites)
+            bee: { width: 100, height: 90, offsetX: 14, offsetY: 20 },
+            plant: { width: 90, height: 120, offsetX: 19, offsetY: 15 },
+            snail: { width: 110, height: 90, offsetX: 9, offsetY: 20 },
+            mushroom: { width: 100, height: 100, offsetX: 14, offsetY: 14 },
+            trunk: { width: 95, height: 110, offsetX: 16, offsetY: 12 }
+        },
+
         // Score thresholds for unlocking new obstacles
         UNLOCK_SCORES: {
             koala: 1000,

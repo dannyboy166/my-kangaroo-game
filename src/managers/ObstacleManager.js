@@ -107,7 +107,31 @@ export default class ObstacleManager {
         obstacle.setVelocityX(0); // No movement - stays in world space
         obstacle.setVelocityY(0);
 
+        // Apply custom collision box from config
+        this.setCollisionBox(obstacle, type);
+
         console.log(`🚧 Spawned ${type} at world X: ${spawnX.toFixed(0)} (scrollFactor=1, velocity=0)`);
+    }
+
+    /**
+     * Apply custom collision box to obstacle based on type
+     * Reads collision box settings from GAME_CONFIG.OBSTACLES.COLLISION_BOXES
+     * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
+     * @param {string} type - Obstacle type key
+     */
+    setCollisionBox(obstacle, type) {
+        const collisionBoxes = GAME_CONFIG.OBSTACLES.COLLISION_BOXES;
+
+        // Check if custom collision box exists for this type
+        if (collisionBoxes && collisionBoxes[type]) {
+            const box = collisionBoxes[type];
+            obstacle.body.setSize(box.width, box.height);
+            obstacle.body.setOffset(box.offsetX, box.offsetY);
+            console.log(`  → Custom collision box applied: ${box.width}x${box.height} at offset (${box.offsetX}, ${box.offsetY})`);
+        } else {
+            // Use default collision box (full sprite size)
+            console.log(`  → Using default collision box (full sprite)`);
+        }
     }
 
     setGameSpeed(speed) {
