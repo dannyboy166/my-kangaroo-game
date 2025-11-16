@@ -11,18 +11,27 @@ import UIManager from '../managers/UIManager.js';
  * GameScene
  * Main gameplay scene - streamlined with manager-based architecture
  *
- * ===== INFINITE RUNNER CAMERA SYSTEM =====
- * This game uses a camera-following system where:
- * 1. Kangaroo sprite moves forward in WORLD SPACE (x position increases)
- * 2. Camera smoothly follows kangaroo horizontally
- * 3. Camera offset keeps kangaroo ~250px from left edge (visible to player)
- * 4. Obstacles spawn at fixed world X positions ahead of kangaroo
- * 5. Background layers scroll at different speeds (parallax effect)
+ * ===== INFINITE RUNNER - STATIC WORLD APPROACH =====
+ * This game uses the industry-standard "static world" infinite runner architecture:
  *
- * Player sees: Kangaroo "running in place" while world scrolls by
- * Reality: Kangaroo moving forward, camera following, creating scrolling illusion
+ * 1. Kangaroo moves FORWARD in world space (velocity +300, increasing with score)
+ * 2. Obstacles are STATIC in world space (velocity 0, placed at fixed positions)
+ * 3. Ground is a TileSprite that scrolls via camera movement (no velocity)
+ * 4. Coins/powerups are STATIC in world space (velocity 0)
+ * 5. Camera follows kangaroo smoothly (offset -250px from left edge)
+ * 6. Background layers use parallax scrolling (slower = appears further away)
  *
- * This is how ALL infinite runners work (Temple Run, Subway Surfers, etc.)
+ * What the player sees:
+ * - Kangaroo appears to run in place
+ * - World scrolls past from right to left
+ * - Background layers move at different speeds (depth illusion)
+ *
+ * What's actually happening:
+ * - Kangaroo is the ONLY thing moving (forward through world)
+ * - Everything else is stationary in world space
+ * - Camera following kangaroo creates the scrolling illusion
+ *
+ * This is the same approach used by: Temple Run, Subway Surfers, Jetpack Joyride, etc.
  */
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -136,11 +145,11 @@ export default class GameScene extends Phaser.Scene {
     /**
      * Create player kangaroo sprite
      *
-     * KEY CONCEPT: The kangaroo moves forward in world space!
+     * The kangaroo is the ONLY game object that moves!
      * - Starts at world X = 50
-     * - Constantly moves forward (velocity X = gameSpeed)
-     * - Camera follows, so player sees kangaroo "stay in place"
-     * - This creates the infinite runner scrolling effect
+     * - Constantly moves forward (velocity X = gameSpeed, increasing over time)
+     * - Camera follows smoothly, creating scrolling illusion
+     * - All obstacles/coins/ground appear to move backward, but they're actually static
      */
     createPlayer() {
         // Create kangaroo animations if they don't exist
@@ -283,13 +292,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     /**
-     * Create invisible physics ground
+     * Create invisible physics ground platform
      *
-     * The ground is a static (non-moving) platform in world space.
-     * - Very wide (1,000,000px) to extend infinitely as kangaroo runs
-     * - Positioned at GROUND_Y (520px)
-     * - Invisible (alpha 0) since visual ground comes from background layers
-     * - Static body (doesn't move or fall)
+     * This is a static collision platform in world space:
+     * - Very wide (1,000,000px) to extend infinitely as kangaroo runs forward
+     * - Positioned at GROUND_Y (520px) - where kangaroo stands
+     * - Invisible (alpha 0) - visual ground comes from parallax background layer
+     * - Static body (doesn't move) - kangaroo collides with it to land after jumping
+     * - Only kangaroo collides with this (obstacles don't need ground collision)
      */
     createPhysicsGround() {
         const GROUND_Y = GAME_CONFIG.DIFFICULTY.GROUND_Y; // 520px
@@ -391,6 +401,22 @@ export default class GameScene extends Phaser.Scene {
     update(time, delta) {
         if (this.isGameOver) return;
 
+        // Debug: Check FPS and movement every 60 frames
+        if (!this.debugFrameCounter) this.debugFrameCounter = 0;
+        this.debugFrameCounter++;
+        if (this.debugFrameCounter % 60 === 0) {
+            const camera = this.cameras.main;
+            const firstObstacle = this.obstacleManager.getObstacles().children.entries.find(o => o.active);
+            const firstCoin = this.collectibleManager.getCoins().children.entries.find(c => c.active);
+            console.log('📊 DEBUG:', {
+                fps: this.game.loop.actualFps.toFixed(0),
+                cameraScrollX: camera.scrollX.toFixed(0),
+                kangarooVelX: this.kangaroo.body.velocity.x.toFixed(0),
+                coinY: firstCoin ? firstCoin.y.toFixed(0) : 'N/A',
+                coinVelY: firstCoin ? firstCoin.body.velocity.y.toFixed(2) : 'N/A'
+            });
+        }
+
         // Update managers
         this.obstacleManager.update(delta);
         this.powerupManager.update(delta);
@@ -479,26 +505,30 @@ export default class GameScene extends Phaser.Scene {
     }
 
     /**
-     * Update score - TESTING: NO SPEED INCREASES
+     * Update score and increase game speed over time
      * @param {number} delta - Time since last frame
      */
     updateScore(delta) {
         // Increase score
         this.score += 0.5;
 
-        // DISABLED FOR TESTING: Keep speed constant at 300
-        // const config = GAME_CONFIG.DIFFICULTY;
-        // const flooredScore = Math.floor(this.score);
-        // if (flooredScore % config.SPEED_INCREASE_INTERVAL === 0 && !this.lastSpeedIncrease) {
-        //     this.gameSpeed += config.SPEED_INCREASE_AMOUNT;
-        //     this.lastSpeedIncrease = true;
-        //     if (this.kangaroo && this.kangaroo.body) {
-        //         this.kangaroo.setVelocityX(this.gameSpeed);
-        //     }
-        //     this.obstacleManager.setGameSpeed(this.gameSpeed);
-        // } else if (flooredScore % config.SPEED_INCREASE_INTERVAL !== 0) {
-        //     this.lastSpeedIncrease = false;
-        // }
+        // Gradually increase game speed (only affects kangaroo velocity)
+        const config = GAME_CONFIG.DIFFICULTY;
+        const flooredScore = Math.floor(this.score);
+        if (flooredScore % config.SPEED_INCREASE_INTERVAL === 0 && !this.lastSpeedIncrease) {
+            this.gameSpeed += config.SPEED_INCREASE_AMOUNT;
+            this.lastSpeedIncrease = true;
+
+            // Update kangaroo's forward velocity (only thing that moves!)
+            if (this.kangaroo && this.kangaroo.body) {
+                this.kangaroo.setVelocityX(this.gameSpeed);
+            }
+
+            // Note: Obstacles don't need speed updates - they're static!
+            // Only kangaroo moves faster, making the game harder
+        } else if (flooredScore % config.SPEED_INCREASE_INTERVAL !== 0) {
+            this.lastSpeedIncrease = false;
+        }
 
         // Update managers with current score
         this.obstacleManager.setScore(this.score);
@@ -592,6 +622,9 @@ export default class GameScene extends Phaser.Scene {
         this.kangaroo.anims.stop();
         this.kangaroo.setFrame(2);
         this.kangaroo.setDepth(10);
+
+        // Stop camera from following (prevents obstacles from sliding)
+        this.cameras.main.stopFollow();
 
         // Set all managers to game over
         this.obstacleManager.setGameOver(true);

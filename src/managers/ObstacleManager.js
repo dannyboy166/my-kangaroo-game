@@ -1,9 +1,11 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
 
 /**
- * ObstacleManager - DEAD SIMPLE
+ * ObstacleManager - Static World Approach
  *
- * Obstacles sit in world space. Don't move. Camera moves past them.
+ * Obstacles are placed at fixed positions in world space.
+ * They don't move - the camera moving past them creates the scrolling illusion.
+ * This is the industry-standard infinite runner approach (Temple Run, Subway Surfers, etc.)
  */
 export default class ObstacleManager {
     constructor(scene) {
@@ -26,22 +28,24 @@ export default class ObstacleManager {
 
         const camera = this.scene.cameras.main;
         const cameraLeftEdge = camera.scrollX;
-        const kangaroo = this.scene.kangaroo;
 
-        // Debug every 60 frames
+        // Debug: Check obstacle velocities every 60 frames
         if (!this.debugCounter) this.debugCounter = 0;
         this.debugCounter++;
-        if (this.debugCounter % 60 === 0 && this.obstacles.children.entries.length > 0) {
+        if (this.debugCounter % 60 === 0) {
             const firstObstacle = this.obstacles.children.entries.find(o => o.active);
-            console.log('🎯 Speed Check:', {
-                kangarooVelX: kangaroo ? kangaroo.body.velocity.x.toFixed(0) : 'N/A',
-                obstacleVelX: firstObstacle ? firstObstacle.body.velocity.x.toFixed(0) : 'N/A',
-                gameSpeed: this.gameSpeed.toFixed(0),
-                cameraScrollX: camera.scrollX.toFixed(0)
-            });
+            if (firstObstacle) {
+                console.log('🔍 Obstacle Debug:', {
+                    obstacleX: firstObstacle.x.toFixed(0),
+                    velocityX: firstObstacle.body.velocity.x.toFixed(2),
+                    velocityY: firstObstacle.body.velocity.y.toFixed(2),
+                    scrollFactor: firstObstacle.scrollFactorX,
+                    cameraScrollX: camera.scrollX.toFixed(0)
+                });
+            }
         }
 
-        // Clean up off-screen obstacles
+        // Clean up off-screen obstacles (behind camera view)
         this.obstacles.children.entries.slice().forEach((obstacle) => {
             if (!obstacle || !obstacle.active) return;
 
@@ -87,32 +91,29 @@ export default class ObstacleManager {
 
         const obstacle = this.scene.physics.add.sprite(spawnX, this.groundY, type);
 
-        // Setup
+        // Setup visual properties
         const baseSize = GAME_CONFIG.OBSTACLES.BASE_SIZES[type] || 0.5;
         obstacle.setScale(baseSize);
-        obstacle.setOrigin(0.5, 1);
+        obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
+        obstacle.setDepth(10); // Above ground layer (ground is at -20)
+        obstacle.setScrollFactor(1); // Move with camera (same as default, but explicit)
 
-        // Add to group FIRST
+        // Add to group
         this.obstacles.add(obstacle);
 
-        // THEN set physics (after adding to group)
+        // Physics setup - STATIC in world space
         obstacle.body.setAllowGravity(false);
-        obstacle.body.setImmovable(false);
+        obstacle.body.setImmovable(true);
+        obstacle.setVelocityX(0); // No movement - stays in world space
+        obstacle.setVelocityY(0);
 
-        // Set velocity LAST
-        obstacle.setVelocityX(-this.gameSpeed);
-
-        console.log(`🚧 Spawned ${type} at X:${spawnX.toFixed(0)}, velocity: ${obstacle.body.velocity.x}`);
+        console.log(`🚧 Spawned ${type} at world X: ${spawnX.toFixed(0)} (scrollFactor=1, velocity=0)`);
     }
 
     setGameSpeed(speed) {
         this.gameSpeed = speed;
-
-        // Update all active obstacles to match new speed
-        this.obstacles.children.entries.forEach((obstacle) => {
-            if (!obstacle || !obstacle.active) return;
-            obstacle.setVelocityX(-speed);
-        });
+        // Note: Obstacles don't need velocity updates - they're static!
+        // Game speed only affects kangaroo's forward velocity
     }
 
     setScore(score) {

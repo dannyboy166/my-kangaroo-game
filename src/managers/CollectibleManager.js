@@ -2,7 +2,11 @@ import { GAME_CONFIG } from '../config/GameConfig.js';
 
 /**
  * CollectibleManager
- * Handles coin spawning, movement, and collection
+ * Handles coin spawning and collection
+ *
+ * Coins are placed at fixed positions in world space (like obstacles).
+ * Camera movement creates the scrolling illusion - no velocity needed!
+ * Magnet powerup uses manual position updates for attraction effect.
  */
 export default class CollectibleManager {
     /**
@@ -16,7 +20,6 @@ export default class CollectibleManager {
         this.coinTimer = null;
         this.coinCollectionCooldown = new Set();
         this.isGameOver = false;
-        this.gameSpeed = GAME_CONFIG.DIFFICULTY.INITIAL_SPEED;
     }
 
     /**
@@ -52,7 +55,7 @@ export default class CollectibleManager {
         this.coins.children.entries.slice().forEach((coin) => {
             if (!coin || !coin.active) return;
 
-            // Magnet effect
+            // Magnet effect - manually pull coins toward kangaroo
             if (magnetActive) {
                 const distanceToKangaroo = Phaser.Math.Distance.Between(
                     coin.x, coin.y, kangaroo.x, kangaroo.y
@@ -60,15 +63,18 @@ export default class CollectibleManager {
 
                 const config = GAME_CONFIG.POWERUPS.MAGNET;
                 if (distanceToKangaroo < config.RANGE) {
+                    // Calculate angle from coin to kangaroo
                     const angle = Phaser.Math.Angle.Between(
                         coin.x, coin.y, kangaroo.x, kangaroo.y
                     );
+                    // Move coin toward kangaroo (manual position update)
                     coin.x += Math.cos(angle) * config.FORCE * delta / 1000;
                     coin.y += Math.sin(angle) * config.FORCE * delta / 1000;
                 }
             }
 
-            // No normal movement - coins are stationary in world (camera creates movement illusion)
+            // Note: Coins don't move on their own - they're static in world space
+            // Camera movement creates the scrolling illusion
 
             // Clean up coins that are off-screen (behind camera view)
             const camera = this.scene.cameras.main;
@@ -98,7 +104,7 @@ export default class CollectibleManager {
     }
 
     /**
-     * Spawn a coin
+     * Spawn a coin at a random position ahead of kangaroo
      */
     spawnCoin() {
         if (this.isGameOver) return;
@@ -111,29 +117,22 @@ export default class CollectibleManager {
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
 
-        const coin = this.scene.physics.add.image(
-            spawnX,
-            coinY,
-            'coin'
-        );
+        // Create using the group's create method instead
+        const coin = this.coins.create(spawnX, coinY, 'coin');
 
+        // Visual setup
         coin.setScale(config.SCALE);
         coin.setOrigin(0.5);
-        coin.setImmovable(true);
-        coin.setVelocityY(0);
+        coin.setScrollFactor(1); // Move with camera like obstacles
+
+        // Physics setup - STATIC in world space
+        // CRITICAL: Set these AFTER create() to prevent group from overriding
+        coin.body.setAllowGravity(false);
+        coin.body.setImmovable(true);
         coin.body.pushable = false;
+        coin.body.setVelocity(0, 0); // No movement
 
-        this.coins.add(coin);
-
-        // Disable gravity
-        this.scene.time.delayedCall(0, () => {
-            if (coin.body) {
-                coin.body.setAllowGravity(false);
-                coin.body.setVelocityY(0);
-                coin.body.setGravity(0, 0);
-                coin.body.setBounce(0);
-            }
-        });
+        console.log(`💰 Spawned coin at Y:${coinY.toFixed(0)}, velY:${coin.body.velocity.y}`);
     }
 
     /**
@@ -184,14 +183,6 @@ export default class CollectibleManager {
             coinsAdded: config.VALUE,
             scoreBonus: config.SCORE_BONUS
         };
-    }
-
-    /**
-     * Set game speed
-     * @param {number} speed - New game speed
-     */
-    setGameSpeed(speed) {
-        this.gameSpeed = speed;
     }
 
     /**

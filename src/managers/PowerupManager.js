@@ -3,6 +3,9 @@ import { GAME_CONFIG } from '../config/GameConfig.js';
 /**
  * PowerupManager
  * Handles powerup spawning, collection, activation, and visual effects (orbs)
+ *
+ * Powerups are placed at fixed positions in world space (like obstacles/coins).
+ * Camera movement creates the scrolling illusion - no velocity needed!
  */
 export default class PowerupManager {
     /**
@@ -15,7 +18,6 @@ export default class PowerupManager {
         this.powerups = null;
         this.powerupTimer = null;
         this.isGameOver = false;
-        this.gameSpeed = GAME_CONFIG.DIFFICULTY.INITIAL_SPEED;
 
         // Active powerup state
         this.activePowerups = {
@@ -97,7 +99,7 @@ export default class PowerupManager {
     }
 
     /**
-     * Spawn a random powerup
+     * Spawn a random powerup at a position ahead of kangaroo
      */
     spawnPowerup() {
         if (this.isGameOver) return;
@@ -113,30 +115,21 @@ export default class PowerupManager {
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
 
-        const powerup = this.scene.physics.add.image(
-            spawnX,
-            powerupY,
-            randomType
-        );
+        // Create using the group's create method instead
+        const powerup = this.powerups.create(spawnX, powerupY, randomType);
 
+        // Visual setup
         powerup.setScale(config.SCALE);
         powerup.setOrigin(0.5);
-        powerup.setImmovable(true);
-        powerup.setVelocityY(0);
-        powerup.body.pushable = false;
+        powerup.setScrollFactor(1); // Move with camera like obstacles
         powerup.powerupType = randomType;
 
-        this.powerups.add(powerup);
-
-        // Disable gravity
-        this.scene.time.delayedCall(0, () => {
-            if (powerup.body) {
-                powerup.body.setAllowGravity(false);
-                powerup.body.setVelocityY(0);
-                powerup.body.setGravity(0, 0);
-                powerup.body.setBounce(0);
-            }
-        });
+        // Physics setup - STATIC in world space
+        // CRITICAL: Set these AFTER create() to prevent group from overriding
+        powerup.body.setAllowGravity(false);
+        powerup.body.setImmovable(true);
+        powerup.body.pushable = false;
+        powerup.body.setVelocity(0, 0); // No movement
 
         // Add glow effect
         this.scene.tweens.add({
@@ -437,14 +430,6 @@ export default class PowerupManager {
      */
     getActivePowerups() {
         return this.activePowerups;
-    }
-
-    /**
-     * Set game speed
-     * @param {number} speed - New game speed
-     */
-    setGameSpeed(speed) {
-        this.gameSpeed = speed;
     }
 
     /**

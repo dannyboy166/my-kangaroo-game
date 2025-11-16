@@ -14,10 +14,14 @@ import GameDataManager from './GameDataManager.js';
  *   - scrollSpeed 0.1  = Very slow (far distant clouds)
  *   - scrollSpeed 0.3  = Slow (middle distance elements)
  *   - scrollSpeed 0.6  = Medium (trees/bushes)
- *   - scrollSpeed 1.0  = Full speed (foreground ground, matches obstacles)
+ *   - scrollSpeed 1.0  = Full speed (foreground ground, moves with camera)
  *
  * Lower scrollSpeed = appears further away (parallax effect)
  * This creates depth perception and makes the world feel 3D!
+ *
+ * ===== STATIC WORLD APPROACH =====
+ * Ground layer is a TileSprite with scrollFactor = 1 (moves with camera naturally)
+ * NO PHYSICS, NO VELOCITY - the camera movement creates the scrolling illusion!
  */
 export default class EnvironmentManager {
     /**
@@ -26,8 +30,7 @@ export default class EnvironmentManager {
     constructor(scene) {
         this.scene = scene;
         this.isGameOver = false;
-        this.gameSpeed = GAME_CONFIG.DIFFICULTY.INITIAL_SPEED;
-        this.parallaxLayers = []; // Store all parallax layers
+        this.parallaxLayers = []; // Store all parallax layers (including ground)
         this.gameDataManager = GameDataManager.getInstance();
     }
 
@@ -82,7 +85,7 @@ export default class EnvironmentManager {
     }
 
     /**
-     * Add a parallax scrolling layer
+     * Add a parallax scrolling layer (including ground)
      * @param {string} texture - Texture key
      * @param {number} scrollSpeed - Parallax speed factor (0-1)
      * @param {number} depth - Z-depth
@@ -95,24 +98,13 @@ export default class EnvironmentManager {
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
         const y = yPos !== null ? yPos : CANVAS_HEIGHT / 2;
 
-        // Ground layer (scrollSpeed 1.0) becomes a moving physics sprite
-        // Other layers stay as camera-fixed parallax
-        if (scrollSpeed >= 1.0) {
-            this.createGroundSprite(texture, scaleX, scaleY, y);
-            return; // Don't add to parallax layers
-        }
-
         console.log(`📍 Adding parallax layer: ${texture}`, {
-            x: CANVAS_WIDTH / 2,
-            y: y,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
-            depth: depth,
             scrollSpeed: scrollSpeed,
-            scaleX: scaleX,
-            scaleY: scaleY
+            depth: depth
         });
 
+        // ALL layers (including ground) are camera-fixed TileSprites
+        // They use tilePositionX to create infinite scrolling illusion
         const layer = this.scene.add.tileSprite(
             CANVAS_WIDTH / 2,
             y,
@@ -122,54 +114,25 @@ export default class EnvironmentManager {
         );
         layer.setOrigin(0.5, 0.5);
         layer.setDepth(depth);
-        layer.setScrollFactor(0); // Fixed to camera
         layer.setTileScale(scaleX, scaleY);
+        layer.setScrollFactor(0); // ALL layers fixed to camera
 
         this.parallaxLayers.push({
             sprite: layer,
-            scrollSpeed: scrollSpeed
+            scrollSpeed: scrollSpeed,
+            tileScaleX: scaleX  // Store for scroll compensation
         });
-    }
 
-    /**
-     * Create ground as a moving sprite (like obstacles)
-     */
-    createGroundSprite(texture, scaleX, scaleY, y) {
-        const kangaroo = this.scene.kangaroo;
-        if (!kangaroo) {
-            console.error('Cannot create ground - kangaroo not found');
-            return;
+        if (scrollSpeed >= 1.0) {
+            console.log(`  → Ground layer (scrollSpeed=${scrollSpeed})`);
+        } else {
+            console.log(`  → Background layer (scrollSpeed=${scrollSpeed})`);
         }
-
-        // Create a HUGE ground sprite that moves at -300
-        const groundWidth = 100000;
-        const groundX = kangaroo.x + groundWidth / 2; // Center ahead of kangaroo
-
-        const ground = this.scene.add.tileSprite(
-            groundX,
-            y,
-            groundWidth,
-            600,
-            texture
-        );
-        ground.setOrigin(0.5, 0.5);
-        ground.setDepth(-20);
-        ground.setScrollFactor(1); // World space
-        ground.setTileScale(scaleX, scaleY);
-
-        // Add physics to make it move
-        this.scene.physics.add.existing(ground);
-        ground.body.setAllowGravity(false);
-        ground.body.setVelocityX(-300); // SAME AS OBSTACLES!
-
-        this.groundSprite = ground;
-
-        console.log('✅ Ground sprite created - MOVES AT -300 (like obstacles)');
     }
 
     /**
-     * Update parallax layers (clouds, trees, etc.)
-     * Ground is now a physics sprite that moves automatically
+     * Update all parallax layers (including ground)
+     * All layers use tilePositionX for infinite repeating pattern
      * @param {number} delta - Time elapsed since last frame
      */
     update(delta) {
@@ -177,19 +140,15 @@ export default class EnvironmentManager {
 
         const camera = this.scene.cameras.main;
 
-        // Only update parallax layers (clouds, trees)
-        // Ground is a physics sprite that moves at -300
+        // Update ALL layers (including ground) with tilePositionX
+        // This shifts the repeating tile pattern, creating infinite scrolling
         this.parallaxLayers.forEach(layer => {
-            layer.sprite.tilePositionX = camera.scrollX * layer.scrollSpeed;
+            // CRITICAL: TileSprite scroll position is affected by tileScale!
+            // When tiles are scaled, we need to compensate the scroll speed
+            // Formula: tilePositionX = camera.scrollX * scrollSpeed / tileScaleX
+            const scaleCompensation = layer.tileScaleX || 1.0;
+            layer.sprite.tilePositionX = camera.scrollX * layer.scrollSpeed / scaleCompensation;
         });
-    }
-
-    /**
-     * Set game speed
-     * @param {number} speed - New game speed
-     */
-    setGameSpeed(speed) {
-        this.gameSpeed = speed;
     }
 
     /**
@@ -201,7 +160,7 @@ export default class EnvironmentManager {
     }
 
     /**
-     * Clean up
+     * Clean up all parallax layers
      */
     cleanup() {
         this.parallaxLayers.forEach(layer => layer.sprite.destroy());
