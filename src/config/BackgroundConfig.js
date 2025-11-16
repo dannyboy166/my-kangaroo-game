@@ -105,7 +105,7 @@ export const BACKGROUND_THEMES = {
                 depth: -50,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
-                y: 520 // Aligns with GROUND_Y (520px from GameConfig)
+                y: 480 // Aligns with GROUND_Y (480px from GameConfig)
             }
         ]
     }
