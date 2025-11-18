@@ -2,6 +2,38 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Portal Integration Context
+
+**This game is part of the SASCO Games Portal project!**
+
+This is one of **4 games** being integrated into Victor's **SASCO student/teacher portal platform** for schools. This game serves as a **free time reward** - students play it after earning free time credits from educational activities like MathCrush2.
+
+### The 4 Games in the Portal:
+1. **MathCrush2** (Unity) - Educational + Time Earner (currently integrating with Victor)
+2. **Wordle** (React) - Educational (teacher-assigned vocabulary)
+3. **Kangaroo Hop** (Phaser.js) - Free Time Reward ← **THIS GAME**
+4. **2048** (Vanilla JS) - Free Time Reward
+
+### Central Planning Location:
+**All portal integration planning:** `/Users/danielsamus/sasco-games-portal/`
+- README.md - Overall roadmap
+- TASKS.md - Task tracking
+- .claude/claude.md - Full project context
+
+**Check the central folder for:**
+- Victor's integration requirements
+- URL parameter specifications
+- Timeline and priorities
+- Progress across all 4 games
+
+### Integration Needs for This Game:
+- Mobile responsive scaling (currently fixed 800x600)
+- URL parameter support (studentId, sessionId, token)
+- "Return to Portal" button
+- Optional: Progress tracking (high score, coins)
+
+---
+
 ## Project Overview
 
 Kangaroo Hop is a Phaser.js browser-based endless runner game built with modern JavaScript (ES6+ modules). The game features a kangaroo jumping over obstacles, collecting coins, and using powerups in an Australian outback setting.
