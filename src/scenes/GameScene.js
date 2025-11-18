@@ -104,6 +104,9 @@ export default class GameScene extends Phaser.Scene {
 
         // Setup collision detection
         this.setupCollisions();
+
+        // TESTING: Create a simple reference box for smooth movement comparison
+        this.createReferenceBox();
     }
 
     /**
@@ -381,6 +384,19 @@ export default class GameScene extends Phaser.Scene {
     update(time, delta) {
         if (this.isGameOver) return;
 
+        // TESTING: Update reference box position (smooth constant movement)
+        if (this.referenceBox) {
+            // Move left at 300 pixels per second (same as game speed)
+            this.referenceBoxX -= (300 * delta) / 1000;
+
+            // Reset to right side when it goes off left
+            if (this.referenceBoxX < -50) {
+                this.referenceBoxX = 850; // Start just off right side
+            }
+
+            this.referenceBox.x = this.referenceBoxX;
+        }
+
         // Update managers
         this.obstacleManager.update(delta);
         this.powerupManager.update(delta);
@@ -622,6 +638,28 @@ export default class GameScene extends Phaser.Scene {
                 obstacleType: obstacleType
             });
         });
+    }
+
+    /**
+     * TESTING: Create a reference box for smooth movement comparison
+     * Simple black box moving left at constant velocity
+     */
+    createReferenceBox() {
+        // Create a simple graphics box (not a sprite, just pure graphics)
+        const graphics = this.add.graphics();
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillRect(0, 0, 50, 50);
+
+        // Position in middle of screen (y=300)
+        this.referenceBox = this.add.image(700, 300, graphics.generateTexture('reference_box', 50, 50));
+        graphics.destroy();
+
+        // Fix to camera so it's always visible
+        this.referenceBox.setScrollFactor(0);
+        this.referenceBox.setDepth(9999); // Always on top
+
+        // Store initial position
+        this.referenceBoxX = 700;
     }
 
     /**

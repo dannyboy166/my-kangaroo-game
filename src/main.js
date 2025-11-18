@@ -15,7 +15,7 @@ const config = {
     // Performance optimizations
     fps: {
         target: 60,           // Target 60 FPS
-        forceSetTimeOut: true // Use setTimeout instead of RAF for more consistent timing
+        forceSetTimeOut: false // Use requestAnimationFrame for smoothest rendering
     },
 
     render: {
@@ -28,7 +28,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: true,      // ENABLED: Shows collision boxes for debugging
+            debug: false,     // DISABLED: Debug mode can cause performance issues
             fps: 60           // Physics at 60 FPS
         }
     },
