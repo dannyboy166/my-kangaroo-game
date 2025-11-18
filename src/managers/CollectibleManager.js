@@ -17,7 +17,6 @@ export default class CollectibleManager {
         this.scene = scene;
         this.gameDataManager = gameDataManager;
         this.coins = null;
-        this.coinTimer = null;
         this.coinCollectionCooldown = new Set();
         this.isGameOver = false;
         this.magnetLines = null; // Graphics object for magnet attraction lines
@@ -43,7 +42,8 @@ export default class CollectibleManager {
             });
         }
 
-        this.scheduleNextCoin();
+        // Random coin spawning DISABLED - coins now spawn strategically with obstacles
+        // this.scheduleNextCoin();
     }
 
     /**
@@ -142,23 +142,6 @@ export default class CollectibleManager {
     }
 
     /**
-     * Schedule next coin spawn
-     */
-    scheduleNextCoin() {
-        if (this.isGameOver) return;
-
-        const config = GAME_CONFIG.COINS;
-        const delay = Phaser.Math.Between(config.MIN_SPAWN_DELAY, config.MAX_SPAWN_DELAY);
-
-        this.coinTimer = this.scene.time.delayedCall(delay, () => {
-            if (!this.isGameOver && this.scene.scene.isActive()) {
-                this.spawnCoin();
-                this.scheduleNextCoin();
-            }
-        });
-    }
-
-    /**
      * Spawn a coin at a specific position (called by ObstacleManager for coordinated spawning)
      * @param {number} x - X position in world space
      * @param {number} y - Y position
@@ -180,27 +163,6 @@ export default class CollectibleManager {
         coin.body.setImmovable(true);
         coin.body.pushable = false;
         coin.body.setVelocity(0, 0);
-    }
-
-    /**
-     * Spawn a coin at a random position ahead of kangaroo (occasional bonus coins)
-     * Most coins now spawn strategically via spawnCoinAtPosition()
-     */
-    spawnCoin() {
-        if (this.isGameOver) return;
-
-        const config = GAME_CONFIG.COINS;
-        const kangaroo = this.scene.kangaroo;
-        const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.COIN_X;
-
-        // Random Y position in the air
-        const coinY = Phaser.Math.Between(
-            config.MIN_Y,
-            GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
-        );
-
-        // Use the standard spawn method
-        this.spawnCoinAtPosition(spawnX, coinY);
     }
 
     /**
@@ -263,14 +225,9 @@ export default class CollectibleManager {
     }
 
     /**
-     * Clean up timers and coins
+     * Clean up coins and graphics
      */
     cleanup() {
-        if (this.coinTimer) {
-            this.coinTimer.destroy();
-            this.coinTimer = null;
-        }
-
         this.coinCollectionCooldown.clear();
 
         if (this.coins) {

@@ -16,7 +16,6 @@ export default class PowerupManager {
         this.scene = scene;
         this.storeManager = storeManager;
         this.powerups = null;
-        this.powerupTimer = null;
         this.isGameOver = false;
 
         // Active powerup state
@@ -39,7 +38,8 @@ export default class PowerupManager {
      */
     create() {
         this.powerups = this.scene.physics.add.group();
-        this.scheduleNextPowerup();
+        // Random powerup spawning DISABLED - powerups now spawn strategically with obstacles
+        // this.scheduleNextPowerup();
     }
 
     /**
@@ -71,92 +71,26 @@ export default class PowerupManager {
     }
 
     /**
-     * Schedule next powerup spawn
+     * Spawn a powerup at a specific position (called by ObstacleManager for coordinated spawning)
+     * @param {number} x - X position in world space
+     * @param {number} y - Y position
      */
-    scheduleNextPowerup() {
-        if (this.isGameOver) return;
-
+    spawnPowerupAtPosition(x, y) {
         const config = GAME_CONFIG.POWERUPS;
-        const delay = Phaser.Math.Between(config.MIN_SPAWN_DELAY, config.MAX_SPAWN_DELAY);
 
-        this.powerupTimer = this.scene.time.delayedCall(delay, () => {
-            if (!this.isGameOver && this.scene.scene.isActive()) {
-                this.spawnPowerup();
-                this.scheduleNextPowerup();
-            }
-        });
-    }
-
-    /**
-     * Spawn a random powerup at a position ahead of kangaroo
-     */
-    spawnPowerup() {
-        if (this.isGameOver) return;
-
-        const config = GAME_CONFIG.POWERUPS;
-        const kangaroo = this.scene.kangaroo;
-        const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.POWERUP_X;
-
+        // Randomly choose powerup type
         const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
-        // Generate initial random Y position
-        let powerupY = Phaser.Math.Between(
-            config.MIN_Y,
-            GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
-        );
-
-        // Check if there's an obstacle at this spawn position (2D overlap check)
-        const obstacleManager = this.scene.obstacleManager;
-        if (obstacleManager) {
-            const obstacles = obstacleManager.getObstacles();
-
-            // Use multiple spawn attempts to find a clear position
-            let attempts = 0;
-            let finalSpawnX = spawnX;
-            let finalSpawnY = powerupY;
-
-            while (attempts < 5) {
-                const overlapsObstacle = obstacles.children.entries.some(obstacle => {
-                    if (!obstacle.active) return false;
-
-                    // Check both X and Y distance for actual 2D overlap
-                    const horizontalDistance = Math.abs(obstacle.x - finalSpawnX);
-                    const verticalDistance = Math.abs(obstacle.y - finalSpawnY);
-
-                    // Use buffer zone: 250px horizontal, 200px vertical (increased to prevent visual overlap)
-                    return horizontalDistance < 250 && verticalDistance < 200;
-                });
-
-                if (!overlapsObstacle) {
-                    break; // Found a clear spot
-                }
-
-                // Try a different Y position
-                finalSpawnY = Phaser.Math.Between(
-                    config.MIN_Y,
-                    GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
-                );
-                attempts++;
-            }
-
-            // Skip powerup spawn if no clear position found after attempts
-            if (attempts >= 5) {
-                return;
-            }
-
-            powerupY = finalSpawnY; // Use the adjusted Y position
-        }
-
         // Map powerup types to animations
         const animMap = {
-            'shield': 'powerup_heart',        // Pink heart for shield
-            'magnet': 'powerup_green_gem',    // Green gem for magnet
-            'double': 'powerup_star'          // Star for double jump
+            'shield': 'powerup_heart',
+            'magnet': 'powerup_green_gem',
+            'double': 'powerup_star'
         };
 
-        // Create using the group's create method with first frame of sprite sheet
-        const powerup = this.powerups.create(spawnX, powerupY, 'powerup_items', 0);
+        // Create powerup at specified position
+        const powerup = this.powerups.create(x, y, 'powerup_items', 0);
 
         // Play animation
         powerup.play(animMap[randomType]);
@@ -164,7 +98,7 @@ export default class PowerupManager {
         // Visual setup
         powerup.setScale(config.SCALE);
         powerup.setOrigin(0.5);
-        powerup.setScrollFactor(1); // Move with camera like obstacles
+        powerup.setScrollFactor(1);
         powerup.powerupType = randomType;
 
         // Physics setup - STATIC in world space
@@ -545,13 +479,9 @@ export default class PowerupManager {
     }
 
     /**
-     * Clean up timers and powerups
+     * Clean up powerups and graphics
      */
     cleanup() {
-        if (this.powerupTimer) {
-            this.powerupTimer.destroy();
-            this.powerupTimer = null;
-        }
 
         // Clean up powerup orbs
         Object.keys(this.powerupOrbs).forEach(type => {

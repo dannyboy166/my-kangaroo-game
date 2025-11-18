@@ -161,10 +161,16 @@ export default class ObstacleManager {
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
 
-        // Spawn coins around this obstacle (50% chance)
-        if (Math.random() < 0.5) {
+        // Spawn collectibles around this obstacle
+        const rand = Math.random();
+        if (rand < 0.4) {
+            // 40% chance: spawn coin
             this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
+        } else if (rand < 0.5) {
+            // 10% chance: spawn powerup
+            this.spawnPowerupAroundObstacle(obstacleSpawnInfo);
         }
+        // 50% chance: spawn nothing
     }
 
     /**
@@ -175,18 +181,73 @@ export default class ObstacleManager {
         const collectibleManager = this.scene.collectibleManager;
         if (!collectibleManager) return;
 
+        let coinX, coinY;
+
         if (obstacleInfo.isFlying) {
             // Flying obstacle (magpie) - spawn coins above or below it
             const offsetY = Math.random() < 0.5 ? -80 : 80; // Above or below
-            const coinX = obstacleInfo.x + 100; // Slightly ahead
-            const coinY = obstacleInfo.y + offsetY;
-            collectibleManager.spawnCoinAtPosition(coinX, coinY);
+            coinX = obstacleInfo.x + 100; // Slightly ahead
+            coinY = obstacleInfo.y + offsetY;
         } else {
             // Ground obstacle - spawn coins high in the air
             const safeYPositions = [200, 250, 300, 350];
-            const coinY = Phaser.Utils.Array.GetRandom(safeYPositions);
-            const coinX = obstacleInfo.x + 100; // Slightly ahead
+            coinY = Phaser.Utils.Array.GetRandom(safeYPositions);
+            coinX = obstacleInfo.x + 100; // Slightly ahead
+        }
+
+        // Check if this position overlaps with ANY obstacle
+        const overlapsObstacle = this.obstacles.children.entries.some(obstacle => {
+            if (!obstacle.active) return false;
+
+            const horizontalDistance = Math.abs(obstacle.x - coinX);
+            const verticalDistance = Math.abs(obstacle.y - coinY);
+
+            // Use buffer zone: 100px horizontal, 100px vertical
+            return horizontalDistance < 100 && verticalDistance < 100;
+        });
+
+        // Only spawn if clear
+        if (!overlapsObstacle) {
             collectibleManager.spawnCoinAtPosition(coinX, coinY);
+        }
+    }
+
+    /**
+     * Spawn powerup in safe positions around an obstacle
+     * @param {Object} obstacleInfo - Obstacle spawn information
+     */
+    spawnPowerupAroundObstacle(obstacleInfo) {
+        const powerupManager = this.scene.powerupManager;
+        if (!powerupManager) return;
+
+        let powerupX, powerupY;
+
+        if (obstacleInfo.isFlying) {
+            // Flying obstacle - spawn powerup above or below it
+            const offsetY = Math.random() < 0.5 ? -100 : 100;
+            powerupX = obstacleInfo.x + 120; // Slightly more ahead than coins
+            powerupY = obstacleInfo.y + offsetY;
+        } else {
+            // Ground obstacle - spawn powerup high in air
+            const safeYPositions = [180, 230, 280, 330];
+            powerupY = Phaser.Utils.Array.GetRandom(safeYPositions);
+            powerupX = obstacleInfo.x + 120; // Slightly more ahead than coins
+        }
+
+        // Check if this position overlaps with ANY obstacle
+        const overlapsObstacle = this.obstacles.children.entries.some(obstacle => {
+            if (!obstacle.active) return false;
+
+            const horizontalDistance = Math.abs(obstacle.x - powerupX);
+            const verticalDistance = Math.abs(obstacle.y - powerupY);
+
+            // Use buffer zone: 120px horizontal, 120px vertical
+            return horizontalDistance < 120 && verticalDistance < 120;
+        });
+
+        // Only spawn if clear
+        if (!overlapsObstacle) {
+            powerupManager.spawnPowerupAtPosition(powerupX, powerupY);
         }
     }
 
@@ -285,10 +346,16 @@ export default class ObstacleManager {
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
 
-        // Spawn coins around this flying obstacle (50% chance)
-        if (Math.random() < 0.5) {
+        // Spawn collectibles around this flying obstacle
+        const rand = Math.random();
+        if (rand < 0.4) {
+            // 40% chance: spawn coin
             this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
+        } else if (rand < 0.5) {
+            // 10% chance: spawn powerup
+            this.spawnPowerupAroundObstacle(obstacleSpawnInfo);
         }
+        // 50% chance: spawn nothing
     }
 
     setGameSpeed(speed) {
