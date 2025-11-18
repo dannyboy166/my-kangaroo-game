@@ -57,11 +57,13 @@ export default class ObstacleManager {
         const cameraLeftEdge = camera.scrollX;
 
         // Clean up off-screen obstacles (behind camera view)
-        this.obstacles.children.entries.slice().forEach((obstacle) => {
+        // Use killAndHide() instead of destroy() for object pooling
+        this.obstacles.children.entries.forEach((obstacle) => {
             if (!obstacle || !obstacle.active) return;
 
             if (obstacle.x < cameraLeftEdge - 100) {
-                obstacle.destroy();
+                obstacle.setActive(false);
+                obstacle.setVisible(false);
             }
         });
     }
@@ -133,25 +135,36 @@ export default class ObstacleManager {
         const boxWidth = 50;
         const boxHeight = 60;
 
-        const obstacle = this.scene.physics.add.sprite(spawnX, this.groundY, 'obstacle_box');
+        // Use object pooling - get inactive object or create new one
+        let obstacle = this.obstacles.getFirstDead(false);
 
-        // Setup visual properties
-        obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
-        obstacle.setDepth(10); // Above ground layer (ground is at -20)
-        obstacle.setScrollFactor(1); // Move with camera (same as default, but explicit)
+        if (obstacle) {
+            // Reuse existing obstacle
+            obstacle.setTexture('obstacle_box');
+            obstacle.setPosition(spawnX, this.groundY);
+            obstacle.setActive(true);
+            obstacle.setVisible(true);
+        } else {
+            // Create new obstacle only if pool is empty
+            obstacle = this.obstacles.create(spawnX, this.groundY, 'obstacle_box');
 
-        // Add to group
-        this.obstacles.add(obstacle);
+            // Setup visual properties (only needed for new objects)
+            obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
+            obstacle.setDepth(10); // Above ground layer (ground is at -20)
+            obstacle.setScrollFactor(1); // Move with camera (same as default, but explicit)
 
-        // Physics setup - STATIC in world space
-        obstacle.body.setAllowGravity(false);
-        obstacle.body.setImmovable(true);
-        obstacle.setVelocityX(0); // No movement - stays in world space
+            // Physics setup - STATIC in world space (only for new objects)
+            obstacle.body.setAllowGravity(false);
+            obstacle.body.setImmovable(true);
+
+            // Simple collision box for the rectangle
+            obstacle.body.setSize(boxWidth, boxHeight);
+            obstacle.body.setOffset(0, 0);
+        }
+
+        // Always reset velocity (pooled objects might have old velocity)
+        obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
-
-        // Simple collision box for the rectangle
-        obstacle.body.setSize(boxWidth, boxHeight);
-        obstacle.body.setOffset(0, 0);
     }
 
     /**
@@ -170,25 +183,36 @@ export default class ObstacleManager {
         const boxWidth = 50;
         const boxHeight = 50;
 
-        const obstacle = this.scene.physics.add.sprite(spawnX, spawnY, 'flying_box');
+        // Use object pooling - get inactive object or create new one
+        let obstacle = this.obstacles.getFirstDead(false);
 
-        // Setup visual properties
-        obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
-        obstacle.setDepth(10);
-        obstacle.setScrollFactor(1);
+        if (obstacle) {
+            // Reuse existing obstacle
+            obstacle.setTexture('flying_box');
+            obstacle.setPosition(spawnX, spawnY);
+            obstacle.setActive(true);
+            obstacle.setVisible(true);
+        } else {
+            // Create new obstacle only if pool is empty
+            obstacle = this.obstacles.create(spawnX, spawnY, 'flying_box');
 
-        // Add to group
-        this.obstacles.add(obstacle);
+            // Setup visual properties (only for new objects)
+            obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
+            obstacle.setDepth(10);
+            obstacle.setScrollFactor(1);
 
-        // Physics setup - STATIC in world space (like ground obstacles)
-        obstacle.body.setAllowGravity(false);
-        obstacle.body.setImmovable(true);
+            // Physics setup - STATIC in world space (only for new objects)
+            obstacle.body.setAllowGravity(false);
+            obstacle.body.setImmovable(true);
+
+            // Simple collision box for the flying rectangle
+            obstacle.body.setSize(boxWidth, boxHeight);
+            obstacle.body.setOffset(0, 0);
+        }
+
+        // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
-
-        // Simple collision box for the flying rectangle
-        obstacle.body.setSize(boxWidth, boxHeight);
-        obstacle.body.setOffset(0, 0);
     }
 
     setGameSpeed(speed) {
