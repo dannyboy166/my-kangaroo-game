@@ -191,7 +191,7 @@ export default class ObstacleManager {
         }
 
         // Randomly choose between ground obstacle or flying magpie
-        const spawnMagpie = Math.random() < 1.0; // DEBUG: 100% magpies (normally 0.15)
+        const spawnMagpie = Math.random() < 0.15; // 15% chance for magpie
 
         if (spawnMagpie) {
             this.spawnFlyingObstacle('magpie');
@@ -439,7 +439,7 @@ export default class ObstacleManager {
         // Physics calculations handle trigger distance automatically
         obstacle.setData('initialY', spawnY); // Remember starting height
         obstacle.setData('swoopStarted', false);
-        obstacle.setData('willSwoop', Math.random() < 0.99); // 50% chance to swoop
+        obstacle.setData('willSwoop', Math.random() < 0.5); // 50% chance to swoop
         obstacle.setData('straightenTime', 0);
         obstacle.setData('isClimbingBack', false);
 

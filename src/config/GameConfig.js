@@ -39,7 +39,7 @@ export const GAME_CONFIG = {
     DIFFICULTY: {
         INITIAL_SPEED: 300,
         SPEED_INCREASE_INTERVAL: 50, // Every 50 score points
-        SPEED_INCREASE_AMOUNT: 50,   // +10 speed increase
+        SPEED_INCREASE_AMOUNT: 10,   // +10 speed increase
         MAX_SPEED: 1000,             // Max speed cap
         GROUND_Y: 500                // Ground level
     },
