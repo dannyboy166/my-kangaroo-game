@@ -21,33 +21,8 @@ export default class ObstacleManager {
     create() {
         this.obstacles = this.scene.physics.add.group();
 
-        // TESTING: Create obstacle textures once (not every spawn!)
-        this.createObstacleTextures();
-
         // Start obstacle spawning
         this.scheduleNextObstacle();
-    }
-
-    /**
-     * Create reusable obstacle textures (called once on initialization)
-     */
-    createObstacleTextures() {
-        // Only create if they don't already exist
-        if (!this.scene.textures.exists('obstacle_box')) {
-            const graphics = this.scene.add.graphics();
-            graphics.fillStyle(0x000000, 1);
-            graphics.fillRect(0, 0, 50, 60);
-            graphics.generateTexture('obstacle_box', 50, 60);
-            graphics.destroy();
-        }
-
-        if (!this.scene.textures.exists('flying_box')) {
-            const graphics = this.scene.add.graphics();
-            graphics.fillStyle(0x000000, 1);
-            graphics.fillRect(0, 0, 50, 50);
-            graphics.generateTexture('flying_box', 50, 50);
-            graphics.destroy();
-        }
     }
 
     update(delta) {
@@ -131,22 +106,21 @@ export default class ObstacleManager {
         // Spawn 800px ahead of kangaroo in world coordinates
         const spawnX = kangaroo.x + 800;
 
-        // TESTING: Use pre-created texture (created once in create())
-        const boxWidth = 50;
-        const boxHeight = 60;
-
         // Use object pooling - get inactive object or create new one
         let obstacle = this.obstacles.getFirstDead(false);
 
         if (obstacle) {
             // Reuse existing obstacle
-            obstacle.setTexture('obstacle_box');
+            obstacle.setTexture(type);
             obstacle.setPosition(spawnX, this.groundY);
             obstacle.setActive(true);
             obstacle.setVisible(true);
+
+            // Update collision box for the new texture
+            this.setCollisionBox(obstacle, type);
         } else {
             // Create new obstacle only if pool is empty
-            obstacle = this.obstacles.create(spawnX, this.groundY, 'obstacle_box');
+            obstacle = this.obstacles.create(spawnX, this.groundY, type);
 
             // Setup visual properties (only needed for new objects)
             obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
@@ -157,14 +131,45 @@ export default class ObstacleManager {
             obstacle.body.setAllowGravity(false);
             obstacle.body.setImmovable(true);
 
-            // Simple collision box for the rectangle
-            obstacle.body.setSize(boxWidth, boxHeight);
-            obstacle.body.setOffset(0, 0);
+            // Set collision box based on obstacle type
+            this.setCollisionBox(obstacle, type);
         }
 
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
+    }
+
+    /**
+     * Set collision box and scale for obstacle based on type
+     * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
+     * @param {string} type - Obstacle type
+     */
+    setCollisionBox(obstacle, type) {
+        // Scale and collision box settings for each obstacle type (50% bigger than before)
+        const settings = {
+            'rock': { scale: 0.75, width: 75, height: 75 },
+            'spider_rock': { scale: 0.75, width: 75, height: 75 },
+            'cactus': { scale: 0.75, width: 60, height: 90 },
+            'log': { scale: 0.45, width: 90, height: 45 },
+            'snake_log': { scale: 0.9, width: 180, height: 90 },
+            'emu': { scale: 0.75, width: 75, height: 75 },
+            'croc': { scale: 0.75, width: 112, height: 60 },
+            'camel': { scale: 1.05, width: 105, height: 126 },
+            'koala': { scale: 0.75, width: 60, height: 75 }
+        };
+
+        const setting = settings[type] || { scale: 0.75, width: 60, height: 60 };
+
+        // Apply scale
+        obstacle.setScale(setting.scale);
+
+        // Set collision box
+        obstacle.body.setSize(setting.width, setting.height);
+        obstacle.body.setOffset(
+            (obstacle.width - setting.width) / 2,
+            obstacle.height - setting.height
+        );
     }
 
     /**
@@ -177,24 +182,25 @@ export default class ObstacleManager {
 
         // Spawn 800px ahead of kangaroo in world coordinates
         const spawnX = kangaroo.x + 800;
-        const spawnY = Phaser.Math.Between(150, 300); // Fly at varying heights
-
-        // TESTING: Use pre-created texture (created once in create())
-        const boxWidth = 50;
-        const boxHeight = 50;
+        const spawnY = Phaser.Math.Between(100, 200); // Fly high only (can't reach with single jump)
 
         // Use object pooling - get inactive object or create new one
         let obstacle = this.obstacles.getFirstDead(false);
 
         if (obstacle) {
             // Reuse existing obstacle
-            obstacle.setTexture('flying_box');
+            obstacle.setTexture(type);
             obstacle.setPosition(spawnX, spawnY);
             obstacle.setActive(true);
             obstacle.setVisible(true);
+
+            // Play animation if it exists
+            if (obstacle.anims && this.scene.anims.exists('magpie_fly')) {
+                obstacle.play('magpie_fly');
+            }
         } else {
             // Create new obstacle only if pool is empty
-            obstacle = this.obstacles.create(spawnX, spawnY, 'flying_box');
+            obstacle = this.obstacles.create(spawnX, spawnY, type);
 
             // Setup visual properties (only for new objects)
             obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
@@ -205,9 +211,14 @@ export default class ObstacleManager {
             obstacle.body.setAllowGravity(false);
             obstacle.body.setImmovable(true);
 
-            // Simple collision box for the flying rectangle
-            obstacle.body.setSize(boxWidth, boxHeight);
-            obstacle.body.setOffset(0, 0);
+            // Collision box for magpie
+            obstacle.body.setSize(100, 80);
+            obstacle.body.setOffset(14, 24);
+
+            // Play animation
+            if (this.scene.anims.exists('magpie_fly')) {
+                obstacle.play('magpie_fly');
+            }
         }
 
         // Always reset velocity (pooled objects might have old velocity)
