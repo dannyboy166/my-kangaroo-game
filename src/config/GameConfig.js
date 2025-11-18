@@ -75,8 +75,8 @@ export const GAME_CONFIG = {
 
     // Powerup system
     POWERUPS: {
-        MIN_SPAWN_DELAY: 10000,   // TESTING: Spawn every 10 seconds for debugging magnet
-        MAX_SPAWN_DELAY: 10000,
+        MIN_SPAWN_DELAY: 5000,   // Spawn every 5-20 seconds
+        MAX_SPAWN_DELAY: 20000,
         MIN_Y: 200,
         MAX_Y_OFFSET: 50, // From ground
         SCALE: 2.0,      // TESTING: Increased to 2.0 for better visibility (32x32 sprites)

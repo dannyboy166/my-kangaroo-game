@@ -172,9 +172,9 @@ export default class ObstacleManager {
             'cactus': { scale: 0.75, width: 60, height: 90 },
             'log': { scale: 0.45, width: 160, height: 135 },  // Collider: 2x wider (144px)
             'snake_log': { scale: 0.9, width: 180, height: 72 },  // Collider: 0.8x taller
-            'emu': { scale: 0.75, width: 75, height: 112.5 },  // Collider: 1.5x higher
+            'emu': { scale: 1.125, width: 75, height: 112.5 },  // Visual 1.5x bigger, collider same proportion
             'croc': { scale: 0.75, width: 168, height: 72 },  // Collider: 1.5x wide, 1.2x higher
-            'camel': { scale: 1.05, width: 105, height: 100.8 },  // Collider: 0.8x shorter
+            'camel': { scale: 1.26, width: 105, height: 100.8 },  // Visual 1.2x bigger (1.575 * 0.8), collider same proportion
             'koala': { scale: 0.75, width: 60, height: 150 }  // Collider: 2x higher
         };
 

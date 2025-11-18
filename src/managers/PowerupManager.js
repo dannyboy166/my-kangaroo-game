@@ -115,8 +115,7 @@ export default class PowerupManager {
             }
         }
 
-        // TESTING: Only spawn double jump for debugging
-        const powerupTypes = ['double'];
+        const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
         const powerupY = Phaser.Math.Between(
@@ -186,13 +185,15 @@ export default class PowerupManager {
         const effectPowerup = this.scene.add.sprite(powerup.x, powerup.y, 'powerup_items', 0);
         effectPowerup.play(animMap[type]);
         effectPowerup.setScale(2.0);
+        effectPowerup.setDepth(100); // Make sure it's visible above everything
 
         this.scene.tweens.add({
             targets: effectPowerup,
-            scaleX: 4.0,
-            scaleY: 4.0,
+            scaleX: 10.0,  // Much bigger! (was 4.0)
+            scaleY: 10.0,
             alpha: 0,
-            duration: 400,
+            duration: 500,  // Slightly longer animation
+            ease: 'Power2',
             onComplete: () => {
                 effectPowerup.destroy();
             }
