@@ -77,16 +77,29 @@ export default class ObstacleManager {
     spawnObstacle() {
         if (this.isGameOver) return;
 
-        // All Australian obstacles available from start (testing phase)
-        const groundObstacles = [
-            'rock', 'spider_rock',  // Rocks (universal)
-            'cactus',               // Outback cactus
-            'log', 'snake_log',     // Logs (universal)
-            'emu',                  // Outback emu
-            'croc',                 // Crocodile (both themes)
-            'camel',                // Desert camel
-            'koala'                 // Australian koala
-        ];
+        // Get current theme from GameDataManager
+        const currentTheme = this.scene.gameDataManager.getBackgroundTheme();
+
+        // Different obstacles for different themes
+        let groundObstacles;
+        if (currentTheme === 'beach') {
+            groundObstacles = [
+                'rock', 'spider_rock',  // Rocks (universal)
+                'log', 'snake_log',     // Logs (universal)
+                'emu',                  // Emu (universal)
+                'croc'                  // Crocodile (beach/water)
+            ];
+        } else {
+            // Outback theme
+            groundObstacles = [
+                'rock', 'spider_rock',  // Rocks (universal)
+                'log', 'snake_log',     // Logs (universal)
+                'emu',                  // Outback emu
+                'croc',                 // Crocodile (both themes)
+                'camel',                // Desert camel
+                'koala'                 // Australian koala
+            ];
+        }
 
         // Randomly choose between ground obstacle or flying magpie
         const spawnMagpie = Math.random() < 0.15; // 15% chance for magpie
@@ -189,7 +202,7 @@ export default class ObstacleManager {
 
         // Spawn 800px ahead of kangaroo in world coordinates
         const spawnX = kangaroo.x + 800;
-        const spawnY = Phaser.Math.Between(100, 200); // Fly high only (can't reach with single jump)
+        const spawnY = Phaser.Math.Between(150, 250); // Fly at medium-high height (requires double jump)
 
         // Use object pooling - get inactive object or create new one
         let obstacle = this.obstacles.getFirstDead(false);
