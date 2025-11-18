@@ -124,8 +124,8 @@ export default class PowerupManager {
                     const horizontalDistance = Math.abs(obstacle.x - finalSpawnX);
                     const verticalDistance = Math.abs(obstacle.y - finalSpawnY);
 
-                    // Use buffer zone: 150px horizontal, 100px vertical
-                    return horizontalDistance < 150 && verticalDistance < 100;
+                    // Use buffer zone: 250px horizontal, 200px vertical (increased to prevent visual overlap)
+                    return horizontalDistance < 250 && verticalDistance < 200;
                 });
 
                 if (!overlapsObstacle) {
