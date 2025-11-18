@@ -97,31 +97,56 @@ export default class PowerupManager {
         const kangaroo = this.scene.kangaroo;
         const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.POWERUP_X;
 
-        // Check if there's an obstacle nearby at this spawn position
-        const obstacleManager = this.scene.obstacleManager;
-        if (obstacleManager) {
-            const obstacles = obstacleManager.getObstacles();
-            const tooCloseToObstacle = obstacles.children.entries.some(obstacle => {
-                if (!obstacle.active) return false;
-
-                // Check if obstacle is within 200px horizontally
-                const horizontalDistance = Math.abs(obstacle.x - spawnX);
-                return horizontalDistance < 200;
-            });
-
-            // Skip powerup spawn if too close to obstacle
-            if (tooCloseToObstacle) {
-                return;
-            }
-        }
-
         const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
-        const powerupY = Phaser.Math.Between(
+        // Generate initial random Y position
+        let powerupY = Phaser.Math.Between(
             config.MIN_Y,
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
+
+        // Check if there's an obstacle at this spawn position (2D overlap check)
+        const obstacleManager = this.scene.obstacleManager;
+        if (obstacleManager) {
+            const obstacles = obstacleManager.getObstacles();
+
+            // Use multiple spawn attempts to find a clear position
+            let attempts = 0;
+            let finalSpawnX = spawnX;
+            let finalSpawnY = powerupY;
+
+            while (attempts < 5) {
+                const overlapsObstacle = obstacles.children.entries.some(obstacle => {
+                    if (!obstacle.active) return false;
+
+                    // Check both X and Y distance for actual 2D overlap
+                    const horizontalDistance = Math.abs(obstacle.x - finalSpawnX);
+                    const verticalDistance = Math.abs(obstacle.y - finalSpawnY);
+
+                    // Use buffer zone: 150px horizontal, 100px vertical
+                    return horizontalDistance < 150 && verticalDistance < 100;
+                });
+
+                if (!overlapsObstacle) {
+                    break; // Found a clear spot
+                }
+
+                // Try a different Y position
+                finalSpawnY = Phaser.Math.Between(
+                    config.MIN_Y,
+                    GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
+                );
+                attempts++;
+            }
+
+            // Skip powerup spawn if no clear position found after attempts
+            if (attempts >= 5) {
+                return;
+            }
+
+            powerupY = finalSpawnY; // Use the adjusted Y position
+        }
 
         // Map powerup types to animations
         const animMap = {

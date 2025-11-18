@@ -168,28 +168,53 @@ export default class CollectibleManager {
         const kangaroo = this.scene.kangaroo;
         const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.COIN_X;
 
-        // Check if there's an obstacle nearby at this spawn position
-        const obstacleManager = this.scene.obstacleManager;
-        if (obstacleManager) {
-            const obstacles = obstacleManager.getObstacles();
-            const tooCloseToObstacle = obstacles.children.entries.some(obstacle => {
-                if (!obstacle.active) return false;
-
-                // Check if obstacle is within 200px horizontally
-                const horizontalDistance = Math.abs(obstacle.x - spawnX);
-                return horizontalDistance < 200;
-            });
-
-            // Skip coin spawn if too close to obstacle
-            if (tooCloseToObstacle) {
-                return;
-            }
-        }
-
-        const coinY = Phaser.Math.Between(
+        // Generate initial random Y position
+        let coinY = Phaser.Math.Between(
             config.MIN_Y,
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
+
+        // Check if there's an obstacle at this spawn position (2D overlap check)
+        const obstacleManager = this.scene.obstacleManager;
+        if (obstacleManager) {
+            const obstacles = obstacleManager.getObstacles();
+
+            // Use multiple spawn attempts to find a clear position
+            let attempts = 0;
+            let finalSpawnX = spawnX;
+            let finalSpawnY = coinY;
+
+            while (attempts < 5) {
+                const overlapsObstacle = obstacles.children.entries.some(obstacle => {
+                    if (!obstacle.active) return false;
+
+                    // Check both X and Y distance for actual 2D overlap
+                    const horizontalDistance = Math.abs(obstacle.x - finalSpawnX);
+                    const verticalDistance = Math.abs(obstacle.y - finalSpawnY);
+
+                    // Use buffer zone: 150px horizontal, 100px vertical
+                    return horizontalDistance < 150 && verticalDistance < 100;
+                });
+
+                if (!overlapsObstacle) {
+                    break; // Found a clear spot
+                }
+
+                // Try a different Y position
+                finalSpawnY = Phaser.Math.Between(
+                    config.MIN_Y,
+                    GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
+                );
+                attempts++;
+            }
+
+            // Skip coin spawn if no clear position found after attempts
+            if (attempts >= 5) {
+                return;
+            }
+
+            coinY = finalSpawnY; // Use the adjusted Y position
+        }
 
         // Create using the group's create method with first frame
         const coin = this.coins.create(spawnX, coinY, 'coin', 0);
