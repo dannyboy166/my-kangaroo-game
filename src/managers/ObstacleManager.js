@@ -62,17 +62,33 @@ export default class ObstacleManager {
         // Check if magpie is close enough to start swooping
         const distanceToKangaroo = magpie.x - kangaroo.x;
 
-        // Calculate swoop distance based on height AND game speed
-        // Faster game = trigger swoop earlier (further away)
+        // Calculate swoop distance using physics: distance = speed × time
+        // Magpies swoop at CONSTANT speed (400px/sec)
+        // Trigger distance scales with game speed automatically
+
+        const CONSTANT_SWOOP_SPEED = 400; // Fixed swoop speed (px/sec)
+        const STRAIGHTEN_TIME = 0.3; // Time magpie stays at ground (seconds)
+
         const magpieHeight = magpie.y;
-        const heightFromGround = this.groundY - magpieHeight;
-        const baseDistance = this.gameSpeed * 1.1; // Scale with speed (e.g., 300 speed = 345px, 800 speed = 920px)
-        const swoopDistance = baseDistance + (heightFromGround * 1.2); // Base distance + extra compensation for higher magpies
+        const targetY = this.groundY - 20; // Where magpie swoops to
+        const verticalDistance = targetY - magpieHeight; // How far down (in pixels)
+
+        // Time needed to swoop down (in seconds)
+        const timeToSwoop = verticalDistance / CONSTANT_SWOOP_SPEED;
+
+        // Total time before magpie is safe to hit
+        const totalTime = timeToSwoop + STRAIGHTEN_TIME;
+
+        // In that time, kangaroo travels this far (distance = speed × time)
+        // At 300 speed: travels ~X px
+        // At 600 speed: travels ~2X px (automatically doubles!)
+        // At 900 speed: travels ~3X px (automatically triples!)
+        const swoopDistance = this.gameSpeed * totalTime * 2; // 10% safety buffer
 
         const swoopStarted = magpie.getData('swoopStarted');
         const willSwoop = magpie.getData('willSwoop');
         const isClimbingBack = magpie.getData('isClimbingBack');
-        const swoopSpeed = magpie.getData('swoopSpeed');
+        // swoopSpeed already declared above for physics calculation
         const climbSpeed = magpie.getData('climbSpeed');
         const initialY = magpie.getData('initialY');
 
@@ -82,13 +98,14 @@ export default class ObstacleManager {
         }
 
         if (magpie.getData('swoopStarted') && !isClimbingBack) {
-            // Swoop down towards ground level
+            // Swoop down towards ground level at CONSTANT speed
+            const CONSTANT_SWOOP_SPEED = 400; // Same as trigger calculation
             const targetY = this.groundY - 20; // Slightly above ground
             const currentY = magpie.y;
 
             if (currentY < targetY) {
-                // Dive down
-                magpie.y += swoopSpeed * delta / 1000;
+                // Dive down at constant speed
+                magpie.y += CONSTANT_SWOOP_SPEED * delta / 1000;
                 magpie.setRotation(-Math.PI / 4); // -45 degrees (diving tilt)
             } else {
                 // Reached bottom, start straightening phase
@@ -104,9 +121,10 @@ export default class ObstacleManager {
         }
 
         if (magpie.getData('isClimbingBack')) {
-            // Climb back up to original height
+            // Climb back up to original height at CONSTANT speed
+            const CONSTANT_CLIMB_SPEED = 300; // Constant climb speed (px/sec)
             if (magpie.y > initialY) {
-                magpie.y -= climbSpeed * delta / 1000;
+                magpie.y -= CONSTANT_CLIMB_SPEED * delta / 1000;
                 magpie.setRotation(Math.PI / 6); // +30 degrees (climbing tilt)
             } else {
                 // Back to normal flying
@@ -197,7 +215,7 @@ export default class ObstacleManager {
         let obstacle = this.obstacles.getFirstDead(false);
 
         if (obstacle) {
-            // Reuse existing obstacle
+            // Reuse existing obstacle - RESET ALL STATE
 
             // CRITICAL: Stop any playing animations before changing texture
             if (obstacle.anims) {
@@ -207,6 +225,7 @@ export default class ObstacleManager {
             obstacle.setTexture(type);
             obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
             obstacle.setPosition(spawnX, this.groundY);
+            obstacle.setRotation(0); // Reset rotation from previous obstacle (e.g., tilted magpie)
             obstacle.setActive(true);
             obstacle.setVisible(true);
 
@@ -416,17 +435,13 @@ export default class ObstacleManager {
         }
 
         // Store swooping AI data on the magpie
-        // Swoop speed scales with game speed so magpies always finish swooping in time
-        const swoopSpeed = this.gameSpeed * 1.2; // 20% faster than kangaroo to swoop in time
-        const climbSpeed = this.gameSpeed * 0.8; // 80% of game speed for climb back
-
+        // Magpies swoop at CONSTANT speeds regardless of game speed
+        // Physics calculations handle trigger distance automatically
         obstacle.setData('initialY', spawnY); // Remember starting height
         obstacle.setData('swoopStarted', false);
-        obstacle.setData('willSwoop', true); // DEBUG: Always swoop (normally 50% chance after score 1000)
+        obstacle.setData('willSwoop', Math.random() < 0.99); // 50% chance to swoop
         obstacle.setData('straightenTime', 0);
         obstacle.setData('isClimbingBack', false);
-        obstacle.setData('swoopSpeed', swoopSpeed); // Scales with game speed
-        obstacle.setData('climbSpeed', climbSpeed); // Scales with game speed
 
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);

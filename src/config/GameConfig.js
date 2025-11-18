@@ -38,10 +38,10 @@ export const GAME_CONFIG = {
     // Game speed and difficulty
     DIFFICULTY: {
         INITIAL_SPEED: 300,
-        SPEED_INCREASE_INTERVAL: 10, // DEBUG: Every 10 score points (normally 30)
-        SPEED_INCREASE_AMOUNT: 25,   // DEBUG: Moderate jumps (normally 10)
-        MAX_SPEED: 800,              // DEBUG: Higher cap (normally 500)
-        GROUND_Y: 500                // Moved down a bit (was 480)
+        SPEED_INCREASE_INTERVAL: 50, // Every 50 score points
+        SPEED_INCREASE_AMOUNT: 50,   // +10 speed increase
+        MAX_SPEED: 1000,             // Max speed cap
+        GROUND_Y: 500                // Ground level
     },
 
     // Obstacle spawning
