@@ -20,6 +20,7 @@ export default class CollectibleManager {
         this.coinTimer = null;
         this.coinCollectionCooldown = new Set();
         this.isGameOver = false;
+        this.magnetLines = null; // Graphics object for magnet attraction lines
     }
 
     /**
@@ -27,6 +28,10 @@ export default class CollectibleManager {
      */
     create() {
         this.coins = this.scene.physics.add.group();
+
+        // Create graphics object for magnet attraction lines
+        this.magnetLines = this.scene.add.graphics();
+        this.magnetLines.setDepth(5); // Above coins but below UI
 
         // Create coin animation if it doesn't exist (already created in MenuScene)
         if (!this.scene.anims.exists('coin_spin')) {
@@ -52,6 +57,9 @@ export default class CollectibleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
+        // Clear previous magnet lines
+        this.magnetLines.clear();
+
         this.coins.children.entries.slice().forEach((coin) => {
             if (!coin || !coin.active) return;
 
@@ -72,6 +80,9 @@ export default class CollectibleManager {
                         Math.cos(angle) * config.FORCE,
                         Math.sin(angle) * config.FORCE
                     );
+
+                    // Draw attraction line from coin to kangaroo
+                    this.drawAttractionLine(coin.x, coin.y, kangaroo.x, kangaroo.y);
                 } else {
                     // Reset velocity when out of range
                     coin.body.setVelocity(0, 0);
@@ -92,6 +103,40 @@ export default class CollectibleManager {
             if (coin.x < cameraLeftEdge - 100) {
                 this.coinCollectionCooldown.delete(coin);
                 coin.destroy();
+            }
+        });
+    }
+
+    /**
+     * Draw attraction line from coin to kangaroo (magnet effect)
+     * @param {number} coinX - Coin X position
+     * @param {number} coinY - Coin Y position
+     * @param {number} kangarooX - Kangaroo X position
+     * @param {number} kangarooY - Kangaroo Y position
+     */
+    drawAttractionLine(coinX, coinY, kangarooX, kangarooY) {
+        // Draw curved line with gradient effect
+        this.magnetLines.lineStyle(2, 0x00BFFF, 0.6); // Blue color, semi-transparent
+
+        // Target point: center of kangaroo (offset upward and forward)
+        const targetX = kangarooX + 20; // 20px forward from kangaroo center
+        const targetY = kangarooY - 50; // 50px up from kangaroo's feet
+
+        // Create a curve from coin to kangaroo center
+        const curve = new Phaser.Curves.QuadraticBezier(
+            new Phaser.Math.Vector2(coinX, coinY),
+            new Phaser.Math.Vector2((coinX + targetX) / 2, (coinY + targetY) / 2 - 30), // Control point (curve upward)
+            new Phaser.Math.Vector2(targetX, targetY)
+        );
+
+        curve.draw(this.magnetLines, 32); // 32 points for smooth curve
+
+        // Add particles/sparkles along the line
+        const points = curve.getPoints(8);
+        points.forEach((point, index) => {
+            if (index % 2 === 0) { // Draw every other point
+                this.magnetLines.fillStyle(0xFFFFFF, 0.8);
+                this.magnetLines.fillCircle(point.x, point.y, 2);
             }
         });
     }
@@ -237,6 +282,11 @@ export default class CollectibleManager {
 
         if (this.coins) {
             this.coins.clear(true, true);
+        }
+
+        if (this.magnetLines) {
+            this.magnetLines.destroy();
+            this.magnetLines = null;
         }
     }
 

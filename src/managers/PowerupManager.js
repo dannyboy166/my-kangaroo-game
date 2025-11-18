@@ -115,7 +115,8 @@ export default class PowerupManager {
             }
         }
 
-        const powerupTypes = ['shield', 'magnet', 'double'];
+        // TESTING: Only spawn double jump for debugging
+        const powerupTypes = ['double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
         const powerupY = Phaser.Math.Between(
@@ -305,34 +306,60 @@ export default class PowerupManager {
     }
 
     /**
-     * Create visual orbs for active powerup
+     * Create visual effects for active powerup
      * @param {string} type - Powerup type
      */
     createPowerupOrb(type) {
-        // Remove existing orbs of this type first
+        // Remove existing visuals of this type first
         this.removePowerupOrb(type);
 
         const config = GAME_CONFIG.POWERUPS.ORBS;
         const orbConfig = config.PROPERTIES[type];
 
-        // Create multiple orbs for this powerup
-        for (let i = 0; i < config.COUNT; i++) {
-            const orb = this.scene.add.graphics();
-            orb.fillStyle(orbConfig.color, 0.7);
-            orb.fillCircle(0, 0, orbConfig.radius);
-            orb.lineStyle(2, orbConfig.color, 1);
-            orb.strokeCircle(0, 0, orbConfig.radius);
+        if (type === 'magnet') {
+            // Magnet: Create pulsing circle (visual indicator, not actual range)
+            const circle = this.scene.add.graphics();
+            circle.lineStyle(3, 0x00BFFF, 0.5);
+            circle.strokeCircle(0, 0, 150); // Smaller visual circle (actual range is still 400px)
+            circle.setBlendMode(Phaser.BlendModes.ADD);
+            circle.magnetPulseScale = 1.0;
+            this.powerupOrbs[type].push(circle);
+        } else if (type === 'double') {
+            // Double Jump: Create star trail particles behind kangaroo
+            const star = this.scene.add.graphics();
+            star.fillStyle(0x00FF00, 0.8);
 
-            // Add glow effect
-            orb.setBlendMode(Phaser.BlendModes.ADD);
+            // Draw a 5-pointed star manually
+            const points = [];
+            for (let i = 0; i < 10; i++) {
+                const angle = (i * Math.PI) / 5 - Math.PI / 2;
+                const radius = i % 2 === 0 ? 15 : 6; // Alternate between outer and inner points
+                points.push(Math.cos(angle) * radius);
+                points.push(Math.sin(angle) * radius);
+            }
+            star.fillPoints(points, true);
+            star.setBlendMode(Phaser.BlendModes.ADD);
+            this.powerupOrbs[type].push(star);
+        } else {
+            // Shield: Keep the 3 spinning orbs (default behavior)
+            for (let i = 0; i < config.COUNT; i++) {
+                const orb = this.scene.add.graphics();
+                orb.fillStyle(orbConfig.color, 0.7);
+                orb.fillCircle(0, 0, orbConfig.radius);
+                orb.lineStyle(2, orbConfig.color, 1);
+                orb.strokeCircle(0, 0, orbConfig.radius);
 
-            // Set initial position and rotation data
-            orb.orbType = type;
-            orb.orbRadius = config.RADIUS;
-            orb.currentAngle = this.getOrbStartAngle(type, i);
-            orb.orbIndex = i;
+                // Add glow effect
+                orb.setBlendMode(Phaser.BlendModes.ADD);
 
-            this.powerupOrbs[type].push(orb);
+                // Set initial position and rotation data
+                orb.orbType = type;
+                orb.orbRadius = config.RADIUS;
+                orb.currentAngle = this.getOrbStartAngle(type, i);
+                orb.orbIndex = i;
+
+                this.powerupOrbs[type].push(orb);
+            }
         }
     }
 
@@ -349,7 +376,7 @@ export default class PowerupManager {
     }
 
     /**
-     * Update powerup orb positions around kangaroo
+     * Update powerup visual effects around kangaroo
      * @param {number} delta - Time elapsed
      */
     updatePowerupOrbs(delta) {
@@ -361,17 +388,44 @@ export default class PowerupManager {
         Object.keys(this.powerupOrbs).forEach(type => {
             const orbs = this.powerupOrbs[type];
             if (orbs && this.activePowerups[type].active) {
-                orbs.forEach(orb => {
-                    if (orb) {
-                        // Update rotation angle
-                        orb.currentAngle += config.ROTATION_SPEED * delta / 1000;
+                if (type === 'magnet') {
+                    // Magnet: Pulsing circle at kangaroo position
+                    orbs.forEach(circle => {
+                        if (circle) {
+                            circle.x = kangaroo.x + config.OFFSET_X;
+                            circle.y = kangaroo.y + config.OFFSET_Y;
 
-                        // Calculate position around kangaroo
-                        const angleRad = Phaser.Math.DegToRad(orb.currentAngle);
-                        orb.x = kangaroo.x + config.OFFSET_X + Math.cos(angleRad) * orb.orbRadius;
-                        orb.y = kangaroo.y + config.OFFSET_Y + Math.sin(angleRad) * orb.orbRadius;
-                    }
-                });
+                            // Pulse effect
+                            circle.magnetPulseScale += delta / 1000;
+                            const pulseScale = 1.0 + Math.sin(circle.magnetPulseScale * 3) * 0.1;
+                            circle.setScale(pulseScale);
+                        }
+                    });
+                } else if (type === 'double') {
+                    // Double Jump: Star positioned behind kangaroo
+                    orbs.forEach(star => {
+                        if (star) {
+                            star.x = kangaroo.x - 30; // Behind kangaroo
+                            star.y = kangaroo.y + config.OFFSET_Y;
+
+                            // Rotate star
+                            star.rotation += delta / 100;
+                        }
+                    });
+                } else {
+                    // Shield: Spinning orbs (default behavior)
+                    orbs.forEach(orb => {
+                        if (orb) {
+                            // Update rotation angle
+                            orb.currentAngle += config.ROTATION_SPEED * delta / 1000;
+
+                            // Calculate position around kangaroo
+                            const angleRad = Phaser.Math.DegToRad(orb.currentAngle);
+                            orb.x = kangaroo.x + config.OFFSET_X + Math.cos(angleRad) * orb.orbRadius;
+                            orb.y = kangaroo.y + config.OFFSET_Y + Math.sin(angleRad) * orb.orbRadius;
+                        }
+                    });
+                }
             }
         });
     }
