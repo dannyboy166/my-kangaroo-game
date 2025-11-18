@@ -64,8 +64,8 @@ export const GAME_CONFIG = {
 
     // Coin spawning
     COINS: {
-        MIN_SPAWN_DELAY: 1750,
-        MAX_SPAWN_DELAY: 3150,
+        MIN_SPAWN_DELAY: 5000,  // Reduced frequency - most coins spawn with obstacles now
+        MAX_SPAWN_DELAY: 8000,
         MIN_Y: 200,
         MAX_Y_OFFSET: 50, // From ground
         SCALE: 1,      // Increased from 0.3 for new 64x64 coin sprite

@@ -159,99 +159,48 @@ export default class CollectibleManager {
     }
 
     /**
-     * Spawn a coin at a random position ahead of kangaroo
+     * Spawn a coin at a specific position (called by ObstacleManager for coordinated spawning)
+     * @param {number} x - X position in world space
+     * @param {number} y - Y position
+     */
+    spawnCoinAtPosition(x, y) {
+        const config = GAME_CONFIG.COINS;
+
+        // Create coin at specified position
+        const coin = this.coins.create(x, y, 'coin', 0);
+
+        // Visual setup
+        coin.setScale(config.SCALE);
+        coin.setOrigin(0.5);
+        coin.setScrollFactor(1);
+        coin.play('coin_spin');
+
+        // Physics setup - STATIC in world space
+        coin.body.setAllowGravity(false);
+        coin.body.setImmovable(true);
+        coin.body.pushable = false;
+        coin.body.setVelocity(0, 0);
+    }
+
+    /**
+     * Spawn a coin at a random position ahead of kangaroo (occasional bonus coins)
+     * Most coins now spawn strategically via spawnCoinAtPosition()
      */
     spawnCoin() {
         if (this.isGameOver) return;
 
         const config = GAME_CONFIG.COINS;
         const kangaroo = this.scene.kangaroo;
-        // Spawn at same X position as obstacles (800px ahead) to ensure they're in range
-        const spawnX = kangaroo ? kangaroo.x + 800 : GAME_CONFIG.SPAWN.COIN_X;
+        const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.COIN_X;
 
-        // Generate initial random Y position
-        let coinY = Phaser.Math.Between(
+        // Random Y position in the air
+        const coinY = Phaser.Math.Between(
             config.MIN_Y,
             GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
         );
 
-        // Check if there's an obstacle at this spawn position (2D overlap check)
-        const obstacleManager = this.scene.obstacleManager;
-        if (obstacleManager) {
-            const obstacles = obstacleManager.getObstacles();
-
-            console.log(`[COIN SPAWN] Attempting spawn at X=${spawnX}, Y=${coinY}`);
-            console.log(`[COIN SPAWN] Active obstacles:`, obstacles.children.entries.filter(o => o.active).map(o => ({
-                texture: o.texture.key,
-                x: o.x,
-                y: o.y
-            })));
-
-            // Use multiple spawn attempts to find a clear position
-            let attempts = 0;
-            let finalSpawnX = spawnX;
-            let finalSpawnY = coinY;
-
-            // NORMAL MODE: Avoid spawning coins on obstacles
-            while (attempts < 5) {
-                const overlapsObstacle = obstacles.children.entries.some(obstacle => {
-                    if (!obstacle.active) return false;
-
-                    // Check both X and Y distance for actual 2D overlap
-                    const horizontalDistance = Math.abs(obstacle.x - finalSpawnX);
-                    const verticalDistance = Math.abs(obstacle.y - finalSpawnY);
-
-                    console.log(`[COIN CHECK] Obstacle ${obstacle.texture.key} at (${obstacle.x}, ${obstacle.y}): hDist=${horizontalDistance.toFixed(0)}, vDist=${verticalDistance.toFixed(0)}`);
-
-                    // Use buffer zone: 600px horizontal (large to account for spawn timing), 250px vertical
-                    const overlaps = horizontalDistance < 600 && verticalDistance < 250;
-                    if (overlaps) {
-                        console.log(`[COIN OVERLAP] ⚠️ Too close to ${obstacle.texture.key}!`);
-                    }
-                    return overlaps;
-                });
-
-                if (!overlapsObstacle) {
-                    console.log(`[COIN SPAWN] ✅ Clear position found at Y=${finalSpawnY} after ${attempts} attempts`);
-                    break; // Found a clear spot
-                }
-
-                console.log(`[COIN SPAWN] ❌ Attempt ${attempts + 1} failed, trying new Y position...`);
-
-                // Try a different Y position
-                finalSpawnY = Phaser.Math.Between(
-                    config.MIN_Y,
-                    GAME_CONFIG.DIFFICULTY.GROUND_Y - config.MAX_Y_OFFSET
-                );
-                attempts++;
-            }
-
-            // Skip coin spawn if no clear position found after attempts
-            if (attempts >= 5) {
-                console.log(`[COIN SPAWN] ❌ SKIPPED - No clear position after 5 attempts`);
-                return;
-            }
-
-            coinY = finalSpawnY; // Use the adjusted Y position
-        }
-
-        // Create using the group's create method with first frame
-        const coin = this.coins.create(spawnX, coinY, 'coin', 0);
-
-        // Visual setup
-        coin.setScale(config.SCALE);
-        coin.setOrigin(0.5);
-        coin.setScrollFactor(1); // Move with camera like obstacles
-
-        // Play spinning animation
-        coin.play('coin_spin');
-
-        // Physics setup - STATIC in world space
-        // CRITICAL: Set these AFTER create() to prevent group from overriding
-        coin.body.setAllowGravity(false);
-        coin.body.setImmovable(true);
-        coin.body.pushable = false;
-        coin.body.setVelocity(0, 0); // No movement
+        // Use the standard spawn method
+        this.spawnCoinAtPosition(spawnX, coinY);
     }
 
     /**

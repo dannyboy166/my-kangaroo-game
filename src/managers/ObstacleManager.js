@@ -118,6 +118,9 @@ export default class ObstacleManager {
         // Spawn 800px ahead of kangaroo in world coordinates
         const spawnX = kangaroo.x + 800;
 
+        // Store spawn position for coin placement
+        const obstacleSpawnInfo = { x: spawnX, type: type, isFlying: false };
+
         // Use object pooling - get inactive object or create new one
         let obstacle = this.obstacles.getFirstDead(false);
 
@@ -157,6 +160,34 @@ export default class ObstacleManager {
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
+
+        // Spawn coins around this obstacle (50% chance)
+        if (Math.random() < 0.5) {
+            this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
+        }
+    }
+
+    /**
+     * Spawn coins in safe positions around an obstacle
+     * @param {Object} obstacleInfo - Obstacle spawn information
+     */
+    spawnCoinsAroundObstacle(obstacleInfo) {
+        const collectibleManager = this.scene.collectibleManager;
+        if (!collectibleManager) return;
+
+        if (obstacleInfo.isFlying) {
+            // Flying obstacle (magpie) - spawn coins above or below it
+            const offsetY = Math.random() < 0.5 ? -80 : 80; // Above or below
+            const coinX = obstacleInfo.x + 100; // Slightly ahead
+            const coinY = obstacleInfo.y + offsetY;
+            collectibleManager.spawnCoinAtPosition(coinX, coinY);
+        } else {
+            // Ground obstacle - spawn coins high in the air
+            const safeYPositions = [200, 250, 300, 350];
+            const coinY = Phaser.Utils.Array.GetRandom(safeYPositions);
+            const coinX = obstacleInfo.x + 100; // Slightly ahead
+            collectibleManager.spawnCoinAtPosition(coinX, coinY);
+        }
     }
 
     /**
@@ -202,6 +233,9 @@ export default class ObstacleManager {
         // Spawn 800px ahead of kangaroo in world coordinates
         const spawnX = kangaroo.x + 800;
         const spawnY = Phaser.Math.Between(150, 250); // Fly at medium-high height (requires double jump)
+
+        // Store spawn position for coin placement
+        const obstacleSpawnInfo = { x: spawnX, y: spawnY, type: type, isFlying: true };
 
         // Use object pooling - get inactive object or create new one
         let obstacle = this.obstacles.getFirstDead(false);
@@ -250,6 +284,11 @@ export default class ObstacleManager {
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
+
+        // Spawn coins around this flying obstacle (50% chance)
+        if (Math.random() < 0.5) {
+            this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
+        }
     }
 
     setGameSpeed(speed) {
