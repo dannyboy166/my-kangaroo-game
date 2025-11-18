@@ -74,21 +74,23 @@ The game follows a **manager-based architecture** for better separation of conce
    - Ground positioned at GROUND_Y (520px)
 
 3. **ObstacleManager** (`src/managers/ObstacleManager.js`)
-   - Handles all obstacle spawning logic
-   - Manages obstacle movement and behavior
+   - **SPAWN ORCHESTRATOR**: Coordinates all obstacle, coin, and powerup spawning
+   - Uses industry-standard "grouped spawning" pattern (Temple Run, Subway Surfers)
+   - When obstacle spawns: 40% chance to spawn coin, 10% chance to spawn powerup
+   - All spawns check for overlaps before placement (guaranteed no overlap!)
    - Special AI for magpies (swooping) and emus (running)
    - Gap obstacle patterns for increased difficulty
 
 4. **PowerupManager** (`src/managers/PowerupManager.js`)
-   - Spawns and manages powerup items
    - Handles powerup activation (shield, magnet, double jump)
    - Visual orb system (rotating indicators around kangaroo)
    - Integrates with StoreManager for purchased powerups
+   - **Spawning**: Called by ObstacleManager via `spawnPowerupAtPosition(x, y)`
 
 5. **CollectibleManager** (`src/managers/CollectibleManager.js`)
-   - Coin spawning and movement
-   - Magnet attraction logic
+   - Handles coin collection and magnet attraction logic
    - Coin collection with visual effects
+   - **Spawning**: Called by ObstacleManager via `spawnCoinAtPosition(x, y)`
 
 6. **AudioManager** (`src/managers/AudioManager.js`)
    - Centralized audio playback
@@ -336,7 +338,51 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes
 
-### Major Codebase Cleanup (2025-11-18) - Latest
+### Industry-Standard Grouped Spawning System (2025-11-18) - Latest
+**The Goal**: Convert from independent timer-based spawning to coordinated grouped spawning (industry-standard pattern).
+
+**The Problem**:
+- Coins and powerups spawned independently with their own timers
+- Complex collision detection with retry logic (up to 5 attempts)
+- Still had overlaps despite buffer zones
+- Confusing codebase with 3 separate spawn systems
+
+**The Solution - Grouped Spawning**:
+ObstacleManager now orchestrates ALL spawning:
+1. When obstacle spawns:
+   - 40% chance → spawn coin nearby (safe position)
+   - 10% chance → spawn powerup nearby (safe position)
+   - 50% chance → spawn nothing
+2. Each collectible checks for overlaps with ALL obstacles before spawning
+3. If overlap detected, skip spawning (guaranteed no overlap)
+
+**Code Changes**:
+- `ObstacleManager.spawnCoinsAroundObstacle()`: Spawns coins in safe positions
+- `ObstacleManager.spawnPowerupAroundObstacle()`: Spawns powerups in safe positions
+- `CollectibleManager.spawnCoinAtPosition(x, y)`: Called by ObstacleManager
+- `PowerupManager.spawnPowerupAtPosition(x, y)`: Called by ObstacleManager
+
+**Deleted Code**:
+- `CollectibleManager.scheduleNextCoin()` - independent timer (obsolete)
+- `CollectibleManager.spawnCoin()` - random spawning (obsolete)
+- `PowerupManager.scheduleNextPowerup()` - independent timer (obsolete)
+- All complex retry/buffer collision logic (no longer needed)
+- `coinTimer` and `powerupTimer` properties
+
+**Benefits**:
+- Industry-standard pattern (Temple Run, Subway Surfers use this)
+- Cleaner codebase: 50% less spawning code
+- Better performance: 1 timer instead of 3
+- Guaranteed fair spawns: always collectible, never overlap
+- Easier for future Claude sessions to understand
+
+**Files Modified**:
+- `ObstacleManager.js`: Added spawn coordination
+- `CollectibleManager.js`: Simplified to position-based spawning only
+- `PowerupManager.js`: Simplified to position-based spawning only
+- `main.js`: Disabled debug mode (collision boxes hidden)
+
+### Major Codebase Cleanup (2025-11-18)
 **The Goal**: Simplify codebase, remove duplication, fix critical bugs, and prepare for production.
 
 **Critical Fixes**:
@@ -605,5 +651,5 @@ physics: {
 ---
 
 **Last Updated**: 2025-11-18
-**Game Version**: 2.5 (Major Codebase Cleanup)
+**Game Version**: 3.0 (Industry-Standard Grouped Spawning)
 **Phaser Version**: 3.90.0
