@@ -95,7 +95,6 @@ export default class ObstacleManager {
                 'rock', 'spider_rock',  // Rocks (universal)
                 'log', 'snake_log',     // Logs (universal)
                 'emu',                  // Outback emu
-                'croc',                 // Crocodile (both themes)
                 'camel',                // Desert camel
                 'koala'                 // Australian koala
             ];
@@ -166,17 +165,17 @@ export default class ObstacleManager {
      * @param {string} type - Obstacle type
      */
     setCollisionBox(obstacle, type) {
-        // Scale and collision box settings for each obstacle type (50% bigger than before)
+        // Visual scale stays the same, only collision boxes adjusted
         const settings = {
-            'rock': { scale: 0.75, width: 75, height: 75 },
+            'rock': { scale: 0.75, width: 75, height: 97.5 },  // Collider: 1.3x taller
             'spider_rock': { scale: 0.75, width: 75, height: 75 },
             'cactus': { scale: 0.75, width: 60, height: 90 },
-            'log': { scale: 0.45, width: 90, height: 45 },
-            'snake_log': { scale: 0.9, width: 180, height: 90 },
-            'emu': { scale: 0.75, width: 75, height: 75 },
-            'croc': { scale: 0.75, width: 112, height: 60 },
-            'camel': { scale: 1.05, width: 105, height: 126 },
-            'koala': { scale: 0.75, width: 60, height: 75 }
+            'log': { scale: 0.45, width: 160, height: 135 },  // Collider: 2x wider (144px)
+            'snake_log': { scale: 0.9, width: 180, height: 72 },  // Collider: 0.8x taller
+            'emu': { scale: 0.75, width: 75, height: 112.5 },  // Collider: 1.5x higher
+            'croc': { scale: 0.75, width: 168, height: 72 },  // Collider: 1.5x wide, 1.2x higher
+            'camel': { scale: 1.05, width: 105, height: 100.8 },  // Collider: 0.8x shorter
+            'koala': { scale: 0.75, width: 60, height: 150 }  // Collider: 2x higher
         };
 
         const setting = settings[type] || { scale: 0.75, width: 60, height: 60 };
@@ -216,9 +215,9 @@ export default class ObstacleManager {
             obstacle.setActive(true);
             obstacle.setVisible(true);
 
-            // Update collision box
+            // Update collision box (offset x-axis 10px to the right)
             obstacle.body.setSize(75, 60);
-            obstacle.body.setOffset(10, 18);
+            obstacle.body.setOffset(20, 18);
 
             // Play animation if it exists
             if (obstacle.anims && this.scene.anims.exists('magpie_fly')) {
@@ -238,9 +237,9 @@ export default class ObstacleManager {
             obstacle.body.setAllowGravity(false);
             obstacle.body.setImmovable(true);
 
-            // Collision box for magpie
+            // Collision box for magpie (offset x-axis 10px to the right)
             obstacle.body.setSize(75, 60);
-            obstacle.body.setOffset(10, 18);
+            obstacle.body.setOffset(20, 18);
 
             // Play animation
             if (this.scene.anims.exists('magpie_fly')) {

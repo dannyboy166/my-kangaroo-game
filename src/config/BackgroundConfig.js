@@ -25,21 +25,21 @@ export const BACKGROUND_THEMES = {
                 scaleMode: 'fit',
                 y: 300 // Center of canvas
             },
-            // Outback clouds - scrolling parallax layer
+            // Outback clouds - scrolling parallax layer (furthest = slowest)
             {
                 key: 'outback_cloud',
                 type: 'tileSprite',
-                scrollSpeed: 0.15,
+                scrollSpeed: 0.1,
                 depth: -85,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
                 y: 300 // Upper portion
             },
-            // Distant trees - far background layer
+            // Distant trees - far background layer (closer than clouds)
             {
                 key: 'parallax_distant_trees',
                 type: 'tileSprite',
-                scrollSpeed: 0.1, // Slower scroll = appears further away
+                scrollSpeed: 0.15,
                 depth: -60,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
@@ -73,7 +73,7 @@ export const BACKGROUND_THEMES = {
             {
                 key: 'beach_cloud',
                 type: 'tileSprite',
-                scrollSpeed: 0.15,
+                scrollSpeed: 0.1, // Furthest = slowest
                 depth: -85,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
@@ -82,7 +82,7 @@ export const BACKGROUND_THEMES = {
             {
                 key: 'beach_sea',
                 type: 'tileSprite',
-                scrollSpeed: 0.3,
+                scrollSpeed: 0.2, // Mid-distance
                 depth: -70,
                 tileScaleX: 0.4,
                 tileScaleY: 0.4,
