@@ -62,25 +62,17 @@ export const GAME_CONFIG = {
         // All obstacle configuration simplified for testing phase
     },
 
-    // Coin spawning
+    // Coin spawning (grouped spawning - coins spawn with obstacles)
     COINS: {
-        MIN_SPAWN_DELAY: 5000,  // Reduced frequency - most coins spawn with obstacles now
-        MAX_SPAWN_DELAY: 8000,
-        MIN_Y: 200,
-        MAX_Y_OFFSET: 50, // From ground
-        SCALE: 1,      // Increased from 0.3 for new 64x64 coin sprite
-        VALUE: 5,
-        SCORE_BONUS: 10
+        SCALE: 1,       // Coin sprite scale
+        VALUE: 5,       // Coins earned per collection
+        SCORE_BONUS: 10 // Score points per collection
     },
 
-    // Powerup system
+    // Powerup system (grouped spawning - powerups spawn with obstacles)
     POWERUPS: {
-        MIN_SPAWN_DELAY: 5000,   // Spawn every 5-20 seconds
-        MAX_SPAWN_DELAY: 20000,
-        MIN_Y: 200,
-        MAX_Y_OFFSET: 50, // From ground
-        SCALE: 2.0,      // TESTING: Increased to 2.0 for better visibility (32x32 sprites)
-        DURATION: 10000, // 10 seconds
+        SCALE: 2.0,      // Powerup sprite scale (32x32 sprites)
+        DURATION: 10000, // Powerup duration (10 seconds)
 
         // Powerup orb configuration
         ORBS: {
