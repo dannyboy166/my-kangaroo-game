@@ -80,17 +80,8 @@ export default class MenuScene extends Phaser.Scene {
         // Load ground decoration
         this.load.image('weed', 'assets/images/weed.png');
 
-        // Load parallax background layers - Outback theme
-        this.load.image('parallax_background', 'assets/images/parallax/_11_background.png');
-        this.load.image('parallax_distant_clouds', 'assets/images/parallax/_10_distant_clouds.png');
-        this.load.image('parallax_distant_clouds1', 'assets/images/parallax/_09_distant_clouds1.png');
-        this.load.image('parallax_clouds', 'assets/images/parallax/_08_clouds.png');
-        this.load.image('parallax_hill2', 'assets/images/parallax/_06_hill2.png');
-        this.load.image('parallax_hill1', 'assets/images/parallax/_05_hill1.png');
-        this.load.image('parallax_bushes', 'assets/images/parallax/_04_bushes.png');
-        this.load.image('parallax_distant_trees', 'assets/images/parallax/_03_distant_trees.png');
-        this.load.image('parallax_trees_bushes', 'assets/images/parallax/_02_trees_and_bushes.png');
-        this.load.image('parallax_ground', 'assets/images/parallax/_01_ground.png');
+        // Load outback background layers - moved from parallax folder
+        this.load.image('parallax_distant_trees', 'assets/images/outback-background/distant_trees.png');
 
         // Load beach background layers - Beach theme (game_background_3)
         this.load.image('beach_sky', 'assets/images/beach-background/game_background_3/layers/sky.png');
