@@ -38,9 +38,9 @@ export const GAME_CONFIG = {
     // Game speed and difficulty
     DIFFICULTY: {
         INITIAL_SPEED: 300,
-        SPEED_INCREASE_INTERVAL: 30, // Score points (was 50 - now faster!)
-        SPEED_INCREASE_AMOUNT: 10,   // Speed increase (was 5 - now doubles!)
-        MAX_SPEED: 500,              // Speed cap to keep game playable
+        SPEED_INCREASE_INTERVAL: 10, // DEBUG: Every 10 score points (normally 30)
+        SPEED_INCREASE_AMOUNT: 25,   // DEBUG: Moderate jumps (normally 10)
+        MAX_SPEED: 800,              // DEBUG: Higher cap (normally 500)
         GROUND_Y: 500                // Moved down a bit (was 480)
     },
 

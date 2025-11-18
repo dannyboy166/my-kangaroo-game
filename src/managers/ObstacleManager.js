@@ -62,10 +62,12 @@ export default class ObstacleManager {
         // Check if magpie is close enough to start swooping
         const distanceToKangaroo = magpie.x - kangaroo.x;
 
-        // Calculate swoop distance based on height - higher magpies need more distance
+        // Calculate swoop distance based on height AND game speed
+        // Faster game = trigger swoop earlier (further away)
         const magpieHeight = magpie.y;
         const heightFromGround = this.groundY - magpieHeight;
-        const swoopDistance = 150 + heightFromGround; // Base 150px + 1px per pixel of height
+        const baseDistance = this.gameSpeed * 1.1; // Scale with speed (e.g., 300 speed = 345px, 800 speed = 920px)
+        const swoopDistance = baseDistance + (heightFromGround * 1.2); // Base distance + extra compensation for higher magpies
 
         const swoopStarted = magpie.getData('swoopStarted');
         const willSwoop = magpie.getData('willSwoop');
@@ -414,13 +416,17 @@ export default class ObstacleManager {
         }
 
         // Store swooping AI data on the magpie
+        // Swoop speed scales with game speed so magpies always finish swooping in time
+        const swoopSpeed = this.gameSpeed * 1.2; // 20% faster than kangaroo to swoop in time
+        const climbSpeed = this.gameSpeed * 0.8; // 80% of game speed for climb back
+
         obstacle.setData('initialY', spawnY); // Remember starting height
         obstacle.setData('swoopStarted', false);
         obstacle.setData('willSwoop', true); // DEBUG: Always swoop (normally 50% chance after score 1000)
         obstacle.setData('straightenTime', 0);
         obstacle.setData('isClimbingBack', false);
-        obstacle.setData('swoopSpeed', 300); // Dive speed (px/sec)
-        obstacle.setData('climbSpeed', 200); // Climb back speed (px/sec)
+        obstacle.setData('swoopSpeed', swoopSpeed); // Scales with game speed
+        obstacle.setData('climbSpeed', climbSpeed); // Scales with game speed
 
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
