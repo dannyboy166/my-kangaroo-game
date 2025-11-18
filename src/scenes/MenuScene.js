@@ -92,11 +92,16 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('parallax_trees_bushes', 'assets/images/parallax/_02_trees_and_bushes.png');
         this.load.image('parallax_ground', 'assets/images/parallax/_01_ground.png');
 
-        // Load beach background layers - Beach theme
+        // Load beach background layers - Beach theme (game_background_3)
         this.load.image('beach_sky', 'assets/images/beach-background/game_background_3/layers/sky.png');
         this.load.image('beach_cloud', 'assets/images/beach-background/game_background_3/layers/cloud.png');
         this.load.image('beach_sea', 'assets/images/beach-background/game_background_3/layers/sea.png');
         this.load.image('beach_land', 'assets/images/beach-background/game_background_3/layers/land.png');
+
+        // Load outback background layers (game_background_2 sky + game_background_1 cloud/land)
+        this.load.image('outback_sky', 'assets/images/beach-background/game_background_2/layers/sky.png');
+        this.load.image('outback_cloud', 'assets/images/beach-background/game_background_1/layers/cloud.png');
+        this.load.image('outback_land', 'assets/images/beach-background/game_background_1/layers/land.png');
 
         // Load helmet image (only static image we still use)
         this.load.image('helmet', 'assets/images/helmet.png');

@@ -16,18 +16,18 @@ export const BACKGROUND_THEMES = {
         id: 'outback',
         name: 'Australian Outback',
         layers: [
-            // Beach sky - gradient background
+            // Outback sky - lighter cyan gradient (game_background_2)
             {
-                key: 'beach_sky',
+                key: 'outback_sky',
                 type: 'image',
                 scrollFactor: 0,
                 depth: -100,
                 scaleMode: 'fit',
                 y: 300 // Center of canvas
             },
-            // Beach clouds - scrolling parallax layer
+            // Outback clouds - scrolling parallax layer
             {
-                key: 'beach_cloud',
+                key: 'outback_cloud',
                 type: 'tileSprite',
                 scrollSpeed: 0.15,
                 depth: -85,
@@ -35,15 +35,25 @@ export const BACKGROUND_THEMES = {
                 tileScaleY: 0.4,
                 y: 300 // Upper portion
             },
-            // Beach land as ground - scaled up to fill bottom
+            // Distant trees - far background layer
             {
-                key: 'beach_land',
+                key: 'parallax_distant_trees',
+                type: 'tileSprite',
+                scrollSpeed: 0.1, // Slower scroll = appears further away
+                depth: -60,
+                tileScaleX: 0.4,
+                tileScaleY: 0.4,
+                y: 250 // Moved up slightly
+            },
+            // Outback land as ground
+            {
+                key: 'outback_land',
                 type: 'tileSprite',
                 scrollSpeed: 1.0, // Scrolls at camera speed to match obstacles
                 depth: -50,
                 tileScaleX: 0.4,
                 tileScaleY: 0.6, // Taller to reach bottom of screen
-                y: 300 // Moved down to fill more vertical space
+                y: 300 // Ground positioning
             }
         ]
     },
@@ -84,8 +94,8 @@ export const BACKGROUND_THEMES = {
                 scrollSpeed: 1.0, // Scrolls at camera speed to match obstacles
                 depth: -50,
                 tileScaleX: 0.4,
-                tileScaleY: 0.4,
-                y: 440 // Moved up 40px to match kangaroo (was 480)
+                tileScaleY: 0.6, // Same as outback - taller to reach bottom
+                y: 300 // Same as outback positioning
             }
         ]
     }
