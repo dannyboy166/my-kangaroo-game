@@ -610,10 +610,9 @@ export default class GameScene extends Phaser.Scene {
         this.time.delayedCall(1000, () => {
             const obstacleType = obstacle.texture ? obstacle.texture.key : 'rock';
 
-            // Reset helmet if equipped
+            // Consume helmet if equipped (use proper StoreManager method)
             if (this.helmetEquipped) {
-                this.storeManager.helmetCount = 0;
-                this.storeManager.saveData();
+                this.storeManager.usePowerUp('helmet');
             }
 
             this.scene.start('GameOverScene', {
