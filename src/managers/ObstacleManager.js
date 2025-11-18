@@ -111,7 +111,14 @@ export default class ObstacleManager {
 
         if (obstacle) {
             // Reuse existing obstacle
+
+            // CRITICAL: Stop any playing animations before changing texture
+            if (obstacle.anims) {
+                obstacle.anims.stop();
+            }
+
             obstacle.setTexture(type);
+            obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
             obstacle.setPosition(spawnX, this.groundY);
             obstacle.setActive(true);
             obstacle.setVisible(true);
@@ -190,9 +197,15 @@ export default class ObstacleManager {
         if (obstacle) {
             // Reuse existing obstacle
             obstacle.setTexture(type);
+            obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
+            obstacle.setScale(0.6); // Scale down magpie
             obstacle.setPosition(spawnX, spawnY);
             obstacle.setActive(true);
             obstacle.setVisible(true);
+
+            // Update collision box
+            obstacle.body.setSize(75, 60);
+            obstacle.body.setOffset(10, 18);
 
             // Play animation if it exists
             if (obstacle.anims && this.scene.anims.exists('magpie_fly')) {
@@ -204,6 +217,7 @@ export default class ObstacleManager {
 
             // Setup visual properties (only for new objects)
             obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
+            obstacle.setScale(0.6); // Scale down magpie
             obstacle.setDepth(10);
             obstacle.setScrollFactor(1);
 
@@ -212,8 +226,8 @@ export default class ObstacleManager {
             obstacle.body.setImmovable(true);
 
             // Collision box for magpie
-            obstacle.body.setSize(100, 80);
-            obstacle.body.setOffset(14, 24);
+            obstacle.body.setSize(75, 60);
+            obstacle.body.setOffset(10, 18);
 
             // Play animation
             if (this.scene.anims.exists('magpie_fly')) {

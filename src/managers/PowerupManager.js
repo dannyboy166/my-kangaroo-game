@@ -96,6 +96,25 @@ export default class PowerupManager {
         const config = GAME_CONFIG.POWERUPS;
         const kangaroo = this.scene.kangaroo;
         const spawnX = kangaroo ? kangaroo.x + 900 : GAME_CONFIG.SPAWN.POWERUP_X;
+
+        // Check if there's an obstacle nearby at this spawn position
+        const obstacleManager = this.scene.obstacleManager;
+        if (obstacleManager) {
+            const obstacles = obstacleManager.getObstacles();
+            const tooCloseToObstacle = obstacles.children.entries.some(obstacle => {
+                if (!obstacle.active) return false;
+
+                // Check if obstacle is within 200px horizontally
+                const horizontalDistance = Math.abs(obstacle.x - spawnX);
+                return horizontalDistance < 200;
+            });
+
+            // Skip powerup spawn if too close to obstacle
+            if (tooCloseToObstacle) {
+                return;
+            }
+        }
+
         const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
