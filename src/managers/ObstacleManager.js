@@ -36,11 +36,81 @@ export default class ObstacleManager {
         this.obstacles.children.entries.forEach((obstacle) => {
             if (!obstacle || !obstacle.active) return;
 
+            // Magpie swooping AI behavior
+            if (obstacle.texture.key === 'magpie') {
+                this.updateMagpieBehavior(obstacle, delta);
+            }
+
             if (obstacle.x < cameraLeftEdge - 100) {
                 obstacle.setActive(false);
                 obstacle.setVisible(false);
             }
         });
+    }
+
+    /**
+     * AI behavior for swooping magpies
+     * - Fly straight until close to kangaroo
+     * - Swoop down in dive attack
+     * - Stay low briefly
+     * - Climb back up to original height
+     */
+    updateMagpieBehavior(magpie, delta) {
+        const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) return;
+
+        // Check if magpie is close enough to start swooping
+        const distanceToKangaroo = magpie.x - kangaroo.x;
+
+        // Calculate swoop distance based on height - higher magpies need more distance
+        const magpieHeight = magpie.y;
+        const heightFromGround = this.groundY - magpieHeight;
+        const swoopDistance = 150 + heightFromGround; // Base 150px + 1px per pixel of height
+
+        const swoopStarted = magpie.getData('swoopStarted');
+        const willSwoop = magpie.getData('willSwoop');
+        const isClimbingBack = magpie.getData('isClimbingBack');
+        const swoopSpeed = magpie.getData('swoopSpeed');
+        const climbSpeed = magpie.getData('climbSpeed');
+        const initialY = magpie.getData('initialY');
+
+        if (!swoopStarted && distanceToKangaroo <= swoopDistance && willSwoop) {
+            // Start swooping down
+            magpie.setData('swoopStarted', true);
+        }
+
+        if (magpie.getData('swoopStarted') && !isClimbingBack) {
+            // Swoop down towards ground level
+            const targetY = this.groundY - 20; // Slightly above ground
+            const currentY = magpie.y;
+
+            if (currentY < targetY) {
+                // Dive down
+                magpie.y += swoopSpeed * delta / 1000;
+                magpie.setRotation(-Math.PI / 4); // -45 degrees (diving tilt)
+            } else {
+                // Reached bottom, start straightening phase
+                magpie.setRotation(0);
+                const straightenTime = magpie.getData('straightenTime') || 0;
+                magpie.setData('straightenTime', straightenTime + delta);
+
+                // After 300ms of being straight, start climbing back up
+                if (magpie.getData('straightenTime') >= 300) {
+                    magpie.setData('isClimbingBack', true);
+                }
+            }
+        }
+
+        if (magpie.getData('isClimbingBack')) {
+            // Climb back up to original height
+            if (magpie.y > initialY) {
+                magpie.y -= climbSpeed * delta / 1000;
+                magpie.setRotation(Math.PI / 6); // +30 degrees (climbing tilt)
+            } else {
+                // Back to normal flying
+                magpie.setRotation(0);
+            }
+        }
     }
 
     scheduleNextObstacle() {
@@ -101,7 +171,7 @@ export default class ObstacleManager {
         }
 
         // Randomly choose between ground obstacle or flying magpie
-        const spawnMagpie = Math.random() < 0.15; // 15% chance for magpie
+        const spawnMagpie = Math.random() < 1.0; // DEBUG: 100% magpies (normally 0.15)
 
         if (spawnMagpie) {
             this.spawnFlyingObstacle('magpie');
@@ -302,11 +372,12 @@ export default class ObstacleManager {
         let obstacle = this.obstacles.getFirstDead(false);
 
         if (obstacle) {
-            // Reuse existing obstacle
+            // Reuse existing obstacle - RESET ALL STATE
             obstacle.setTexture(type);
             obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
             obstacle.setScale(0.75); // Between 0.6 and 0.9
             obstacle.setPosition(spawnX, spawnY);
+            obstacle.setRotation(0); // Reset rotation from previous swoop!
             obstacle.setActive(true);
             obstacle.setVisible(true);
 
@@ -341,6 +412,15 @@ export default class ObstacleManager {
                 obstacle.play('magpie_fly');
             }
         }
+
+        // Store swooping AI data on the magpie
+        obstacle.setData('initialY', spawnY); // Remember starting height
+        obstacle.setData('swoopStarted', false);
+        obstacle.setData('willSwoop', true); // DEBUG: Always swoop (normally 50% chance after score 1000)
+        obstacle.setData('straightenTime', 0);
+        obstacle.setData('isClimbingBack', false);
+        obstacle.setData('swoopSpeed', 300); // Dive speed (px/sec)
+        obstacle.setData('climbSpeed', 200); // Climb back speed (px/sec)
 
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
