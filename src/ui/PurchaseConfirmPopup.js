@@ -7,12 +7,12 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         this.onConfirm = onConfirm;
         this.onCancel = onCancel;
         
-        // Item display info
+        // Item display info (animations mapped to powerup types)
         this.itemInfo = {
-            doubleJump: { name: 'Double Jump', emoji: '🦘', description: 'Jump twice in mid-air!' },
-            shield: { name: 'Shield', emoji: '🛡️', description: 'Protect from one hit!' },
-            magnet: { name: 'Coin Magnet', emoji: '🧲', description: 'Attract coins automatically!' },
-            helmet: { name: 'Zip Tie Helmet', emoji: '🪖', description: 'Dont stress about magpies! \n They can\'t swoop you anymore!' }
+            doubleJump: { name: 'Double Jump', anim: 'powerup_star', description: 'Jump twice in mid-air!' },
+            shield: { name: 'Shield', anim: 'powerup_heart', description: 'Protect from one hit!' },
+            magnet: { name: 'Coin Magnet', anim: 'powerup_green_gem', description: 'Attract coins automatically!' },
+            helmet: { name: 'Zip Tie Helmet', staticTexture: 'helmet', description: 'Dont stress about magpies! \n They can\'t swoop you anymore!' }
         };
 
         this.createPopup();
@@ -55,16 +55,27 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         // Get item info
         const info = this.itemInfo[this.itemType] || this.itemInfo.doubleJump;
 
-        // Item info
-        this.itemText = this.scene.add.text(0, -60, `${info.emoji} ${info.name}`, {
+        // Item icon sprite (animated powerup or static helmet)
+        if (info.anim) {
+            this.itemSprite = this.scene.add.sprite(-65, -60, 'powerup_items', 0);
+            this.itemSprite.play(info.anim);
+            this.itemSprite.setScale(1.2);
+        } else if (info.staticTexture) {
+            this.itemSprite = this.scene.add.sprite(-65, -65, info.staticTexture);
+            this.itemSprite.setScale(0.6);
+        }
+        this.add(this.itemSprite);
+
+        // Item name text (no emoji, just name)
+        this.itemText = this.scene.add.text(-30, -60, info.name, {
             fontSize: '20px',
             fontFamily: 'Arial',
             color: '#ECF0F1',
             fontStyle: 'bold'
-        }).setOrigin(0.5);
+        }).setOrigin(0, 0.5);
         this.add(this.itemText);
 
-        this.descText = this.scene.add.text(0, -30, info.description, {
+        this.descText = this.scene.add.text(0, -10, info.description, {
             fontSize: '16px',
             fontFamily: 'Arial',
             color: '#BDC3C7',
@@ -72,14 +83,20 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         }).setOrigin(0.5);
         this.add(this.descText);
 
-        // Price display
-        this.priceText = this.scene.add.text(0, 10, `Cost: ${this.itemPrice} coins 🪙`, {
+        // Price display with animated coin (centered)
+        this.priceText = this.scene.add.text(35, 25, `Cost: ${this.itemPrice}`, {
             fontSize: '18px',
             fontFamily: 'Arial',
             color: '#F39C12',
             fontStyle: 'bold'
-        }).setOrigin(0.5);
+        }).setOrigin(1, 0.5);
         this.add(this.priceText);
+
+        // Animated coin sprite
+        this.coinSprite = this.scene.add.sprite(60, 25, 'coin', 0);
+        this.coinSprite.play('coin_spin');
+        this.coinSprite.setScale(0.4);
+        this.add(this.coinSprite);
 
         // Cancel button
         this.cancelBtn = this.scene.add.graphics();
