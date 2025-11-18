@@ -52,17 +52,6 @@ export default class CollectibleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
-        // Debug logging every 180 frames
-        if (!this.debugCounter) this.debugCounter = 0;
-        this.debugCounter++;
-        if (this.debugCounter % 180 === 0) {
-            console.log('🪙 Collectible Manager Status:', {
-                activeCoins: this.coins.children.entries.length,
-                magnetActive: magnetActive,
-                memoryNote: 'Coins auto-pooled by Phaser Groups'
-            });
-        }
-
         this.coins.children.entries.slice().forEach((coin) => {
             if (!coin || !coin.active) return;
 
@@ -148,7 +137,6 @@ export default class CollectibleManager {
 
             // Skip coin spawn if too close to obstacle
             if (tooCloseToObstacle) {
-                console.log('💰 Skipped coin spawn - too close to obstacle');
                 return;
             }
         }
@@ -175,8 +163,6 @@ export default class CollectibleManager {
         coin.body.setImmovable(true);
         coin.body.pushable = false;
         coin.body.setVelocity(0, 0); // No movement
-
-        console.log(`💰 Spawned coin at Y:${coinY.toFixed(0)}, velY:${coin.body.velocity.y}`);
     }
 
     /**

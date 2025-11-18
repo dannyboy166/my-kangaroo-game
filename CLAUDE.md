@@ -126,7 +126,7 @@ MenuScene → GameScene ↔ StoreScene → GameOverScene → MenuScene
 - **Engine**: Phaser Arcade Physics
 - **Gravity**: 800 (global), 900 (kangaroo-specific)
 - **Jump Velocity**: -950 (normal), -750 (double jump)
-- **Ground Level**: y = 520 (GAME_CONFIG.DIFFICULTY.GROUND_Y)
+- **Ground Level**: y = 500 (GAME_CONFIG.DIFFICULTY.GROUND_Y)
 - **Physics Ground**: Wide platform (1,000,000px x 50px) at GROUND_Y, invisible
 - **Collision Detection**: Overlap-based for precise hit detection
 - **World Bounds**: Kangaroo NOT constrained (infinite forward movement)
@@ -336,7 +336,65 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes
 
-### Unified Animated Powerup Sprites (2025-11-18) - Latest
+### Major Codebase Cleanup (2025-11-18) - Latest
+**The Goal**: Simplify codebase, remove duplication, fix critical bugs, and prepare for production.
+
+**Critical Fixes**:
+1. **Fixed localStorage Duplication** - Consolidated coin management into GameDataManager only
+   - Removed duplicate coin handling in StoreManager
+   - StoreManager now properly delegates to GameDataManager for all coin operations
+
+2. **Fixed Memory Leak** - Added cleanup() method to GameDataManager
+   - Debounce timer now properly cleaned up to prevent memory leaks
+
+3. **Removed localStorage Key Conflict**:
+   - Deleted `'kangaroo_hop_total_coins'` key (was conflicting with `'kangaroo_coins'`)
+   - Single source of truth for coin data
+
+**Code Simplification**:
+1. **Refactored StoreManager** (137→123 lines, -10%)
+   - Replaced 3 duplicate switch statements with object mapping
+   - Removed all coin management code (now uses GameDataManager)
+   - Cleaner, more maintainable powerup inventory system
+
+2. **Removed All Debug Logging**
+   - Cleaned 50+ console.log calls across entire codebase
+   - Removed debug counters from all managers
+   - Preserved critical error/warning logging only
+
+3. **Removed Dead Code**:
+   - Deleted old backup files: `GameScene_OLD.js`, `GameScene.OLD.js`
+   - Deleted 10 outdated documentation files
+   - Removed unused Pixel Adventure obstacle configurations
+   - Removed 80+ lines of unused collision box config from GameConfig.js
+   - Removed unused `setCollisionBox()` method from ObstacleManager
+
+**Documentation Updates**:
+- Fixed GROUND_Y inconsistency (was 520 in docs, actually 500)
+- Removed references to unused obstacle types
+- Simplified GameConfig documentation
+
+**Files Deleted** (11 total):
+- `src/scenes/GameScene_OLD.js`
+- `src/scenes/GameScene.OLD.js`
+- `INFINITE_RUNNER_EXPLAINED.md`
+- `ARCHITECTURE.md`
+- `REFACTOR_SUMMARY.md`
+- `TILESPRITE_FIX_EXPLAINED.md`
+- `MEMORY_EFFICIENCY_REPORT.md`
+- `THE_BIG_FIX.md`
+- `BUGFIX_NOTES.md`
+- `DEBUG_ANALYSIS.md`
+- `SCROLL_SPEED_CALCULATION.md`
+- `PRODUCTION_ROADMAP.md`
+
+**Result**:
+- Cleaner, simpler codebase focused on core gameplay
+- No localStorage conflicts or memory leaks
+- Production-ready logging (errors only)
+- Easier to maintain and extend
+
+### Unified Animated Powerup Sprites (2025-11-18)
 **The Goal**: Create consistent, visually appealing powerup system across all game contexts.
 
 **Changes Made**:
@@ -526,7 +584,7 @@ physics: {
 ## Important Constants
 
 ### Ground & Physics
-- **GROUND_Y**: 520 (defined in GAME_CONFIG.DIFFICULTY.GROUND_Y)
+- **GROUND_Y**: 500 (defined in GAME_CONFIG.DIFFICULTY.GROUND_Y)
 - **Canvas Size**: 800x600
 - **Physics Ground**: Wide platform (1,000,000px x 50px) at y=520 (invisible)
 - **Visual Ground**: Comes from background parallax layers (Beach/Outback themes)
@@ -547,5 +605,5 @@ physics: {
 ---
 
 **Last Updated**: 2025-11-18
-**Game Version**: 2.4 (Unified Animated Powerup Sprites)
+**Game Version**: 2.5 (Major Codebase Cleanup)
 **Phaser Version**: 3.90.0

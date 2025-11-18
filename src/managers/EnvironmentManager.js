@@ -57,12 +57,18 @@ export default class EnvironmentManager {
         const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
 
-        console.log(`🎨 Creating background for theme: ${theme.name}`);
-
         theme.layers.forEach(layerConfig => {
             const yPos = layerConfig.y !== undefined ? layerConfig.y : CANVAS_HEIGHT / 2;
 
-            if (layerConfig.type === 'image') {
+            if (layerConfig.type === 'color') {
+                // Simple colored rectangle (for testing - no images)
+                const height = layerConfig.height !== undefined ? layerConfig.height : CANVAS_HEIGHT;
+                const graphics = this.scene.add.graphics();
+                graphics.fillStyle(layerConfig.color, 1);
+                graphics.fillRect(0, yPos, CANVAS_WIDTH, height);
+                graphics.setDepth(layerConfig.depth);
+                graphics.setScrollFactor(0); // Fixed to camera
+            } else if (layerConfig.type === 'image') {
                 // Fixed background image (no scrolling)
                 const img = this.scene.add.image(CANVAS_WIDTH / 2, yPos, layerConfig.key);
                 img.setDisplaySize(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -80,8 +86,6 @@ export default class EnvironmentManager {
                 );
             }
         });
-
-        console.log(`✅ Background created with ${this.parallaxLayers.length} parallax layers`);
     }
 
     /**
@@ -97,11 +101,6 @@ export default class EnvironmentManager {
         const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
         const y = yPos !== null ? yPos : CANVAS_HEIGHT / 2;
-
-        console.log(`📍 Adding parallax layer: ${texture}`, {
-            scrollSpeed: scrollSpeed,
-            depth: depth
-        });
 
         // ALL layers (including ground) are camera-fixed TileSprites
         // They use tilePositionX to create infinite scrolling illusion
@@ -122,12 +121,6 @@ export default class EnvironmentManager {
             scrollSpeed: scrollSpeed,
             tileScaleX: scaleX  // Store for scroll compensation
         });
-
-        if (scrollSpeed >= 1.0) {
-            console.log(`  → Ground layer (scrollSpeed=${scrollSpeed})`);
-        } else {
-            console.log(`  → Background layer (scrollSpeed=${scrollSpeed})`);
-        }
     }
 
     /**
@@ -140,28 +133,14 @@ export default class EnvironmentManager {
 
         const camera = this.scene.cameras.main;
 
-        // DEBUG: Log every 60 frames to check for issues
-        if (!this.debugFrameCounter) this.debugFrameCounter = 0;
-        this.debugFrameCounter++;
-
         // CRITICAL FIX: Force camera scroll to whole pixels to prevent TileSprite shivering
         // Phaser camera produces sub-pixel positions (e.g., 300.5px) which causes
         // irregular jumps when combined with tileScale division
         const roundedCameraX = Math.floor(camera.scrollX);
 
-        if (this.debugFrameCounter % 60 === 0) {
-            console.log('📊 BACKGROUND DEBUG:', {
-                fps: Math.round(this.scene.game.loop.actualFps),
-                cameraScrollRaw: camera.scrollX.toFixed(2),
-                cameraScrollRounded: roundedCameraX,
-                deltaTime: delta.toFixed(2),
-                layerCount: this.parallaxLayers.length
-            });
-        }
-
         // Update ALL layers (including ground) with tilePositionX
         // This shifts the repeating tile pattern, creating infinite scrolling
-        this.parallaxLayers.forEach((layer, index) => {
+        this.parallaxLayers.forEach((layer) => {
             // CRITICAL: TileSprite scroll position is affected by tileScale!
             // When tiles are scaled, we need to compensate the scroll speed
             // Formula: tilePositionX = roundedCameraX * scrollSpeed / tileScaleX
@@ -172,34 +151,7 @@ export default class EnvironmentManager {
             const scrollPosition = (roundedCameraX * layer.scrollSpeed) / scaleCompensation;
             const finalPosition = Math.floor(scrollPosition);
 
-            // Store previous position to detect jumps
-            const previousPosition = layer.sprite.tilePositionX;
             layer.sprite.tilePositionX = finalPosition;
-
-            // DEBUG: Log layer details every 60 frames
-            if (this.debugFrameCounter % 60 === 0 && index === 3) { // Layer 3 = trees (0=clouds, 1=clouds, 2=clouds, 3=trees, 4=ground)
-                const jump = Math.abs(finalPosition - previousPosition);
-                console.log(`  🌳 Trees Layer (index ${index}):`, {
-                    scrollSpeed: layer.scrollSpeed,
-                    tileScale: layer.tileScaleX,
-                    scrollPos: scrollPosition.toFixed(2),
-                    finalPos: finalPosition,
-                    prevPos: previousPosition,
-                    jump: jump,
-                    pixelsPerFrame: (layer.scrollSpeed / scaleCompensation).toFixed(2)
-                });
-            }
-            // Also log ground layer
-            if (this.debugFrameCounter % 60 === 0 && index === 4) { // Layer 4 = ground
-                const jump = Math.abs(finalPosition - previousPosition);
-                console.log(`  🟫 Ground Layer (index ${index}):`, {
-                    scrollSpeed: layer.scrollSpeed,
-                    tileScale: layer.tileScaleX,
-                    finalPos: finalPosition,
-                    prevPos: previousPosition,
-                    jump: jump
-                });
-            }
         });
     }
 

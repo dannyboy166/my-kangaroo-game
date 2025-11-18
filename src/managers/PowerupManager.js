@@ -49,17 +49,6 @@ export default class PowerupManager {
     update(delta) {
         if (this.isGameOver) return;
 
-        // Debug logging every 180 frames
-        if (!this.debugCounter) this.debugCounter = 0;
-        this.debugCounter++;
-        if (this.debugCounter % 180 === 0) {
-            console.log('⚡ Powerup Manager Status:', {
-                activePowerups: this.powerups.children.entries.length,
-                activeEffects: Object.keys(this.activePowerups).filter(k => this.activePowerups[k].active).length,
-                memoryNote: 'Visual effects cleaned up on deactivation'
-            });
-        }
-
         // Update powerup timers
         this.updatePowerupTimers(delta);
 

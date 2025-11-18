@@ -1,137 +1,123 @@
+/**
+ * StoreManager
+ * Manages powerup inventory and purchases
+ * Uses object mapping instead of switch statements for cleaner code
+ * Coins are managed by GameDataManager (no duplication)
+ */
 export default class StoreManager {
     constructor() {
-        this.totalCoins = parseInt(localStorage.getItem('kangaroo_hop_total_coins')) || 0;
-        this.doubleJumpCount = parseInt(localStorage.getItem('kangaroo_hop_double_jump')) || 0;
-        this.shieldCount = parseInt(localStorage.getItem('kangaroo_hop_shield')) || 0;
-        this.magnetCount = parseInt(localStorage.getItem('kangaroo_hop_magnet')) || 0;
-        this.helmetCount = parseInt(localStorage.getItem('kangaroo_hop_helmet')) || 0;
-        
-        this.prices = {
-            doubleJump: 20,
-            shield: 40,
-            magnet: 30,
-            helmet: 100
+        // Powerup inventory with unified structure
+        this.powerups = {
+            doubleJump: {
+                count: this.loadCount('kangaroo_hop_double_jump'),
+                price: 50,
+                name: 'Double Jump',
+                description: 'Jump twice in the air!\nLasts 10 seconds',
+                maxCount: 3
+            },
+            shield: {
+                count: this.loadCount('kangaroo_hop_shield'),
+                price: 50,
+                name: 'Shield',
+                description: 'Protects from one hit!\nLasts 10 seconds',
+                maxCount: 3
+            },
+            magnet: {
+                count: this.loadCount('kangaroo_hop_magnet'),
+                price: 50,
+                name: 'Coin Magnet',
+                description: 'Attracts nearby coins!\nLasts 10 seconds',
+                maxCount: 3
+            },
+            helmet: {
+                count: this.loadCount('kangaroo_hop_helmet'),
+                price: 100,
+                name: 'Magpie Helmet',
+                description: 'Protects from magpie swoops!\nLasts one game',
+                maxCount: 1
+            }
         };
-        
-        this.maxItemCount = 3;
-        this.maxHelmetCount = 1; // Only one helmet can be owned at a time
     }
-    
+
+    /**
+     * Load powerup count from localStorage
+     */
+    loadCount(key) {
+        return parseInt(localStorage.getItem(key)) || 0;
+    }
+
+    /**
+     * Save all powerup counts to localStorage
+     */
     saveData() {
-        localStorage.setItem('kangaroo_hop_total_coins', this.totalCoins.toString());
-        localStorage.setItem('kangaroo_hop_double_jump', this.doubleJumpCount.toString());
-        localStorage.setItem('kangaroo_hop_shield', this.shieldCount.toString());
-        localStorage.setItem('kangaroo_hop_magnet', this.magnetCount.toString());
-        localStorage.setItem('kangaroo_hop_helmet', this.helmetCount.toString());
+        Object.entries(this.powerups).forEach(([type, data]) => {
+            const key = this.getStorageKey(type);
+            localStorage.setItem(key, data.count.toString());
+        });
     }
-    
-    addCoins(amount) {
-        this.totalCoins += amount;
-        this.saveData();
+
+    /**
+     * Get localStorage key for powerup type
+     */
+    getStorageKey(type) {
+        const keys = {
+            doubleJump: 'kangaroo_hop_double_jump',
+            shield: 'kangaroo_hop_shield',
+            magnet: 'kangaroo_hop_magnet',
+            helmet: 'kangaroo_hop_helmet'
+        };
+        return keys[type];
     }
-    
-    canPurchase(type) {
-        const price = this.prices[type];
-        const count = this.getPowerUpCount(type);
-        const maxCount = type === 'helmet' ? this.maxHelmetCount : this.maxItemCount;
-        return this.totalCoins >= price && count < maxCount;
-    }
-    
-    purchasePowerUp(type) {
-        if (!this.canPurchase(type)) return false;
-        
-        const price = this.prices[type];
-        this.totalCoins -= price;
-        
-        switch (type) {
-            case 'doubleJump':
-                this.doubleJumpCount++;
-                break;
-            case 'shield':
-                this.shieldCount++;
-                break;
-            case 'magnet':
-                this.magnetCount++;
-                break;
-            case 'helmet':
-                this.helmetCount++;
-                break;
-        }
-        
+
+    /**
+     * Use a powerup (decrement count)
+     */
+    usePowerUp(type) {
+        const powerup = this.powerups[type];
+        if (!powerup || powerup.count <= 0) return false;
+
+        powerup.count--;
         this.saveData();
         return true;
     }
-    
-    usePowerUp(type) {
-        switch (type) {
-            case 'doubleJump':
-                if (this.doubleJumpCount > 0) {
-                    this.doubleJumpCount--;
-                    this.saveData();
-                    return true;
-                }
-                break;
-            case 'shield':
-                if (this.shieldCount > 0) {
-                    this.shieldCount--;
-                    this.saveData();
-                    return true;
-                }
-                break;
-            case 'magnet':
-                if (this.magnetCount > 0) {
-                    this.magnetCount--;
-                    this.saveData();
-                    return true;
-                }
-                break;
-            case 'helmet':
-                if (this.helmetCount > 0) {
-                    this.helmetCount--;
-                    this.saveData();
-                    return true;
-                }
-                break;
-        }
-        return false;
-    }
-    
+
+    /**
+     * Get powerup count
+     */
     getPowerUpCount(type) {
-        switch (type) {
-            case 'doubleJump':
-                return this.doubleJumpCount;
-            case 'shield':
-                return this.shieldCount;
-            case 'magnet':
-                return this.magnetCount;
-            case 'helmet':
-                return this.helmetCount;
-            default:
-                return 0;
-        }
+        return this.powerups[type]?.count || 0;
     }
-    
+
+    /**
+     * Get powerup price
+     */
     getPowerUpPrice(type) {
-        return this.prices[type] || 0;
+        return this.powerups[type]?.price || 0;
     }
-    
+
+    /**
+     * Get powerup name
+     */
     getPowerUpName(type) {
-        const names = {
-            doubleJump: 'Double Jump',
-            shield: 'Shield',
-            magnet: 'Coin Magnet',
-            helmet: 'Zip Tie Helmet'
-        };
-        return names[type] || type;
+        return this.powerups[type]?.name || type;
     }
-    
+
+    /**
+     * Get powerup description
+     */
     getPowerUpDescription(type) {
-        const descriptions = {
-            doubleJump: 'Jump twice in the air!\nLasts 10 seconds',
-            shield: 'Protects from one hit!\nLasts 10 seconds',
-            magnet: 'Attracts nearby coins!\nLasts 10 seconds',
-            helmet: 'Protects from magpie swoops!\nLasts one game'
-        };
-        return descriptions[type] || '';
+        return this.powerups[type]?.description || '';
+    }
+
+    /**
+     * Add a powerup to inventory
+     */
+    addPowerUp(type) {
+        const powerup = this.powerups[type];
+        if (!powerup) return false;
+
+        powerup.count++;
+        this.saveData();
+        return true;
     }
 }

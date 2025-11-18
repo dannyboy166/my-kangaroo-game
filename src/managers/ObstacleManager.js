@@ -21,8 +21,33 @@ export default class ObstacleManager {
     create() {
         this.obstacles = this.scene.physics.add.group();
 
+        // TESTING: Create obstacle textures once (not every spawn!)
+        this.createObstacleTextures();
+
         // Start obstacle spawning
         this.scheduleNextObstacle();
+    }
+
+    /**
+     * Create reusable obstacle textures (called once on initialization)
+     */
+    createObstacleTextures() {
+        // Only create if they don't already exist
+        if (!this.scene.textures.exists('obstacle_box')) {
+            const graphics = this.scene.add.graphics();
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillRect(0, 0, 50, 60);
+            graphics.generateTexture('obstacle_box', 50, 60);
+            graphics.destroy();
+        }
+
+        if (!this.scene.textures.exists('flying_box')) {
+            const graphics = this.scene.add.graphics();
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillRect(0, 0, 50, 50);
+            graphics.generateTexture('flying_box', 50, 50);
+            graphics.destroy();
+        }
     }
 
     update(delta) {
@@ -30,22 +55,6 @@ export default class ObstacleManager {
 
         const camera = this.scene.cameras.main;
         const cameraLeftEdge = camera.scrollX;
-
-        // Debug: Check obstacle velocities every 60 frames
-        if (!this.debugCounter) this.debugCounter = 0;
-        this.debugCounter++;
-        if (this.debugCounter % 60 === 0) {
-            const firstObstacle = this.obstacles.children.entries.find(o => o.active);
-            if (firstObstacle) {
-                console.log('🔍 Obstacle Debug:', {
-                    obstacleX: firstObstacle.x.toFixed(0),
-                    velocityX: firstObstacle.body.velocity.x.toFixed(2),
-                    velocityY: firstObstacle.body.velocity.y.toFixed(2),
-                    scrollFactor: firstObstacle.scrollFactorX,
-                    cameraScrollX: camera.scrollX.toFixed(0)
-                });
-            }
-        }
 
         // Clean up off-screen obstacles (behind camera view)
         this.obstacles.children.entries.slice().forEach((obstacle) => {
@@ -79,8 +88,6 @@ export default class ObstacleManager {
         }
 
         const delay = Phaser.Math.Between(minDelay, maxDelay);
-
-        console.log(`⏰ Next obstacle in ${delay}ms (score: ${Math.floor(this.score)})`);
 
         this.obstacleTimer = this.scene.time.delayedCall(delay, () => {
             if (!this.isGameOver && this.scene.scene.isActive()) {
@@ -122,11 +129,13 @@ export default class ObstacleManager {
         // Spawn 800px ahead of kangaroo in world coordinates
         const spawnX = kangaroo.x + 800;
 
-        const obstacle = this.scene.physics.add.sprite(spawnX, this.groundY, type);
+        // TESTING: Use pre-created texture (created once in create())
+        const boxWidth = 50;
+        const boxHeight = 60;
+
+        const obstacle = this.scene.physics.add.sprite(spawnX, this.groundY, 'obstacle_box');
 
         // Setup visual properties
-        const baseSize = GAME_CONFIG.OBSTACLES.BASE_SIZES[type] || 0.5;
-        obstacle.setScale(baseSize);
         obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
         obstacle.setDepth(10); // Above ground layer (ground is at -20)
         obstacle.setScrollFactor(1); // Move with camera (same as default, but explicit)
@@ -140,10 +149,9 @@ export default class ObstacleManager {
         obstacle.setVelocityX(0); // No movement - stays in world space
         obstacle.setVelocityY(0);
 
-        // Apply custom collision box from config
-        this.setCollisionBox(obstacle, type);
-
-        console.log(`🚧 Spawned ${type} at world X: ${spawnX.toFixed(0)} (scrollFactor=1, velocity=0)`);
+        // Simple collision box for the rectangle
+        obstacle.body.setSize(boxWidth, boxHeight);
+        obstacle.body.setOffset(0, 0);
     }
 
     /**
@@ -158,19 +166,16 @@ export default class ObstacleManager {
         const spawnX = kangaroo.x + 800;
         const spawnY = Phaser.Math.Between(150, 300); // Fly at varying heights
 
-        const obstacle = this.scene.physics.add.sprite(spawnX, spawnY, type);
+        // TESTING: Use pre-created texture (created once in create())
+        const boxWidth = 50;
+        const boxHeight = 50;
+
+        const obstacle = this.scene.physics.add.sprite(spawnX, spawnY, 'flying_box');
 
         // Setup visual properties
-        const baseSize = GAME_CONFIG.MAGPIE?.SCALE || 0.8;
-        obstacle.setScale(baseSize);
         obstacle.setOrigin(0.5, 0.5); // Center anchor for flying
         obstacle.setDepth(10);
         obstacle.setScrollFactor(1);
-
-        // Play flying animation if it exists
-        if (this.scene.anims.exists('magpie_fly')) {
-            obstacle.play('magpie_fly');
-        }
 
         // Add to group
         this.obstacles.add(obstacle);
@@ -181,31 +186,9 @@ export default class ObstacleManager {
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
 
-        // Apply custom collision box
-        this.setCollisionBox(obstacle, type);
-
-        console.log(`🦅 Spawned ${type} at world X: ${spawnX.toFixed(0)}, Y: ${spawnY} (flying)`);
-    }
-
-    /**
-     * Apply custom collision box to obstacle based on type
-     * Reads collision box settings from GAME_CONFIG.OBSTACLES.COLLISION_BOXES
-     * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
-     * @param {string} type - Obstacle type key
-     */
-    setCollisionBox(obstacle, type) {
-        const collisionBoxes = GAME_CONFIG.OBSTACLES.COLLISION_BOXES;
-
-        // Check if custom collision box exists for this type
-        if (collisionBoxes && collisionBoxes[type]) {
-            const box = collisionBoxes[type];
-            obstacle.body.setSize(box.width, box.height);
-            obstacle.body.setOffset(box.offsetX, box.offsetY);
-            console.log(`  → Custom collision box applied: ${box.width}x${box.height} at offset (${box.offsetX}, ${box.offsetY})`);
-        } else {
-            // Use default collision box (full sprite size)
-            console.log(`  → Using default collision box (full sprite)`);
-        }
+        // Simple collision box for the flying rectangle
+        obstacle.body.setSize(boxWidth, boxHeight);
+        obstacle.body.setOffset(0, 0);
     }
 
     setGameSpeed(speed) {

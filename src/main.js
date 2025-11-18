@@ -43,5 +43,3 @@ const config = {
 
 // Create and start the game
 const game = new Phaser.Game(config);
-
-console.log('🦘 Kangaroo Hop game initialized!');

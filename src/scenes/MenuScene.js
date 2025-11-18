@@ -343,8 +343,6 @@ export default class MenuScene extends Phaser.Scene {
                 this.startGame();
             }
         });
-
-        console.log('Menu scene loaded');
     }
 
 
@@ -359,8 +357,6 @@ export default class MenuScene extends Phaser.Scene {
     createThemeBackground() {
         const themeId = this.gameDataManager.getBackgroundTheme();
         const theme = BACKGROUND_THEMES[themeId] || BACKGROUND_THEMES.outback;
-
-        console.log(`🎨 MenuScene: Loading ${theme.name} background`);
 
         // Create static background layers (no scrolling in menu)
         theme.layers.forEach(layerConfig => {

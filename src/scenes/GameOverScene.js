@@ -215,7 +215,5 @@ export default class GameOverScene extends Phaser.Scene {
             this.audioManager?.playButtonClick();
             this.scene.start('MenuScene');
         });
-
-        console.log(`Game Over! Score: ${this.finalScore}, High Score: ${this.highScore}`);
     }
 }

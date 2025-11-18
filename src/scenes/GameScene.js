@@ -72,8 +72,6 @@ export default class GameScene extends Phaser.Scene {
      * @param {Object} data - Data passed from previous scene
      */
     create(data) {
-        console.log('🎮 GameScene: Initializing with manager-based architecture');
-
         // Store audio manager from menu scene
         this.audioManager = data.audioManager;
 
@@ -106,8 +104,6 @@ export default class GameScene extends Phaser.Scene {
 
         // Setup collision detection
         this.setupCollisions();
-
-        console.log('✅ GameScene: Initialization complete');
     }
 
     /**
@@ -128,7 +124,6 @@ export default class GameScene extends Phaser.Scene {
     checkHelmetEquipment() {
         const helmetCount = this.storeManager.getPowerUpCount('helmet');
         this.helmetEquipped = helmetCount > 0;
-        console.log(`🪖 Helmet: ${this.helmetEquipped ? 'Equipped' : 'Not equipped'}`);
     }
 
     /**
@@ -179,13 +174,6 @@ export default class GameScene extends Phaser.Scene {
 
         // CRITICAL: Set constant forward velocity (this makes kangaroo run forward in world space)
         this.kangaroo.setVelocityX(this.gameSpeed);
-
-        console.log('🦘 Kangaroo created:', {
-            worldX: this.kangaroo.x,
-            groundY: this.kangaroo.y,
-            velocityX: this.kangaroo.body.velocity.x,
-            gravity: this.kangaroo.body.gravity.y
-        });
 
         // Setup camera to follow kangaroo smoothly
         // This makes the kangaroo appear to "stay in place" while world scrolls
@@ -324,13 +312,6 @@ export default class GameScene extends Phaser.Scene {
         // Store in a group for collision management
         this.groundBody = this.physics.add.staticGroup();
         this.groundBody.add(ground);
-
-        console.log('🟩 Physics ground created:', {
-            worldX: ground.x,
-            topY: GROUND_Y,
-            width: ground.body.width,
-            height: ground.body.height
-        });
     }
 
     /**
@@ -359,9 +340,7 @@ export default class GameScene extends Phaser.Scene {
      */
     setupCollisions() {
         // Kangaroo collides with ground
-        console.log('🔗 Setting up collision between kangaroo and ground');
-        const collider = this.physics.add.collider(this.kangaroo, this.groundBody);
-        console.log('🔗 Collider created:', collider);
+        this.physics.add.collider(this.kangaroo, this.groundBody);
 
         // REMOVED: Obstacles DON'T collide with ground (they have gravity off and fixed Y position)
         // this.physics.add.collider(this.obstacleManager.getObstacles(), this.groundBody);
@@ -401,22 +380,6 @@ export default class GameScene extends Phaser.Scene {
      */
     update(time, delta) {
         if (this.isGameOver) return;
-
-        // Debug: Check FPS and movement every 60 frames
-        if (!this.debugFrameCounter) this.debugFrameCounter = 0;
-        this.debugFrameCounter++;
-        if (this.debugFrameCounter % 60 === 0) {
-            const camera = this.cameras.main;
-            const firstObstacle = this.obstacleManager.getObstacles().children.entries.find(o => o.active);
-            const firstCoin = this.collectibleManager.getCoins().children.entries.find(c => c.active);
-            console.log('📊 DEBUG:', {
-                fps: this.game.loop.actualFps.toFixed(0),
-                cameraScrollX: camera.scrollX.toFixed(0),
-                kangarooVelX: this.kangaroo.body.velocity.x.toFixed(0),
-                coinY: firstCoin ? firstCoin.y.toFixed(0) : 'N/A',
-                coinVelY: firstCoin ? firstCoin.body.velocity.y.toFixed(2) : 'N/A'
-            });
-        }
 
         // Update managers
         this.obstacleManager.update(delta);
@@ -526,8 +489,6 @@ export default class GameScene extends Phaser.Scene {
                 if (this.kangaroo && this.kangaroo.body) {
                     this.kangaroo.setVelocityX(this.gameSpeed);
                 }
-
-                console.log(`⚡ Speed increased to ${this.gameSpeed} (max: ${config.MAX_SPEED})`);
             }
 
             // Note: Obstacles don't need speed updates - they're static!
@@ -550,7 +511,6 @@ export default class GameScene extends Phaser.Scene {
 
         // Helmet protection against magpies
         if (this.helmetEquipped && obstacle.texture?.key === 'magpie') {
-            console.log('🪖 Helmet protected from magpie!');
             this.audioManager?.playCollision();
 
             // Visual feedback
@@ -654,7 +614,6 @@ export default class GameScene extends Phaser.Scene {
             if (this.helmetEquipped) {
                 this.storeManager.helmetCount = 0;
                 this.storeManager.saveData();
-                console.log('🪖 Helmet used up');
             }
 
             this.scene.start('GameOverScene', {
@@ -669,8 +628,6 @@ export default class GameScene extends Phaser.Scene {
      * Clean up when scene shuts down
      */
     shutdown() {
-        console.log('🧹 GameScene: Cleaning up');
-
         // Cleanup managers
         this.obstacleManager?.cleanup();
         this.powerupManager?.cleanup();

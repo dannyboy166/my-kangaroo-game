@@ -16,57 +16,20 @@ export const BACKGROUND_THEMES = {
         id: 'outback',
         name: 'Australian Outback',
         layers: [
+            // Simple colored background - no images, just colors for testing
             {
-                key: 'parallax_background',
-                type: 'image',
-                scrollFactor: 0,
-                depth: -100,
-                scaleMode: 'fit' // Fill canvas
+                key: 'simple_sky',
+                type: 'color',
+                color: 0x87CEEB, // Sky blue
+                depth: -100
             },
             {
-                key: 'parallax_distant_clouds',
-                type: 'tileSprite',
-                scrollSpeed: 0.1,
-                depth: -90,
-                tileScaleX: 1.0,    // No scaling! 1024x512 POT
-                tileScaleY: 1.0,
-                y: 400  // Moved down
-            },
-            {
-                key: 'parallax_distant_clouds1',
-                type: 'tileSprite',
-                scrollSpeed: 0.15,
-                depth: -85,
-                tileScaleX: 1.0,    // No scaling! 1024x512 POT
-                tileScaleY: 1.0,
-                y: 350  // Moved down
-            },
-            {
-                key: 'parallax_clouds',
-                type: 'tileSprite',
-                scrollSpeed: 0.25,
-                depth: -80,
-                tileScaleX: 1.0,    // No scaling! 1024x512 POT
-                tileScaleY: 1.0,
-                y: 300  // Moved down
-            },
-            {
-                key: 'parallax_trees_bushes',
-                type: 'tileSprite',
-                scrollSpeed: 0.6,
-                depth: -50,
-                tileScaleX: 0.7,    // Smaller = looks further away
-                tileScaleY: 0.7,
-                y: 450  // Moved down (was 400)
-            },
-            {
-                key: 'parallax_ground',
-                type: 'tileSprite',
-                scrollSpeed: 1.0, // Matches camera scroll rate for perfect obstacle alignment
+                key: 'simple_ground',
+                type: 'color',
+                color: 0xD2691E, // Chocolate brown for ground
                 depth: -20,
-                tileScaleX: 1.0,  // No scaling! 1024x512 POT
-                tileScaleY: 1.0,
-                y: 440 // Moved up (was 480)
+                y: 440, // Ground starts at y=440
+                height: 160 // Fill from 440 to bottom of canvas (600)
             }
         ]
     },

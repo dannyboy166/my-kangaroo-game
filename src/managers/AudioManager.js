@@ -21,12 +21,10 @@ export default class AudioManager {
     
     init(scene) {
         this.scene = scene;
-        console.log('🔊 AudioManager initialized with scene');
     }
-    
+
     preloadSounds(scene) {
         // This will be called from each scene's preload
-        console.log('🔊 AudioManager: Sounds preloaded');
     }
     
     setSounds(sounds) {

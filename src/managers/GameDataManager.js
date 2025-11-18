@@ -93,4 +93,14 @@ export default class GameDataManager {
         }
         return GameDataManager.instance;
     }
+
+    /**
+     * Cleanup method to prevent memory leaks
+     */
+    cleanup() {
+        if (this.saveTimer) {
+            clearTimeout(this.saveTimer);
+            this.saveTimer = null;
+        }
+    }
 }

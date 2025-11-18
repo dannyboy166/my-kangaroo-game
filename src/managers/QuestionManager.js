@@ -30,8 +30,6 @@ class QuestionManager {
         if (this.isInitialized) return;
 
         try {
-            console.log('🎯 Initializing Question Manager...');
-
             // Load saved categories from localStorage (like Unity's PlayerStatistics)
             this.loadSavedCategories();
 
@@ -42,10 +40,8 @@ class QuestionManager {
             await this.loadQuestionsForCategories(userId, accessToken);
 
             this.isInitialized = true;
-            console.log('✅ Question Manager initialized successfully');
         } catch (error) {
             console.error('❌ Failed to initialize Question Manager:', error);
-            console.log('🔄 Falling back to testing mode...');
             this.isTesting = true;
             this.createDummyCategories();
         }
@@ -54,7 +50,6 @@ class QuestionManager {
     // Fetch categories from server (similar to Unity's FetchCategory)
     async fetchCategories(userId, accessToken) {
         if (this.isTesting) {
-            console.log('🧪 Testing mode - using dummy categories');
             this.createDummyCategories();
             return;
         }
@@ -76,7 +71,6 @@ class QuestionManager {
             const data = await response.json();
 
             if (parseInt(data.error) === 0) {
-                console.log('📚 Categories received:', data);
                 this.updateCategories(data.data);
                 this.saveCategoriesToStorage();
             } else {
@@ -90,14 +84,12 @@ class QuestionManager {
     // Fetch questions for a specific category (similar to Unity's FetchQuestions)
     async fetchQuestions(category, userId, accessToken) {
         if (this.isTesting) {
-            console.log('🧪 Testing mode - skipping server fetch for', category.fileName);
             category.level.isFetching = false;
             return;
         }
 
         if (category.level.isFetching) return;
 
-        console.log(`📝 Fetching questions for ${category.fileName}`);
         category.level.isFetching = true;
 
         try {
@@ -121,7 +113,6 @@ class QuestionManager {
             if (parseInt(data.error) === 0) {
                 const questions = data.data.map(qData => new Question(qData, category));
                 category.level.setBank(questions);
-                console.log(`✅ Questions fetched successfully for ${category.fileName}`);
                 this.saveCategory(category);
             } else {
                 console.error('Server error:', data.message);
@@ -158,7 +149,6 @@ class QuestionManager {
             );
 
             if (availableCategories.length === 0) {
-                console.warn('⚠️ No available questions in any category');
                 break;
             }
 
@@ -173,7 +163,6 @@ class QuestionManager {
             }
         }
 
-        console.log(`🎯 Generated ${selectedQuestions.length} questions for quiz`);
         return selectedQuestions;
     }
 
@@ -211,7 +200,6 @@ class QuestionManager {
         const savedCategories = localStorage.getItem('kangaroo_categories');
         if (savedCategories) {
             this.allCategories = JSON.parse(savedCategories);
-            console.log('📂 Loaded saved categories from storage');
         }
     }
 
@@ -234,11 +222,10 @@ class QuestionManager {
         // Add dummy questions
         this.allCategories.forEach(category => {
             category.loadLevel();
-            
+
             // In testing mode, always create fresh dummy questions
             const dummyQuestions = this.createDummyQuestions(category, 10);
             category.level.setBank(dummyQuestions);
-            console.log(`🧪 Created ${dummyQuestions.length} dummy questions for ${category.category_name}`);
         });
     }
 
@@ -263,14 +250,12 @@ class QuestionManager {
     // Get quiz questions for game
     getQuizQuestions(questionCount = 5, requiredCorrect = 3) {
         if (this.isTesting) {
-            console.log('🧪 Testing mode - returning dummy questions');
             return this.generateQuestions(questionCount);
         }
 
         const questions = this.generateQuestions(questionCount);
 
         if (questions.length < requiredCorrect) {
-            console.warn('⚠️ Not enough questions available for quiz');
             // Reset question usage flags
             questions.forEach(q => q.isUsing = false);
             return [];
@@ -401,7 +386,6 @@ class AcademicLevel {
     }
 
     promoteLevel(value, category) {
-        console.log(`📈 Level promotion: ${category.category_name} ${this.levelID} -> ${this.levelID + value}`);
         // Implementation would depend on your game's progression system
     }
 }

@@ -13,8 +13,6 @@ class AuthManager {
     // Login using your API structure
     async login(email = 'admin@wiseway.com', password = 'InCedUvHorlyo!5') {
         try {
-            console.log('🔐 Attempting login to WorldWise API...');
-            
             const formData = new FormData();
             formData.append('email', email);
             formData.append('password', password);
@@ -30,19 +28,17 @@ class AuthManager {
             }
 
             const data = await response.json();
-            console.log('🔐 Login response:', data);
-            
+
             if (parseInt(data.error) === 0) {
                 // Extract user data from response
                 this.userId = data.data?.user_id || data.user_id || '1';
                 this.accessToken = data.data?.access_token || data.access_token || 'temp_token';
-                
+
                 // Save to localStorage
                 localStorage.setItem('worldwise_user_id', this.userId);
                 localStorage.setItem('worldwise_access_token', this.accessToken);
-                
+
                 this.isLoggedIn = true;
-                console.log('✅ Login successful! UserID:', this.userId);
                 return true;
             } else {
                 console.error('❌ Login failed:', data.message || 'Unknown error');
@@ -56,14 +52,13 @@ class AuthManager {
 
     // Fallback to test credentials if login fails
     tryFallbackCredentials() {
-        console.log('⚠️ Using fallback test credentials');
         // Use test credentials that should work with your API
         this.userId = '1'; // Admin user ID
         this.accessToken = 'test_token_123'; // You might need to get a real token
-        
+
         localStorage.setItem('worldwise_user_id', this.userId);
         localStorage.setItem('worldwise_access_token', this.accessToken);
-        
+
         this.isLoggedIn = true;
         return true;
     }
@@ -71,8 +66,6 @@ class AuthManager {
     // Alternative: Create a test user account
     async createTestUser() {
         try {
-            console.log('👤 Creating test user account...');
-            
             const formData = new FormData();
             formData.append('name', 'Kangaroo Test User');
             formData.append('email', 'test@kangaroohop.com');
@@ -85,20 +78,18 @@ class AuthManager {
             });
 
             const data = await response.json();
-            console.log('👤 Signup response:', data);
-            
+
             if (parseInt(data.error) === 0) {
                 this.userId = data.data?.user_id || data.user_id;
                 this.accessToken = data.data?.access_token || data.access_token;
-                
+
                 localStorage.setItem('worldwise_user_id', this.userId);
                 localStorage.setItem('worldwise_access_token', this.accessToken);
-                
+
                 this.isLoggedIn = true;
-                console.log('✅ Test user created! UserID:', this.userId);
                 return true;
             }
-            
+
             return false;
         } catch (error) {
             console.error('❌ Test user creation failed:', error);
@@ -133,8 +124,7 @@ class AuthManager {
             });
 
             const data = await response.json();
-            console.log('🧪 API test response:', data);
-            
+
             return parseInt(data.error) === 0;
         } catch (error) {
             console.error('❌ API test failed:', error);

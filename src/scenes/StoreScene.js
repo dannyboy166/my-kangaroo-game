@@ -217,13 +217,6 @@ export default class StoreScene extends Phaser.Scene {
         const playerCoins = this.gameDataManager.getCoins();
         const canBuy = playerCoins >= price && count < maxCount;
 
-        // Debug logging for helmet
-        if (type === 'helmet') {
-            const helmetCount = this.storeManager.getPowerUpCount('helmet');
-            const coins = this.gameDataManager.getCoins();
-            const helmetPrice = this.storeManager.getPowerUpPrice('helmet');
-            console.log(`🪖 Shop debug - Helmet count: ${helmetCount}, Coins: ${coins}, Price: ${helmetPrice}, Can buy: ${canBuy}, maxCount: ${maxCount}`);
-        }
 
         const buttonColor = canBuy ? '#00FF00' : '#666666';
         const buttonTextColor = canBuy ? '#000000' : '#999999';
@@ -265,8 +258,6 @@ export default class StoreScene extends Phaser.Scene {
                 const itemMaxCount = type === 'helmet' ? 1 : 3;
                 const playerCoins = this.gameDataManager.getCoins();
 
-                console.log(`💰 Purchase attempt - Type: ${type}, PlayerCoins: ${playerCoins}, ItemPrice: ${itemPrice}, ItemCount: ${itemCount}, ItemMaxCount: ${itemMaxCount}`);
-
                 if (playerCoins >= itemPrice && itemCount < itemMaxCount) {
                     // Show confirmation popup
                     const confirmPopup = new PurchaseConfirmPopup(
@@ -275,30 +266,8 @@ export default class StoreScene extends Phaser.Scene {
                         itemPrice,
                         () => {
                             // On confirm - do the purchase
-                            console.log(`✅ Purchase confirmed for ${type}`);
                             this.gameDataManager.spendCoins(itemPrice);
-
-                            // Add powerup via StoreManager
-                            switch (type) {
-                                case 'doubleJump':
-                                    this.storeManager.doubleJumpCount++;
-                                    console.log(`🦘 DoubleJump count now: ${this.storeManager.doubleJumpCount}`);
-                                    break;
-                                case 'shield':
-                                    this.storeManager.shieldCount++;
-                                    console.log(`🛡️ Shield count now: ${this.storeManager.shieldCount}`);
-                                    break;
-                                case 'magnet':
-                                    this.storeManager.magnetCount++;
-                                    console.log(`🧲 Magnet count now: ${this.storeManager.magnetCount}`);
-                                    break;
-                                case 'helmet':
-                                    this.storeManager.helmetCount++;
-                                    console.log(`🪖 Helmet count now: ${this.storeManager.helmetCount}`);
-                                    break;
-                            }
-                            this.storeManager.saveData();
-
+                            this.storeManager.addPowerUp(type);
                             this.audioManager.playButtonClick();
                             // Refresh the display
                             container.destroy();
@@ -308,12 +277,9 @@ export default class StoreScene extends Phaser.Scene {
                         },
                         () => {
                             // On cancel - just close popup
-                            console.log(`❌ Purchase cancelled for ${type}`);
                         }
                     );
                     this.add.existing(confirmPopup);
-                } else {
-                    console.log(`❌ Purchase denied for ${type} - insufficient coins or max reached`);
                 }
             });
 
