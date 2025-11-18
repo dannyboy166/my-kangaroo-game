@@ -184,9 +184,9 @@ export const GAME_CONFIG = {
 
             // Orb properties by type
             PROPERTIES: {
-                shield: { color: 0xFF69B4, radius: 20 },  // Pink (hot pink) to match heart
-                magnet: { color: 0xFF00FF, radius: 18 },
-                double: { color: 0x00FFFF, radius: 16 }
+                shield: { color: 0xFF69B4, radius: 20 },  // Pink to match heart
+                magnet: { color: 0x00BFFF, radius: 18 },  // Blue (deep sky blue)
+                double: { color: 0x00FF00, radius: 16 }   // Green (lime green)
             },
 
             // Starting angles for each powerup type

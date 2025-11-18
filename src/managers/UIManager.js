@@ -97,17 +97,18 @@ export default class UIManager {
         const startY = config.INVENTORY_START_Y;
         const spacing = config.INVENTORY_SPACING;
 
-        // Shield
-        this.shieldIcon = this.scene.add.image(30, startY, 'shield');
-        this.shieldIcon.setScale(0.15);
-        this.shieldIcon.setOrigin(0.1, 0.5);
+        // Shield - use animated heart sprite
+        this.shieldIcon = this.scene.add.sprite(30, startY, 'powerup_items', 0);
+        this.shieldIcon.play('powerup_heart'); // Pink heart animation
+        this.shieldIcon.setScale(1.2);
+        this.shieldIcon.setOrigin(0, 0.5);
         this.shieldIcon.setScrollFactor(0);
         this.shieldIcon.setDepth(1000);
 
-        this.shieldCount = this.scene.add.text(55, startY, '0', {
+        this.shieldCount = this.scene.add.text(70, startY, '0', {
             fontSize: '18px',
             fontFamily: 'Arial',
-            color: '#00FF00',
+            color: '#FF69B4',  // Pink to match heart
             stroke: '#000000',
             strokeThickness: 2,
             fontStyle: 'bold'
@@ -116,17 +117,18 @@ export default class UIManager {
         this.shieldCount.setScrollFactor(0);
         this.shieldCount.setDepth(1000);
 
-        // Magnet
-        this.magnetIcon = this.scene.add.image(30, startY + spacing, 'magnet');
-        this.magnetIcon.setScale(0.12);
+        // Magnet - use animated green gem sprite
+        this.magnetIcon = this.scene.add.sprite(30, startY + spacing, 'powerup_items', 0);
+        this.magnetIcon.play('powerup_green_gem'); // Green gem animation
+        this.magnetIcon.setScale(1.2);
         this.magnetIcon.setOrigin(0, 0.5);
         this.magnetIcon.setScrollFactor(0);
         this.magnetIcon.setDepth(1000);
 
-        this.magnetCount = this.scene.add.text(55, startY + spacing, '0', {
+        this.magnetCount = this.scene.add.text(70, startY + spacing, '0', {
             fontSize: '18px',
             fontFamily: 'Arial',
-            color: '#FF00FF',
+            color: '#00BFFF',  // Blue to match gem
             stroke: '#000000',
             strokeThickness: 2,
             fontStyle: 'bold'
@@ -135,17 +137,18 @@ export default class UIManager {
         this.magnetCount.setScrollFactor(0);
         this.magnetCount.setDepth(1000);
 
-        // Double Jump
-        this.doubleIcon = this.scene.add.image(30, startY + (spacing * 2), 'double');
-        this.doubleIcon.setScale(0.15);
-        this.doubleIcon.setOrigin(0.1, 0.5);
+        // Double Jump - use animated star sprite
+        this.doubleIcon = this.scene.add.sprite(30, startY + (spacing * 2), 'powerup_items', 0);
+        this.doubleIcon.play('powerup_star'); // Star animation
+        this.doubleIcon.setScale(1.2);
+        this.doubleIcon.setOrigin(0, 0.5);
         this.doubleIcon.setScrollFactor(0);
         this.doubleIcon.setDepth(1000);
 
-        this.doubleCount = this.scene.add.text(55, startY + (spacing * 2), '0', {
+        this.doubleCount = this.scene.add.text(70, startY + (spacing * 2), '0', {
             fontSize: '18px',
             fontFamily: 'Arial',
-            color: '#00FFFF',
+            color: '#00FF00',  // Green to match star
             stroke: '#000000',
             strokeThickness: 2,
             fontStyle: 'bold'
@@ -167,9 +170,9 @@ export default class UIManager {
         const spacing = config.POWERUP_BAR_SPACING;
 
         this.activeBars = {
-            shield: this.createProgressBar(config.POWERUP_BAR_X, startY, '#00FF00'),
-            magnet: this.createProgressBar(config.POWERUP_BAR_X, startY + spacing, '#FF00FF'),
-            double: this.createProgressBar(config.POWERUP_BAR_X, startY + (spacing * 2), '#00FFFF')
+            shield: this.createProgressBar(config.POWERUP_BAR_X, startY, '#FF69B4'),      // Pink to match heart
+            magnet: this.createProgressBar(config.POWERUP_BAR_X, startY + spacing, '#00BFFF'),  // Blue to match gem
+            double: this.createProgressBar(config.POWERUP_BAR_X, startY + (spacing * 2), '#00FF00') // Green to match star
         };
 
         // Initially hide all bars

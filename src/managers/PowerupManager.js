@@ -117,9 +117,9 @@ export default class PowerupManager {
 
         // Map powerup types to animations
         const animMap = {
-            'shield': 'powerup_heart',     // Heart for shield
-            'magnet': 'powerup_gem',       // Gem/box for magnet
-            'double': 'powerup_coin'       // Gold coin for double jump
+            'shield': 'powerup_heart',        // Pink heart for shield
+            'magnet': 'powerup_green_gem',    // Green gem for magnet
+            'double': 'powerup_star'          // Star for double jump
         };
 
         // Create using the group's create method with first frame of sprite sheet
@@ -167,14 +167,21 @@ export default class PowerupManager {
         // Activate powerup
         this.activatePowerup(type);
 
-        // Visual effect
-        const effectPowerup = this.scene.add.image(powerup.x, powerup.y, type);
-        effectPowerup.setScale(0.6);
+        // Visual effect - use animated sprite instead of static image
+        const animMap = {
+            'shield': 'powerup_heart',
+            'magnet': 'powerup_green_gem',
+            'double': 'powerup_star'
+        };
+
+        const effectPowerup = this.scene.add.sprite(powerup.x, powerup.y, 'powerup_items', 0);
+        effectPowerup.play(animMap[type]);
+        effectPowerup.setScale(2.0);
 
         this.scene.tweens.add({
             targets: effectPowerup,
-            scaleX: 1.2,
-            scaleY: 1.2,
+            scaleX: 4.0,
+            scaleY: 4.0,
             alpha: 0,
             duration: 400,
             onComplete: () => {

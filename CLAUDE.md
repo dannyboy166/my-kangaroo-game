@@ -145,16 +145,26 @@ MenuScene → GameScene ↔ StoreScene → GameOverScene → MenuScene
 ### Powerup System
 
 **Types**:
-- **Shield**: One-time collision protection (green orbs)
-- **Magnet**: Attracts coins within 400px range (purple orbs)
-- **Double Jump**: Extra jump in mid-air (cyan orbs)
+- **Shield**: One-time collision protection (pink heart ❤️, pink orbs)
+- **Magnet**: Attracts coins within 400px range (green gem 💎, blue orbs)
+- **Double Jump**: Extra jump in mid-air (star ⭐, green orbs)
 
 **Duration**: 10 seconds for all powerups
 
+**Visual Sprites**:
+- Uses animated sprite sheet from Dani Maccari's platformer items pack
+- Heart animation (frames 8-13) for Shield
+- Green gem animation (frames 48-55) for Magnet
+- Star animation (frames 56-63) for Double Jump
+- Mystery box animation (frames 24-31) reserved for future random powerup feature
+
 **Visual Indicators**:
 - Rotating orbs around kangaroo (3 per powerup type)
-- Progress bars showing time remaining
-- Color-coded UI elements
+  - Shield: Pink orbs (0xFF69B4)
+  - Magnet: Blue orbs (0x00BFFF)
+  - Double Jump: Green orbs (0x00FF00)
+- Progress bars showing time remaining (color-matched)
+- Color-coded UI elements (inventory counts match orb colors)
 
 **Sources**:
 - Random spawns during gameplay
@@ -326,7 +336,39 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes
 
-### Smoothness & Performance Optimization (2025-11-16) - Latest
+### Unified Animated Powerup Sprites (2025-11-18) - Latest
+**The Goal**: Create consistent, visually appealing powerup system across all game contexts.
+
+**Changes Made**:
+1. **Replaced Static Icons with Animated Sprites**:
+   - Shield: Pink heart animation (frames 8-13) ❤️
+   - Magnet: Green gem animation (frames 48-55) 💎
+   - Double Jump: Star animation (frames 56-63) ⭐
+   - Mystery box (frames 24-31) reserved for future random powerup feature
+
+2. **Updated All Powerup Contexts**:
+   - In-game collectibles (`PowerupManager.js:119-123`)
+   - Collection animation effect (`PowerupManager.js:170-190`)
+   - Shop display (`StoreScene.js:108-125`)
+   - Inventory UI (`UIManager.js:100-146`)
+
+3. **Color-Coordinated UI System**:
+   - Shield: Pink orbs/bars/text (0xFF69B4 / #FF69B4)
+   - Magnet: Blue orbs/bars/text (0x00BFFF / #00BFFF)
+   - Double Jump: Green orbs/bars/text (0x00FF00 / #00FF00)
+   - Updated in `GameConfig.js:186-190` and `UIManager.js:173-175`
+
+4. **Cleanup**:
+   - Removed old static images (shield.png, magnet.png, double.png)
+   - Removed unused _words.png variants
+   - Removed static image loading from `MenuScene.js:101-105`
+
+**Result**:
+- Consistent animated sprites across gameplay, shop, and UI
+- Color-matched visual indicators (orbs, progress bars, inventory counts)
+- Cleaner asset folder and codebase
+
+### Smoothness & Performance Optimization (2025-11-16)
 **The Challenge**: Game felt choppy with visible stuttering, rubber-banding camera, and seams in background tiles.
 
 **Root Causes Identified**:
@@ -504,6 +546,6 @@ physics: {
 
 ---
 
-**Last Updated**: 2025-11-16
-**Game Version**: 2.3 (Smoothness & Performance Optimization)
+**Last Updated**: 2025-11-18
+**Game Version**: 2.4 (Unified Animated Powerup Sprites)
 **Phaser Version**: 3.90.0

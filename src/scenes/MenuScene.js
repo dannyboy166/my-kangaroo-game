@@ -98,10 +98,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('beach_sea', 'assets/images/beach-background/game_background_3/layers/sea.png');
         this.load.image('beach_land', 'assets/images/beach-background/game_background_3/layers/land.png');
 
-        // Load powerup images
-        this.load.image('shield', 'assets/images/shield.png');
-        this.load.image('magnet', 'assets/images/magnet.png');
-        this.load.image('double', 'assets/images/double.png');
+        // Load helmet image (only static image we still use)
         this.load.image('helmet', 'assets/images/helmet.png');
 
         // Load audio files
@@ -128,42 +125,41 @@ export default class MenuScene extends Phaser.Scene {
         }
 
         // Create powerup animations from sprite sheet
-        // TESTING DIFFERENT FRAMES - trying to find the right ones
-        // Option 1: frames 16-23 (row 2 - amo)
-        if (!this.anims.exists('powerup_star')) {
-            this.anims.create({
-                key: 'powerup_star',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 16, end: 23 }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Option 2: frames 24-31 (row 3 - box 1)
-        if (!this.anims.exists('powerup_gem')) {
-            this.anims.create({
-                key: 'powerup_gem',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 24, end: 31 }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Option 3: frames 0-7 (row 0 - gold coin) for double jump
-        if (!this.anims.exists('powerup_coin')) {
-            this.anims.create({
-                key: 'powerup_coin',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 0, end: 7 }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Heart animation (row 1, frames 8-13) - for MAGNET (skip last 2 blank frames)
+        // Heart animation (row 1, frames 8-13) - for SHIELD (skip last 2 blank frames)
         if (!this.anims.exists('powerup_heart')) {
             this.anims.create({
                 key: 'powerup_heart',
                 frames: this.anims.generateFrameNumbers('powerup_items', { start: 8, end: 13 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Green gem animation (row 6, frames 48-55) - for MAGNET
+        if (!this.anims.exists('powerup_green_gem')) {
+            this.anims.create({
+                key: 'powerup_green_gem',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 48, end: 55 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Star animation (row 7, frames 56-63) - for DOUBLE JUMP
+        if (!this.anims.exists('powerup_star')) {
+            this.anims.create({
+                key: 'powerup_star',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 56, end: 63 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        // Mystery box animation (row 3, frames 24-31) - RESERVED for future random powerup
+        if (!this.anims.exists('powerup_mystery_box')) {
+            this.anims.create({
+                key: 'powerup_mystery_box',
+                frames: this.anims.generateFrameNumbers('powerup_items', { start: 24, end: 31 }),
                 frameRate: 10,
                 repeat: -1
             });

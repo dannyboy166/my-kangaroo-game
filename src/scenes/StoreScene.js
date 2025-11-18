@@ -98,30 +98,30 @@ export default class StoreScene extends Phaser.Scene {
         panel.strokeRoundedRect(-350, -45, 700, 90, 10);
         container.add(panel);
 
-        // Item icon (use appropriate sprite/image) - handle name mapping
-        let iconKey = type;
-        if (type === 'doubleJump') {
-            iconKey = 'double'; // The image is loaded as 'double' not 'doubleJump'
-        }
+        // Item icon - use animated sprites for powerups, static image for helmet
+        let icon;
+        if (type === 'helmet') {
+            // Helmet uses static image
+            icon = this.add.image(-300, 0, 'helmet');
+            icon.setScale(0.8);
+        } else {
+            // Powerups use animated sprites
+            let animKey;
+            switch (type) {
+                case 'shield':
+                    animKey = 'powerup_heart'; // Pink heart
+                    break;
+                case 'magnet':
+                    animKey = 'powerup_green_gem'; // Green gem
+                    break;
+                case 'doubleJump':
+                    animKey = 'powerup_star'; // Star
+                    break;
+            }
 
-        const icon = this.add.image(-300, 0, iconKey);
-
-        // Set appropriate scale for each item type
-        switch (type) {
-            case 'helmet':
-                icon.setScale(0.8);
-                break;
-            case 'shield':
-                icon.setScale(0.25);
-                break;
-            case 'magnet':
-                icon.setScale(0.2);
-                break;
-            case 'doubleJump':
-                icon.setScale(0.25);
-                break;
-            default:
-                icon.setScale(0.3);
+            icon = this.add.sprite(-300, 0, 'powerup_items', 0);
+            icon.play(animKey);
+            icon.setScale(2.5); // Scale up the 32x32 sprites
         }
 
         container.add(icon);
