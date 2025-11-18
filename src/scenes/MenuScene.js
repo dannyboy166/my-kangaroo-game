@@ -232,18 +232,6 @@ export default class MenuScene extends Phaser.Scene {
 
         // No need for createSimpleGround - using parallax ground layer instead
 
-        // Add high score display
-        const highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
-        if (highScore > 0) {
-            this.add.text(400, 275, `Best Score: ${highScore}`, {
-                fontSize: '20px',
-                fontFamily: 'Arial',
-                color: '#FFD700',
-                stroke: '#000000',
-                strokeThickness: 2
-            }).setOrigin(0.5).setDepth(1000);
-        }
-
         // Add shop button
         const shopButton = this.add.text(300, 330, 'SHOP', {
             fontSize: '24px',
@@ -367,10 +355,18 @@ export default class MenuScene extends Phaser.Scene {
                 img.setDisplaySize(800, 600);
                 img.setDepth(layerConfig.depth);
             } else if (layerConfig.type === 'tileSprite') {
-                // For menu, show as static image at custom position
-                const tile = this.add.tileSprite(400, yPos, 800, 600, layerConfig.key);
+                // For menu, show as static image at custom position with custom height
+                const tileHeight = layerConfig.height !== undefined ? layerConfig.height : 600;
+                const tile = this.add.tileSprite(400, yPos, 800, tileHeight, layerConfig.key);
                 tile.setTileScale(layerConfig.tileScaleX, layerConfig.tileScaleY);
                 tile.setDepth(layerConfig.depth);
+
+                // Apply custom origin if specified
+                if (layerConfig.originX !== undefined || layerConfig.originY !== undefined) {
+                    const originX = layerConfig.originX !== undefined ? layerConfig.originX : 0.5;
+                    const originY = layerConfig.originY !== undefined ? layerConfig.originY : 0.5;
+                    tile.setOrigin(originX, originY);
+                }
             }
         });
     }

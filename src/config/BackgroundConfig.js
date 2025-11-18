@@ -16,20 +16,34 @@ export const BACKGROUND_THEMES = {
         id: 'outback',
         name: 'Australian Outback',
         layers: [
-            // Simple colored background - no images, just colors for testing
+            // Beach sky - gradient background
             {
-                key: 'simple_sky',
-                type: 'color',
-                color: 0x87CEEB, // Sky blue
-                depth: -100
+                key: 'beach_sky',
+                type: 'image',
+                scrollFactor: 0,
+                depth: -100,
+                scaleMode: 'fit',
+                y: 300 // Center of canvas
             },
+            // Beach clouds - scrolling parallax layer
             {
-                key: 'simple_ground',
-                type: 'color',
-                color: 0xD2691E, // Chocolate brown for ground
-                depth: -20,
-                y: 440, // Ground starts at y=440
-                height: 160 // Fill from 440 to bottom of canvas (600)
+                key: 'beach_cloud',
+                type: 'tileSprite',
+                scrollSpeed: 0.15,
+                depth: -85,
+                tileScaleX: 0.4,
+                tileScaleY: 0.4,
+                y: 300 // Upper portion
+            },
+            // Beach land as ground - scaled up to fill bottom
+            {
+                key: 'beach_land',
+                type: 'tileSprite',
+                scrollSpeed: 1.0, // Scrolls at camera speed to match obstacles
+                depth: -50,
+                tileScaleX: 0.4,
+                tileScaleY: 0.6, // Taller to reach bottom of screen
+                y: 300 // Moved down to fill more vertical space
             }
         ]
     },

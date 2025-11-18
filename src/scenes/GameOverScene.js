@@ -81,7 +81,7 @@ export default class GameOverScene extends Phaser.Scene {
         // High score display
         const highScoreColor = this.isNewRecord ? '#FFD700' : '#CCCCCC';
         const highScoreText = this.isNewRecord ? `NEW RECORD: ${this.highScore}!` : `Best: ${this.highScore}`;
-        
+
         this.add.text(400, 270, highScoreText, {
             fontSize: '24px',
             fontFamily: 'Arial',
@@ -89,21 +89,6 @@ export default class GameOverScene extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-
-        // New record celebration
-        if (this.isNewRecord) {
-            // Add celebration particles
-            const particles = this.add.particles(400, 270, 'coin', {
-                scale: 0.3,
-                speed: { min: 100, max: 200 },
-                lifespan: 2000,
-                quantity: 2,
-                frequency: 100
-            });
-
-            // Stop particles after 3 seconds
-            this.time.delayedCall(3000, () => particles.destroy());
-        }
 
         // Show fun fact popup after a short delay (only if not returning from shop)
         if (this.showFunFact) {

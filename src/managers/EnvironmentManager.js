@@ -75,14 +75,20 @@ export default class EnvironmentManager {
                 img.setDepth(layerConfig.depth);
                 img.setScrollFactor(layerConfig.scrollFactor);
             } else if (layerConfig.type === 'tileSprite') {
-                // Scrolling parallax layer with custom Y position
+                // Scrolling parallax layer with custom Y position and optional height
+                const customHeight = layerConfig.height !== undefined ? layerConfig.height : CANVAS_HEIGHT;
+                const originX = layerConfig.originX !== undefined ? layerConfig.originX : 0.5;
+                const originY = layerConfig.originY !== undefined ? layerConfig.originY : 0.5;
                 this.addParallaxLayer(
                     layerConfig.key,
                     layerConfig.scrollSpeed,
                     layerConfig.depth,
                     layerConfig.tileScaleX,
                     layerConfig.tileScaleY,
-                    yPos
+                    yPos,
+                    customHeight,
+                    originX,
+                    originY
                 );
             }
         });
@@ -96,11 +102,15 @@ export default class EnvironmentManager {
      * @param {number} scaleX - Horizontal tile scale
      * @param {number} scaleY - Vertical tile scale
      * @param {number} yPos - Y position (default: canvas center)
+     * @param {number} height - Custom height for the tileSprite (default: canvas height)
+     * @param {number} originX - X origin (default: 0.5)
+     * @param {number} originY - Y origin (default: 0.5)
      */
-    addParallaxLayer(texture, scrollSpeed, depth, scaleX, scaleY, yPos = null) {
+    addParallaxLayer(texture, scrollSpeed, depth, scaleX, scaleY, yPos = null, height = null, originX = 0.5, originY = 0.5) {
         const CANVAS_WIDTH = GAME_CONFIG.CANVAS.WIDTH;
         const CANVAS_HEIGHT = GAME_CONFIG.CANVAS.HEIGHT;
         const y = yPos !== null ? yPos : CANVAS_HEIGHT / 2;
+        const spriteHeight = height !== null ? height : CANVAS_HEIGHT;
 
         // ALL layers (including ground) are camera-fixed TileSprites
         // They use tilePositionX to create infinite scrolling illusion
@@ -108,10 +118,10 @@ export default class EnvironmentManager {
             CANVAS_WIDTH / 2,
             y,
             CANVAS_WIDTH,
-            CANVAS_HEIGHT,
+            spriteHeight,
             texture
         );
-        layer.setOrigin(0.5, 0.5);
+        layer.setOrigin(originX, originY);
         layer.setDepth(depth);
         layer.setTileScale(scaleX, scaleY);
         layer.setScrollFactor(0); // ALL layers fixed to camera
