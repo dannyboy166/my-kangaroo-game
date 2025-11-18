@@ -35,16 +35,6 @@ export const BACKGROUND_THEMES = {
                 tileScaleY: 0.4,
                 y: 300 // Upper portion
             },
-            // Distant trees - far background layer (closer than clouds)
-            {
-                key: 'parallax_distant_trees',
-                type: 'tileSprite',
-                scrollSpeed: 0.15,
-                depth: -60,
-                tileScaleX: 0.4,
-                tileScaleY: 0.4,
-                y: 250 // Moved up slightly
-            },
             // Outback land as ground
             {
                 key: 'outback_land',
