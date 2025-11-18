@@ -257,11 +257,11 @@ export default class ObstacleManager {
         if (rand < 0.4) {
             // 40% chance: spawn coin
             this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
-        } else if (rand < 0.5) {
-            // 10% chance: spawn powerup
+        } else if (rand < 0.65) {
+            // 25% chance: spawn powerup (increased from 10%)
             this.spawnPowerupAroundObstacle(obstacleSpawnInfo);
         }
-        // 50% chance: spawn nothing
+        // 35% chance: spawn nothing
     }
 
     /**
@@ -277,13 +277,12 @@ export default class ObstacleManager {
         if (obstacleInfo.isFlying) {
             // Flying obstacle (magpie) - spawn coins above or below it
             const offsetY = Math.random() < 0.5 ? -80 : 80; // Above or below
-            coinX = obstacleInfo.x + 100; // Slightly ahead
+            coinX = obstacleInfo.x + Phaser.Math.Between(80, 200); // Random distance ahead (80-200px)
             coinY = obstacleInfo.y + offsetY;
         } else {
-            // Ground obstacle - spawn coins high in the air
-            const safeYPositions = [200, 250, 300, 350];
-            coinY = Phaser.Utils.Array.GetRandom(safeYPositions);
-            coinX = obstacleInfo.x + 100; // Slightly ahead
+            // Ground obstacle - spawn coins at jump height (random)
+            coinY = Phaser.Math.Between(250, 400); // Random height (not too high, above ground at 500)
+            coinX = obstacleInfo.x + Phaser.Math.Between(80, 200); // Random distance ahead (80-200px)
         }
 
         // Check if this position overlaps with ANY obstacle
@@ -316,13 +315,12 @@ export default class ObstacleManager {
         if (obstacleInfo.isFlying) {
             // Flying obstacle - spawn powerup above or below it
             const offsetY = Math.random() < 0.5 ? -100 : 100;
-            powerupX = obstacleInfo.x + 120; // Slightly more ahead than coins
+            powerupX = obstacleInfo.x + Phaser.Math.Between(100, 250); // Random distance ahead (100-250px)
             powerupY = obstacleInfo.y + offsetY;
         } else {
-            // Ground obstacle - spawn powerup high in air
-            const safeYPositions = [180, 230, 280, 330];
-            powerupY = Phaser.Utils.Array.GetRandom(safeYPositions);
-            powerupX = obstacleInfo.x + 120; // Slightly more ahead than coins
+            // Ground obstacle - spawn powerup at jump height (random)
+            powerupY = Phaser.Math.Between(250, 400); // Random height (not too high, above ground at 500)
+            powerupX = obstacleInfo.x + Phaser.Math.Between(100, 250); // Random distance ahead (100-250px)
         }
 
         // Check if this position overlaps with ANY obstacle
