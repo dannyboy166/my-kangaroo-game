@@ -108,13 +108,14 @@ export default class ObstacleManager {
                 magpie.y += CONSTANT_SWOOP_SPEED * delta / 1000;
                 magpie.setRotation(-Math.PI / 4); // -45 degrees (diving tilt)
             } else {
-                // Reached bottom, start straightening phase
+                // Reached bottom, stay down until past kangaroo
                 magpie.setRotation(0);
-                const straightenTime = magpie.getData('straightenTime') || 0;
-                magpie.setData('straightenTime', straightenTime + delta);
 
-                // After 300ms of being straight, start climbing back up
-                if (magpie.getData('straightenTime') >= 300) {
+                // Check if magpie is now behind the kangaroo
+                const isBehindKangaroo = magpie.x < kangaroo.x;
+
+                if (isBehindKangaroo) {
+                    // Climb as soon as past kangaroo
                     magpie.setData('isClimbingBack', true);
                 }
             }

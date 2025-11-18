@@ -276,19 +276,19 @@ export default class PowerupManager {
         const config = GAME_CONFIG.POWERUPS.ORBS;
         const orbConfig = config.PROPERTIES[type];
 
-        if (type === 'magnet') {
-            // Magnet: Create pulsing circle (visual indicator, not actual range)
+        if (type === 'shield') {
+            // Shield: Create pulsing circle (protective barrier)
             const circle = this.scene.add.graphics();
-            circle.lineStyle(3, 0x00BFFF, 0.5);
-            circle.strokeCircle(0, 0, 150); // Smaller visual circle (actual range is still 400px)
+            circle.lineStyle(3, 0xFF69B4, 0.5); // Pink for shield
+            circle.strokeCircle(0, 0, 100); // Smaller protective circle around kangaroo
             circle.setBlendMode(Phaser.BlendModes.ADD);
-            circle.magnetPulseScale = 1.0;
+            circle.shieldPulseScale = 1.0;
             this.powerupOrbs[type].push(circle);
         } else if (type === 'double') {
             // Double Jump: Flash kangaroo green - no separate visual objects needed
             // The flashing is handled in updatePowerupOrbs by tinting the kangaroo sprite
         } else {
-            // Shield: Keep the 3 spinning orbs (default behavior)
+            // Magnet: 3 spinning blue orbs (attracting coins)
             for (let i = 0; i < config.COUNT; i++) {
                 const orb = this.scene.add.graphics();
                 orb.fillStyle(orbConfig.color, 0.7);
@@ -335,16 +335,16 @@ export default class PowerupManager {
         Object.keys(this.powerupOrbs).forEach(type => {
             const orbs = this.powerupOrbs[type];
             if (orbs && this.activePowerups[type].active) {
-                if (type === 'magnet') {
-                    // Magnet: Pulsing circle at kangaroo position
+                if (type === 'shield') {
+                    // Shield: Pulsing pink circle at kangaroo position (protective barrier)
                     orbs.forEach(circle => {
                         if (circle) {
                             circle.x = kangaroo.x + config.OFFSET_X;
                             circle.y = kangaroo.y + config.OFFSET_Y;
 
                             // Pulse effect
-                            circle.magnetPulseScale += delta / 1000;
-                            const pulseScale = 1.0 + Math.sin(circle.magnetPulseScale * 3) * 0.1;
+                            circle.shieldPulseScale += delta / 1000;
+                            const pulseScale = 1.0 + Math.sin(circle.shieldPulseScale * 3) * 0.1;
                             circle.setScale(pulseScale);
                         }
                     });
@@ -364,7 +364,7 @@ export default class PowerupManager {
                     const tintColor = Phaser.Display.Color.GetColor(greenTint.r, greenTint.g, greenTint.b);
                     kangaroo.setTint(tintColor);
                 } else {
-                    // Shield: Spinning orbs (default behavior)
+                    // Magnet: Spinning blue orbs (attracting coins)
                     orbs.forEach(orb => {
                         if (orb) {
                             // Update rotation angle

@@ -39,7 +39,7 @@ export const GAME_CONFIG = {
     DIFFICULTY: {
         INITIAL_SPEED: 300,
         SPEED_INCREASE_INTERVAL: 50, // Every 50 score points
-        SPEED_INCREASE_AMOUNT: 10,   // +10 speed increase
+        SPEED_INCREASE_AMOUNT: 15,   // +10 speed increase
         MAX_SPEED: 1000,             // Max speed cap
         GROUND_Y: 500                // Ground level
     },
@@ -77,15 +77,15 @@ export const GAME_CONFIG = {
         // Powerup orb configuration
         ORBS: {
             COUNT: 3,
-            RADIUS: 60,
+            RADIUS: 90, // Orbit radius - how far orbs circle from kangaroo (increased from 60)
             ROTATION_SPEED: 200, // degrees per second
             OFFSET_X: 10,
             OFFSET_Y: -50,
 
             // Orb properties by type
             PROPERTIES: {
-                shield: { color: 0xFF69B4, radius: 20 },  // Pink to match heart
-                magnet: { color: 0x00BFFF, radius: 18 },  // Blue (deep sky blue)
+                shield: { color: 0xFF69B4, radius: 20 },  // Pink circle (protective barrier)
+                magnet: { color: 0x00BFFF, radius: 16 },  // Blue orbs (attracting coins) - bigger
                 double: { color: 0x00FF00, radius: 16 }   // Green (lime green)
             },
 
