@@ -325,21 +325,8 @@ export default class PowerupManager {
             circle.magnetPulseScale = 1.0;
             this.powerupOrbs[type].push(circle);
         } else if (type === 'double') {
-            // Double Jump: Create star trail particles behind kangaroo
-            const star = this.scene.add.graphics();
-            star.fillStyle(0x00FF00, 0.8);
-
-            // Draw a 5-pointed star manually
-            const points = [];
-            for (let i = 0; i < 10; i++) {
-                const angle = (i * Math.PI) / 5 - Math.PI / 2;
-                const radius = i % 2 === 0 ? 15 : 6; // Alternate between outer and inner points
-                points.push(Math.cos(angle) * radius);
-                points.push(Math.sin(angle) * radius);
-            }
-            star.fillPoints(points, true);
-            star.setBlendMode(Phaser.BlendModes.ADD);
-            this.powerupOrbs[type].push(star);
+            // Double Jump: Flash kangaroo green - no separate visual objects needed
+            // The flashing is handled in updatePowerupOrbs by tinting the kangaroo sprite
         } else {
             // Shield: Keep the 3 spinning orbs (default behavior)
             for (let i = 0; i < config.COUNT; i++) {
@@ -402,16 +389,20 @@ export default class PowerupManager {
                         }
                     });
                 } else if (type === 'double') {
-                    // Double Jump: Star positioned behind kangaroo
-                    orbs.forEach(star => {
-                        if (star) {
-                            star.x = kangaroo.x - 30; // Behind kangaroo
-                            star.y = kangaroo.y + config.OFFSET_Y;
+                    // Double Jump: Subtle green flash (stays green, just pulses brightness)
+                    const time = Date.now() / 400;
+                    const flash = Math.sin(time) * 0.2 + 0.6; // Oscillate between 0.4 and 0.8 (narrower range)
 
-                            // Rotate star
-                            star.rotation += delta / 100;
-                        }
-                    });
+                    // Mix between light green and medium green (always stays greenish)
+                    const greenTint = Phaser.Display.Color.Interpolate.ColorWithColor(
+                        { r: 200, g: 255, b: 200 }, // Lighter green (minimum)
+                        { r: 170, g: 255, b: 170 }, // Medium green (maximum)
+                        1,
+                        flash
+                    );
+
+                    const tintColor = Phaser.Display.Color.GetColor(greenTint.r, greenTint.g, greenTint.b);
+                    kangaroo.setTint(tintColor);
                 } else {
                     // Shield: Spinning orbs (default behavior)
                     orbs.forEach(orb => {
@@ -440,6 +431,14 @@ export default class PowerupManager {
                 if (orb) orb.destroy();
             });
             this.powerupOrbs[type] = [];
+        }
+
+        // Clear kangaroo tint when double jump expires
+        if (type === 'double') {
+            const kangaroo = this.scene.kangaroo;
+            if (kangaroo) {
+                kangaroo.clearTint();
+            }
         }
     }
 
