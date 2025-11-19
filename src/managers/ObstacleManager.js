@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
-import { CHARACTER_CONFIGS } from '../config/CharacterConfig.js';
+import { CHARACTER_CONFIGS, getPhysicsBodyConfig } from '../config/CharacterConfig.js';
 
 /**
  * ObstacleManager - Static World Approach
@@ -247,7 +247,18 @@ export default class ObstacleManager {
             }
 
             obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
-            obstacle.setPosition(spawnX, this.groundY);
+
+            // Apply ground offset if character has one (for sprite alignment)
+            const characterObstacles = ['emu', 'camel', 'croc'];
+            let spawnY = this.groundY;
+            if (characterObstacles.includes(type)) {
+                const config = CHARACTER_CONFIGS[type];
+                if (config && config.physics.groundOffset) {
+                    spawnY += config.physics.groundOffset;
+                }
+            }
+
+            obstacle.setPosition(spawnX, spawnY);
             obstacle.setRotation(0); // Reset rotation from previous obstacle (e.g., tilted magpie)
             obstacle.setFlipX(false); // Reset flip
             obstacle.setActive(true);
@@ -256,11 +267,21 @@ export default class ObstacleManager {
             // Update collision box for the new texture
             this.setCollisionBox(obstacle, type);
         } else {
+            // Apply ground offset if character has one (for sprite alignment)
+            const characterObstacles = ['emu', 'camel', 'croc'];
+            let spawnY = this.groundY;
+            if (characterObstacles.includes(type)) {
+                const config = CHARACTER_CONFIGS[type];
+                if (config && config.physics.groundOffset) {
+                    spawnY += config.physics.groundOffset;
+                }
+            }
+
             // Create new obstacle only if pool is empty
             if (frameNumber !== null) {
-                obstacle = this.obstacles.create(spawnX, this.groundY, firstFrameKey, frameNumber);
+                obstacle = this.obstacles.create(spawnX, spawnY, firstFrameKey, frameNumber);
             } else {
-                obstacle = this.obstacles.create(spawnX, this.groundY, firstFrameKey);
+                obstacle = this.obstacles.create(spawnX, spawnY, firstFrameKey);
             }
 
             // Setup visual properties (only needed for new objects)
@@ -393,34 +414,48 @@ export default class ObstacleManager {
 
     /**
      * Set collision box and scale for obstacle based on type
+     * Uses CharacterConfig for new professional animals (emu, camel, croc)
+     * Uses hardcoded values for legacy obstacles (rock, log, etc.)
      * @param {Phaser.GameObjects.Sprite} obstacle - The obstacle sprite
      * @param {string} type - Obstacle type
      */
     setCollisionBox(obstacle, type) {
-        // Visual scale stays the same, only collision boxes adjusted
-        const settings = {
-            'rock': { scale: 0.75, width: 75, height: 97.5 },  // Collider: 1.3x taller
-            'spider_rock': { scale: 0.75, width: 75, height: 75 },
-            'cactus': { scale: 0.75, width: 60, height: 90 },
-            'log': { scale: 0.6, width: 160, height: 135 },  // 2x bigger (0.45 * 2 = 0.9)
-            'snake_log': { scale: 0.9, width: 180, height: 72 },  // Collider: 0.8x taller
-            'emu': { scale: 1.125, width: 75, height: 112.5 },  // Visual 1.5x bigger, collider same proportion
-            'croc': { scale: 0.75, width: 168, height: 72 },  // Collider: 1.5x wide, 1.2x higher
-            'camel': { scale: 1.26, width: 105, height: 100.8 },  // Visual 1.2x bigger (1.575 * 0.8), collider same proportion
-            'koala': { scale: 1, width: 60, height: 150 }  // 1.6x bigger (0.75 * 1.6 = 1.2)
-        };
+        // Check if this is a character-based obstacle (uses CharacterConfig)
+        const characterObstacles = ['emu', 'camel', 'croc'];
 
-        const setting = settings[type] || { scale: 0.75, width: 60, height: 60 };
+        if (characterObstacles.includes(type)) {
+            // Use CharacterConfig for new professional animals
+            const physicsConfig = getPhysicsBodyConfig(type);
 
-        // Apply scale
-        obstacle.setScale(setting.scale);
+            // Apply scale from config
+            obstacle.setScale(physicsConfig.scale);
 
-        // Set collision box
-        obstacle.body.setSize(setting.width, setting.height);
-        obstacle.body.setOffset(
-            (obstacle.width - setting.width) / 2,
-            obstacle.height - setting.height
-        );
+            // Set collision box using config values (already converted to original sprite coordinates)
+            obstacle.body.setSize(physicsConfig.bodyWidth, physicsConfig.bodyHeight);
+            obstacle.body.setOffset(physicsConfig.bodyOffsetX, physicsConfig.bodyOffsetY);
+        } else {
+            // Legacy obstacles use hardcoded settings
+            const settings = {
+                'rock': { scale: 0.75, width: 75, height: 97.5 },
+                'spider_rock': { scale: 0.75, width: 75, height: 75 },
+                'cactus': { scale: 0.75, width: 60, height: 90 },
+                'log': { scale: 0.6, width: 160, height: 135 },
+                'snake_log': { scale: 0.9, width: 180, height: 72 },
+                'koala': { scale: 1, width: 60, height: 150 }
+            };
+
+            const setting = settings[type] || { scale: 0.75, width: 60, height: 60 };
+
+            // Apply scale
+            obstacle.setScale(setting.scale);
+
+            // Set collision box (legacy bottom-aligned approach)
+            obstacle.body.setSize(setting.width, setting.height);
+            obstacle.body.setOffset(
+                (obstacle.width - setting.width) / 2,
+                obstacle.height - setting.height
+            );
+        }
     }
 
     /**

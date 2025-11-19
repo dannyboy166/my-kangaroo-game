@@ -80,16 +80,16 @@ export const CHARACTER_CONFIGS = {
 
         // Physics body settings
         physics: {
-            // Display size (scaled down from original)
-            displayWidth: 128,
-            displayHeight: 148, // Maintains aspect ratio
+            // Display size (1.2x bigger: 128 * 1.2 = 153.6)
+            displayWidth: 154,
+            displayHeight: 178, // Maintains aspect ratio (148 * 1.2)
 
             // Collision box (in scaled sprite coordinates)
             // Origin is (0.5, 1) = bottom-center anchor
-            bodyWidth: 60,      // Tight hitbox width
-            bodyHeight: 70,     // Shorter box for forgiving gameplay
-            bodyOffsetX: 40,    // Center horizontally: (128 - 60) / 2
-            bodyOffsetY: 45     // Position higher on sprite
+            bodyWidth: 72,      // Tight hitbox width (60 * 1.2)
+            bodyHeight: 75,     // Shorter box for forgiving gameplay (70 * 1.2)
+            bodyOffsetX: 60,    // Center horizontally: (154 - 72) / 2
+            bodyOffsetY: 65     // Position higher on sprite (45 * 1.2)
         }
     }
 
@@ -123,12 +123,15 @@ export const CHARACTER_CONFIGS = {
             }
         },
         physics: {
-            displayWidth: 128,
-            displayHeight: 148,
-            bodyWidth: 70,
-            bodyHeight: 90,
-            bodyOffsetX: 29,
-            bodyOffsetY: 58
+            // Display size (1.5x bigger: 128 * 1.5 = 192)
+            displayWidth: 192,
+            displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
+            // Emu/Ostrich - tall bird with long neck
+            bodyWidth: 135,     // Wide hitbox covers body (90 * 1.5)
+            bodyHeight: 105,    // Tall hitbox covers neck and body (70 * 1.5)
+            bodyOffsetX: 29,    // Center: (192 - 135) / 2
+            bodyOffsetY: 21,    // Start from top of visible bird (14 * 1.5)
+            groundOffset: 20    // Push down 30px to align feet with ground
         }
     }
 
@@ -162,12 +165,15 @@ export const CHARACTER_CONFIGS = {
             }
         },
         physics: {
-            displayWidth: 128,
-            displayHeight: 148,
-            bodyWidth: 80,
-            bodyHeight: 90,
-            bodyOffsetX: 24,
-            bodyOffsetY: 58
+            // Display size (1.5x bigger: 128 * 1.5 = 192)
+            displayWidth: 192,
+            displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
+            // Camel - large body with hump
+            bodyWidth: 150,     // Wide hitbox covers full body (100 * 1.5)
+            bodyHeight: 135,    // Covers hump to legs (90 * 1.5)
+            bodyOffsetX: 21,    // Center: (192 - 150) / 2
+            bodyOffsetY: 30,    // Start from top of hump (20 * 1.5)
+            groundOffset: 25    // Push down 25px to align feet with ground
         }
     }
 
@@ -206,12 +212,15 @@ export const CHARACTER_CONFIGS = {
             }
         },
         physics: {
-            displayWidth: 128,
-            displayHeight: 148,
-            bodyWidth: 100,
-            bodyHeight: 60,
-            bodyOffsetX: 14,
-            bodyOffsetY: 88
+            // Display size (1.5x bigger: 128 * 1.5 = 192)
+            displayWidth: 192,
+            displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
+            // Crocodile - long low body (standing upright in this game)
+            bodyWidth: 165,     // Very wide hitbox (110 * 1.5)
+            bodyHeight: 45,     // Tall enough to cover head to tail (30 * 1.5)
+            bodyOffsetX: 14,    // Center: (192 - 165) / 2
+            bodyOffsetY: 45,    // Position on visible body (30 * 1.5)
+            groundOffset: 10    // Push down 20px to align feet with ground
         }
     }
 };

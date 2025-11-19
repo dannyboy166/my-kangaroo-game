@@ -30,14 +30,14 @@ export const GAME_CONFIG = {
     // Game physics
     PHYSICS: {
         GRAVITY: 800,
-        KANGAROO_GRAVITY: 900,
-        JUMP_VELOCITY: -950,
-        DOUBLE_JUMP_VELOCITY: -750
+        KANGAROO_GRAVITY: 1000,  // Increased from 900 for faster fall speed
+        JUMP_VELOCITY: -1000,
+        DOUBLE_JUMP_VELOCITY: -800
     },
 
     // Game speed and difficulty
     DIFFICULTY: {
-        INITIAL_SPEED: 300,
+        INITIAL_SPEED: 400,
         SPEED_INCREASE_INTERVAL: 50, // Every 50 score points
         SPEED_INCREASE_AMOUNT: 15,   // +10 speed increase
         MAX_SPEED: 1000,             // Max speed cap
