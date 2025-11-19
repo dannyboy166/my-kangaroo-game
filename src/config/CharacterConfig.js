@@ -165,15 +165,15 @@ export const CHARACTER_CONFIGS = {
             }
         },
         physics: {
-            // Display size (1.5x bigger: 128 * 1.5 = 192)
-            displayWidth: 192,
-            displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
+            // Display size (1.8x bigger: 128 * 1.8 = 230)
+            displayWidth: 230,
+            displayHeight: 266, // Maintains aspect ratio (148 * 1.8)
             // Camel - large body with hump
-            bodyWidth: 120,     // Wide hitbox covers full body (100 * 1.5)
-            bodyHeight: 125,    // Covers hump to legs (90 * 1.5)
-            bodyOffsetX: 41,    // Center: (192 - 150) / 2
-            bodyOffsetY: 30,    // Start from top of hump (20 * 1.5)
-            groundOffset: 25    // Push down 25px to align feet with ground
+            bodyWidth: 144,     // Wide hitbox covers full body (120 * 1.2)
+            bodyHeight: 150,    // Covers hump to legs (125 * 1.2)
+            bodyOffsetX: 43,    // Center: (230 - 144) / 2
+            bodyOffsetY: 36,    // Start from top of hump (30 * 1.2)
+            groundOffset: 30    // Push down to align feet with ground (25 * 1.2)
         }
     }
 
