@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
+import { CHARACTER_CONFIGS, getPhysicsBodyConfig } from '../config/CharacterConfig.js';
 import GameDataManager from '../managers/GameDataManager.js';
 import StoreManager from '../managers/StoreManager.js';
 import ObstacleManager from '../managers/ObstacleManager.js';
@@ -147,29 +148,40 @@ export default class GameScene extends Phaser.Scene {
      * - All obstacles/coins/ground appear to move backward, but they're actually static
      */
     createPlayer() {
-        // Create kangaroo animations if they don't exist
+        // Create obstacle animations (emu, magpie, helmet - temporary)
+        // NOTE: Main kangaroo animations are created in MenuScene.createCharacterAnimations()
         this.createKangarooAnimations();
 
-        // Choose sprite based on helmet equipment
-        const spriteKey = this.helmetEquipped ? 'kangaroo_helmet' : 'kangaroo';
-        const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';
+        // ========================================
+        // CREATE KANGAROO SPRITE
+        // ========================================
+        // Determine animation key based on helmet
+        const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_brown_moving';
+        const firstFrameKey = 'kangaroo_brown_moving_000';
 
-        // Create kangaroo sprite at starting world position
-        const config = GAME_CONFIG.KANGAROO;
+        // Create sprite at starting position
         this.kangaroo = this.physics.add.sprite(
-            config.X, // World X position (starts at 50)
-            GAME_CONFIG.DIFFICULTY.GROUND_Y, // Ground level (520px)
-            spriteKey
+            GAME_CONFIG.KANGAROO.X,
+            GAME_CONFIG.DIFFICULTY.GROUND_Y,
+            firstFrameKey
         );
 
-        // Configure physics body
-        this.kangaroo.setScale(config.SCALE);
-        this.kangaroo.setCollideWorldBounds(false); // Allow infinite forward movement
-        this.kangaroo.body.setSize(config.BODY_WIDTH, config.BODY_HEIGHT);
-        this.kangaroo.body.setOffset(config.BODY_OFFSET_X, config.BODY_OFFSET_Y);
+        // Get physics configuration from CharacterConfig
+        const physicsConfig = getPhysicsBodyConfig('kangaroo');
+
+        // Apply visual properties
+        this.kangaroo.setOrigin(0.5, 1); // Bottom-center anchor
+        this.kangaroo.setScale(physicsConfig.scale);
+        this.kangaroo.setFlipX(true); // Face right
+        this.kangaroo.setCollideWorldBounds(false);
+        this.kangaroo.setDepth(100);
+
+        // Apply physics body (collision box)
+        this.kangaroo.body.setSize(physicsConfig.bodyWidth, physicsConfig.bodyHeight);
+        this.kangaroo.body.setOffset(physicsConfig.bodyOffsetX, physicsConfig.bodyOffsetY);
         this.kangaroo.body.setGravityY(GAME_CONFIG.PHYSICS.KANGAROO_GRAVITY);
-        this.kangaroo.setOrigin(0.5, 1); // Bottom-center anchor (feet on ground)
-        this.kangaroo.setDepth(100); // Always in front of background
+
+        // Start animation
         this.kangaroo.play(runAnimKey);
 
         // CRITICAL: Set constant forward velocity (this makes kangaroo run forward in world space)
@@ -187,22 +199,10 @@ export default class GameScene extends Phaser.Scene {
      * Create kangaroo animations
      */
     createKangarooAnimations() {
-        // Regular kangaroo animations
-        if (!this.anims.exists('kangaroo_run')) {
-            this.anims.create({
-                key: 'kangaroo_run',
-                frames: this.anims.generateFrameNumbers('kangaroo', { start: 0, end: 11 }),
-                frameRate: 15,
-                repeat: -1
-            });
-            this.anims.create({
-                key: 'kangaroo_jump',
-                frames: [{ key: 'kangaroo', frame: 2 }],
-                frameRate: 1
-            });
-        }
+        // NOTE: Kangaroo animations are now created in MenuScene.createCharacterAnimations()
+        // Keeping helmet animations here temporarily until we get new helmet variant
 
-        // Helmet kangaroo animations
+        // Helmet kangaroo animations (OLD SPRITE - temporary)
         if (!this.anims.exists('kangaroo_helmet_run')) {
             this.anims.create({
                 key: 'kangaroo_helmet_run',
@@ -431,15 +431,18 @@ export default class GameScene extends Phaser.Scene {
      */
     jump() {
         const isOnGround = this.kangaroo.body.blocked.down || this.kangaroo.body.touching.down;
+        const jumpAnimKey = this.helmetEquipped ? 'kangaroo_helmet_jump' : 'kangaroo_brown_jump';
 
         if (isOnGround) {
             // Normal jump
             this.kangaroo.setVelocityY(GAME_CONFIG.PHYSICS.JUMP_VELOCITY);
+            this.kangaroo.play(jumpAnimKey); // Play jump animation immediately!
             this.audioManager?.playJump();
             this.powerupManager.enableDoubleJump();
         } else if (this.powerupManager.canDoubleJump()) {
             // Double jump
             this.kangaroo.setVelocityY(GAME_CONFIG.PHYSICS.DOUBLE_JUMP_VELOCITY);
+            this.kangaroo.play(jumpAnimKey); // Play jump animation immediately!
             this.audioManager?.playDoubleJump();
             this.powerupManager.useDoubleJump();
         }
@@ -453,8 +456,8 @@ export default class GameScene extends Phaser.Scene {
         const isOnGround = this.kangaroo.body.blocked.down;
         const currentAnim = this.kangaroo.anims.currentAnim?.key;
 
-        const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_run';
-        const jumpAnimKey = this.helmetEquipped ? 'kangaroo_helmet_jump' : 'kangaroo_jump';
+        const runAnimKey = this.helmetEquipped ? 'kangaroo_helmet_run' : 'kangaroo_brown_moving';
+        const jumpAnimKey = this.helmetEquipped ? 'kangaroo_helmet_jump' : 'kangaroo_brown_jump';
 
         if (isOnGround) {
             if (currentAnim !== runAnimKey) {
@@ -582,11 +585,13 @@ export default class GameScene extends Phaser.Scene {
         this.spaceKey.enabled = false;
         this.cursors.up.enabled = false;
 
-        // Stop kangaroo
+        // Stop kangaroo and play death animation
         this.kangaroo.setVelocity(0, 0);
-        this.kangaroo.setTint(0xff6666);
-        this.kangaroo.anims.stop();
-        this.kangaroo.setFrame(2);
+
+        // Play die animation (only if not using helmet)
+        const dieAnimKey = this.helmetEquipped ? 'kangaroo_helmet_jump' : 'kangaroo_brown_die';
+        this.kangaroo.play(dieAnimKey);
+
         this.kangaroo.setDepth(10);
 
         // Stop camera from following (prevents obstacles from sliding)

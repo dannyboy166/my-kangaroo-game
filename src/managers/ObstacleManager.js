@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
+import { CHARACTER_CONFIGS } from '../config/CharacterConfig.js';
 
 /**
  * ObstacleManager - Static World Approach
@@ -212,6 +213,21 @@ export default class ObstacleManager {
         // Store spawn position for coin placement
         const obstacleSpawnInfo = { x: spawnX, type: type, isFlying: false };
 
+        // Check if this is a new animated character (emu, camel, or croc)
+        const isAnimatedCharacter = (type === 'emu' || type === 'camel' || type === 'croc');
+
+        // Determine first frame key based on character type
+        let firstFrameKey;
+        let frameNumber = null;
+        if (type === 'croc') {
+            firstFrameKey = 'croc_green_moving'; // Crocodile uses sprite sheet
+            frameNumber = 0; // Start at first frame of sprite sheet
+        } else if (isAnimatedCharacter) {
+            firstFrameKey = `${type}_brown_moving_000`; // Emu/camel use individual frames
+        } else {
+            firstFrameKey = type; // Static obstacles
+        }
+
         // Use object pooling - get inactive object or create new one
         let obstacle = this.obstacles.getFirstDead(false);
 
@@ -223,10 +239,17 @@ export default class ObstacleManager {
                 obstacle.anims.stop();
             }
 
-            obstacle.setTexture(type);
+            // Set texture (with frame number for sprite sheets)
+            if (frameNumber !== null) {
+                obstacle.setTexture(firstFrameKey, frameNumber);
+            } else {
+                obstacle.setTexture(firstFrameKey);
+            }
+
             obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
             obstacle.setPosition(spawnX, this.groundY);
             obstacle.setRotation(0); // Reset rotation from previous obstacle (e.g., tilted magpie)
+            obstacle.setFlipX(false); // Reset flip
             obstacle.setActive(true);
             obstacle.setVisible(true);
 
@@ -234,7 +257,11 @@ export default class ObstacleManager {
             this.setCollisionBox(obstacle, type);
         } else {
             // Create new obstacle only if pool is empty
-            obstacle = this.obstacles.create(spawnX, this.groundY, type);
+            if (frameNumber !== null) {
+                obstacle = this.obstacles.create(spawnX, this.groundY, firstFrameKey, frameNumber);
+            } else {
+                obstacle = this.obstacles.create(spawnX, this.groundY, firstFrameKey);
+            }
 
             // Setup visual properties (only needed for new objects)
             obstacle.setOrigin(0.5, 1); // Bottom-center anchor (sits on ground)
@@ -252,6 +279,29 @@ export default class ObstacleManager {
         // Always reset velocity (pooled objects might have old velocity)
         obstacle.setVelocityX(0);
         obstacle.setVelocityY(0);
+
+        // Play animation, scale, and flip for animated characters
+        if (isAnimatedCharacter) {
+            // Determine animation key based on character type
+            let animKey;
+            if (type === 'croc') {
+                animKey = 'croc_green_moving'; // Crocodile uses green color
+            } else {
+                animKey = `${type}_brown_moving`; // Emu/camel use brown color
+            }
+
+            obstacle.play(animKey);
+            obstacle.setFlipX(false); // Don't flip - they should face right like the kangaroo
+
+            // Scale down from original dimensions to displayWidth
+            const charConfig = CHARACTER_CONFIGS[type];
+            if (charConfig) {
+                // Crocodile uses different original dimensions (511px per frame, 5 frames horizontal)
+                const originalWidth = (type === 'croc') ? 511 : 937;
+                const scale = charConfig.physics.displayWidth / originalWidth;
+                obstacle.setScale(scale);
+            }
+        }
 
         // Spawn collectibles around this obstacle
         const rand = Math.random();

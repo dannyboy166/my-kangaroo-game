@@ -1,6 +1,7 @@
 import GameDataManager from '../managers/GameDataManager.js';
 import AudioManager from '../managers/AudioManager.js';
 import { BACKGROUND_THEMES } from '../config/BackgroundConfig.js';
+import { CHARACTER_CONFIGS, getCharacterFramePaths } from '../config/CharacterConfig.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -10,13 +11,28 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     preload() {
-        // Load kangaroo sprite sheet (768x256 with 6x2 frames, each 128x128)
-        this.load.spritesheet('kangaroo', 'assets/images/kangaroos.png', {
-            frameWidth: 128,
-            frameHeight: 128
-        });
-        
+        // ========================================
+        // NEW PROFESSIONAL ANIMATED CHARACTERS
+        // ========================================
+        // Load new animated kangaroo frames (937x1083 per frame, high quality!)
+        this.loadCharacterFrames('kangaroo', 'brown');
+
+        // Load new obstacle animals
+        this.loadCharacterFrames('emu', 'brown');      // Ostrich (looks like emu)
+        this.loadCharacterFrames('camel', 'brown');    // Camel
+        this.loadCharacterFrames('croc', 'green');     // Crocodile (uses sprite sheets)
+
+        // Optional color variants:
+        // this.loadCharacterFrames('kangaroo', 'grey');
+
+        // OLD SPRITE SHEET (keeping as backup for now)
+        // this.load.spritesheet('kangaroo_old', 'assets/images/kangaroos.png', {
+        //     frameWidth: 128,
+        //     frameHeight: 128
+        // });
+
         // Load kangaroo helmet sprite sheet (same dimensions as normal kangaroo)
+        // TODO: Replace with new character variant when we get helmet version
         this.load.spritesheet('kangaroo_helmet', 'assets/images/kangaroos_helmet_sheet.png', {
             frameWidth: 128,
             frameHeight: 128
@@ -110,6 +126,18 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        // ========================================
+        // CREATE NEW CHARACTER ANIMATIONS
+        // ========================================
+        // Create animations for the new professional characters
+        this.createCharacterAnimations('kangaroo', 'brown');
+        this.createCharacterAnimations('emu', 'brown');
+        this.createCharacterAnimations('camel', 'brown');
+        this.createCharacterAnimations('croc', 'green');
+
+        // Optional color variants:
+        // this.createCharacterAnimations('kangaroo', 'grey');
+
         // Create coin animation from sprite sheet
         if (!this.anims.exists('coin_spin')) {
             this.anims.create({
@@ -386,5 +414,95 @@ export default class MenuScene extends Phaser.Scene {
 
         // Restart the scene to show new background
         this.scene.restart();
+    }
+
+    /**
+     * Load character animation frames
+     * USE THIS METHOD TO ADD NEW ANIMALS!
+     *
+     * @param {string} characterKey - Character name from CHARACTER_CONFIGS
+     * @param {string} color - Color variant (brown, grey, etc.)
+     */
+    loadCharacterFrames(characterKey, color) {
+        const config = CHARACTER_CONFIGS[characterKey];
+        if (!config) {
+            console.error(`Character config not found: ${characterKey}`);
+            return;
+        }
+
+        // Check if this character uses sprite sheets or individual frames
+        if (config.useSpriteSheet) {
+            // Load sprite sheets (like crocodile)
+            Object.keys(config.animations).forEach(animKey => {
+                const animConfig = config.animations[animKey];
+                const spriteSheetKey = `${characterKey}_${color}_${animKey}`;
+                const path = `${config.basePath}/${color}/${animConfig.spriteSheet}.png`;
+
+                this.load.spritesheet(spriteSheetKey, path, {
+                    frameWidth: animConfig.frameWidth,
+                    frameHeight: animConfig.frameHeight
+                });
+            });
+        } else {
+            // Load individual frames (like kangaroo, emu, camel)
+            Object.keys(config.animations).forEach(animKey => {
+                const frames = getCharacterFramePaths(characterKey, animKey, color);
+                const textureKey = `${characterKey}_${color}_${animKey}`;
+
+                // Load each frame as individual image
+                frames.forEach((path, index) => {
+                    const frameKey = `${textureKey}_${String(index).padStart(3, '0')}`;
+                    this.load.image(frameKey, path);
+                });
+            });
+        }
+    }
+
+    /**
+     * Create character animations from loaded frames
+     * Call this in create() after preload() completes
+     *
+     * @param {string} characterKey - Character name
+     * @param {string} color - Color variant
+     */
+    createCharacterAnimations(characterKey, color) {
+        const config = CHARACTER_CONFIGS[characterKey];
+        if (!config) return;
+
+        Object.keys(config.animations).forEach(animKey => {
+            const animConfig = config.animations[animKey];
+            const animationKey = `${characterKey}_${color}_${animKey}`;
+
+            // Skip if animation already exists
+            if (this.anims.exists(animationKey)) return;
+
+            if (config.useSpriteSheet) {
+                // Create animation from sprite sheet (like crocodile)
+                const spriteSheetKey = `${characterKey}_${color}_${animKey}`;
+                this.anims.create({
+                    key: animationKey,
+                    frames: this.anims.generateFrameNumbers(spriteSheetKey, {
+                        start: 0,
+                        end: animConfig.frameCount - 1
+                    }),
+                    frameRate: animConfig.frameRate,
+                    repeat: animConfig.repeat
+                });
+            } else {
+                // Create animation from individual frames (like kangaroo, emu, camel)
+                const frames = [];
+                for (let i = 0; i < animConfig.frameCount; i++) {
+                    const frameKey = `${characterKey}_${color}_${animKey}_${String(i).padStart(3, '0')}`;
+                    frames.push({ key: frameKey });
+                }
+
+                this.anims.create({
+                    key: animationKey,
+                    frames: frames,
+                    frameRate: animConfig.frameRate,
+                    repeat: animConfig.repeat
+                });
+            }
+        });
     }
 }
