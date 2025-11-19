@@ -297,9 +297,22 @@ export default class ObstacleManager {
             this.setCollisionBox(obstacle, type);
         }
 
-        // Always reset velocity (pooled objects might have old velocity)
-        obstacle.setVelocityX(0);
-        obstacle.setVelocityY(0);
+        // Set velocity based on obstacle type
+        // Animated animals "run" backwards to appear like they're charging at the kangaroo
+        const runSpeeds = {
+            'croc': -50,   // Crocodile: slow waddle
+            'camel': -100, // Camel: moderate gallop (2x croc)
+            'emu': -200    // Emu: fast sprint (3x croc)
+        };
+
+        if (runSpeeds[type]) {
+            obstacle.setVelocityX(runSpeeds[type]);
+            obstacle.setVelocityY(0);
+        } else {
+            // Static obstacles don't move
+            obstacle.setVelocityX(0);
+            obstacle.setVelocityY(0);
+        }
 
         // Play animation, scale, and flip for animated characters
         if (isAnimatedCharacter) {

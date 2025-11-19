@@ -65,15 +65,19 @@ export default class CollectibleManager {
 
             // Magnet effect - use velocity for smooth attraction
             if (magnetActive) {
+                // Attract to a point slightly ahead of kangaroo (front of body)
+                const magnetTargetX = kangaroo.x + 40; // 40px ahead (forward)
+                const magnetTargetY = kangaroo.y - 30; // Slightly up (chest level)
+
                 const distanceToKangaroo = Phaser.Math.Distance.Between(
-                    coin.x, coin.y, kangaroo.x, kangaroo.y
+                    coin.x, coin.y, magnetTargetX, magnetTargetY
                 );
 
                 const config = GAME_CONFIG.POWERUPS.MAGNET;
                 if (distanceToKangaroo < config.RANGE) {
-                    // Calculate angle from coin to kangaroo
+                    // Calculate angle from coin to magnet target point
                     const angle = Phaser.Math.Angle.Between(
-                        coin.x, coin.y, kangaroo.x, kangaroo.y
+                        coin.x, coin.y, magnetTargetX, magnetTargetY
                     );
                     // Use physics velocity for smoother movement
                     coin.body.setVelocity(
@@ -81,8 +85,8 @@ export default class CollectibleManager {
                         Math.sin(angle) * config.FORCE
                     );
 
-                    // Draw attraction line from coin to kangaroo
-                    this.drawAttractionLine(coin.x, coin.y, kangaroo.x, kangaroo.y);
+                    // Draw attraction line from coin to magnet target
+                    this.drawAttractionLine(coin.x, coin.y, magnetTargetX, magnetTargetY);
                 } else {
                     // Reset velocity when out of range
                     coin.body.setVelocity(0, 0);

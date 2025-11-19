@@ -79,8 +79,8 @@ export const GAME_CONFIG = {
             COUNT: 3,
             RADIUS: 90, // Orbit radius - how far orbs circle from kangaroo (increased from 60)
             ROTATION_SPEED: 200, // degrees per second
-            OFFSET_X: 10,
-            OFFSET_Y: -50,
+            OFFSET_X: 25,  // Centered horizontally on kangaroo
+            OFFSET_Y: -80, // Slightly higher (kangaroo is 1.2x bigger now)
 
             // Orb properties by type
             PROPERTIES: {

@@ -123,8 +123,10 @@ export default class GameScene extends Phaser.Scene {
      * Check if player has helmet equipped
      */
     checkHelmetEquipment() {
-        const helmetCount = this.storeManager.getPowerUpCount('helmet');
-        this.helmetEquipped = helmetCount > 0;
+        // TEMPORARILY DISABLED: Helmet disabled until helmet sprite is added
+        this.helmetEquipped = false;
+        // const helmetCount = this.storeManager.getPowerUpCount('helmet');
+        // this.helmetEquipped = helmetCount > 0;
     }
 
     /**

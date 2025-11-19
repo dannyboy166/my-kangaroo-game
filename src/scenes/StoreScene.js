@@ -77,7 +77,8 @@ export default class StoreScene extends Phaser.Scene {
         });
     }
     createShopItems() {
-        const items = ['shield', 'magnet', 'doubleJump', 'helmet'];
+        // Helmet temporarily disabled - needs helmet sprite for new kangaroo character
+        const items = ['shield', 'magnet', 'doubleJump'];
         const startY = 140;
         const spacing = 110; // Increased from 90 to 110 for more space
 

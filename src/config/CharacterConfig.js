@@ -127,10 +127,10 @@ export const CHARACTER_CONFIGS = {
             displayWidth: 192,
             displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
             // Emu/Ostrich - tall bird with long neck
-            bodyWidth: 135,     // Wide hitbox covers body (90 * 1.5)
-            bodyHeight: 105,    // Tall hitbox covers neck and body (70 * 1.5)
-            bodyOffsetX: 29,    // Center: (192 - 135) / 2
-            bodyOffsetY: 21,    // Start from top of visible bird (14 * 1.5)
+            bodyWidth: 100,     // Wide hitbox covers body (90 * 1.5)
+            bodyHeight: 100,    // Tall hitbox covers neck and body (70 * 1.5)
+            bodyOffsetX: 49,    // Center: (192 - 135) / 2
+            bodyOffsetY: 35,    // Start from top of visible bird (14 * 1.5)
             groundOffset: 20    // Push down 30px to align feet with ground
         }
     }
@@ -169,9 +169,9 @@ export const CHARACTER_CONFIGS = {
             displayWidth: 192,
             displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
             // Camel - large body with hump
-            bodyWidth: 150,     // Wide hitbox covers full body (100 * 1.5)
-            bodyHeight: 135,    // Covers hump to legs (90 * 1.5)
-            bodyOffsetX: 21,    // Center: (192 - 150) / 2
+            bodyWidth: 120,     // Wide hitbox covers full body (100 * 1.5)
+            bodyHeight: 125,    // Covers hump to legs (90 * 1.5)
+            bodyOffsetX: 41,    // Center: (192 - 150) / 2
             bodyOffsetY: 30,    // Start from top of hump (20 * 1.5)
             groundOffset: 25    // Push down 25px to align feet with ground
         }
@@ -212,15 +212,15 @@ export const CHARACTER_CONFIGS = {
             }
         },
         physics: {
-            // Display size (1.5x bigger: 128 * 1.5 = 192)
-            displayWidth: 192,
-            displayHeight: 222, // Maintains aspect ratio (148 * 1.5)
+            // Display size (2.25x bigger: 128 * 2.25 = 288)
+            displayWidth: 288,
+            displayHeight: 333, // Maintains aspect ratio (148 * 2.25)
             // Crocodile - long low body (standing upright in this game)
-            bodyWidth: 165,     // Very wide hitbox (110 * 1.5)
-            bodyHeight: 45,     // Tall enough to cover head to tail (30 * 1.5)
-            bodyOffsetX: 14,    // Center: (192 - 165) / 2
-            bodyOffsetY: 45,    // Position on visible body (30 * 1.5)
-            groundOffset: 10    // Push down 20px to align feet with ground
+            bodyWidth: 248,     // Very wide hitbox (110 * 2.25)
+            bodyHeight: 68,     // Tall enough to cover head to tail (30 * 2.25)
+            bodyOffsetX: 20,    // Center: (288 - 248) / 2
+            bodyOffsetY: 68,    // Position on visible body (30 * 2.25)
+            groundOffset: 15    // Push down to align feet with ground (10 * 1.5)
         }
     }
 };
@@ -248,10 +248,22 @@ export function getCharacterFramePaths(characterKey, animationKey, color = null)
     }
 
     const frames = [];
-    for (let i = 0; i < animation.frameCount; i++) {
-        const frameNum = String(i).padStart(3, '0');
-        const path = `${config.basePath}/${selectedColor}/${animation.prefix}_${frameNum}.png`;
-        frames.push(path);
+
+    // Support both frameCount (all frames) and frameStart/frameEnd (specific range)
+    if (animation.frameStart !== undefined && animation.frameEnd !== undefined) {
+        // Use specific frame range (e.g., frames 3-5 for jump)
+        for (let i = animation.frameStart; i <= animation.frameEnd; i++) {
+            const frameNum = String(i).padStart(3, '0');
+            const path = `${config.basePath}/${selectedColor}/${animation.prefix}_${frameNum}.png`;
+            frames.push(path);
+        }
+    } else {
+        // Use all frames (traditional frameCount)
+        for (let i = 0; i < animation.frameCount; i++) {
+            const frameNum = String(i).padStart(3, '0');
+            const path = `${config.basePath}/${selectedColor}/${animation.prefix}_${frameNum}.png`;
+            frames.push(path);
+        }
     }
 
     return frames;

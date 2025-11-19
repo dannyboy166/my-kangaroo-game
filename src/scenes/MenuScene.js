@@ -491,9 +491,20 @@ export default class MenuScene extends Phaser.Scene {
             } else {
                 // Create animation from individual frames (like kangaroo, emu, camel)
                 const frames = [];
-                for (let i = 0; i < animConfig.frameCount; i++) {
-                    const frameKey = `${characterKey}_${color}_${animKey}_${String(i).padStart(3, '0')}`;
-                    frames.push({ key: frameKey });
+
+                // Support both frameCount and frameStart/frameEnd
+                if (animConfig.frameStart !== undefined && animConfig.frameEnd !== undefined) {
+                    // Use specific frame range (e.g., frames 3-5 for jump)
+                    for (let i = animConfig.frameStart; i <= animConfig.frameEnd; i++) {
+                        const frameKey = `${characterKey}_${color}_${animKey}_${String(i - animConfig.frameStart).padStart(3, '0')}`;
+                        frames.push({ key: frameKey });
+                    }
+                } else {
+                    // Use all frames (traditional frameCount)
+                    for (let i = 0; i < animConfig.frameCount; i++) {
+                        const frameKey = `${characterKey}_${color}_${animKey}_${String(i).padStart(3, '0')}`;
+                        frames.push({ key: frameKey });
+                    }
                 }
 
                 this.anims.create({
