@@ -28,7 +28,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: true,      // ENABLED: Show collision boxes for debugging
+            debug: false,     // DISABLED: Hide collision boxes for production
             fps: 60           // Physics at 60 FPS
         }
     },
