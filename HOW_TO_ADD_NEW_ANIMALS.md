@@ -17,7 +17,7 @@ The system automatically handles:
 assets/characters/
 ├── kangaroo/
 │   ├── brown/
-│   │   └── __red_kangaroo_no_joey_moving_000.png, 001.png, ...
+│   │   └── red_kangaroo_no_joey_moving_000.png, 001.png, ...
 │   └── grey/
 │       └── ... (same structure)
 ├── emu/brown/
@@ -33,6 +33,13 @@ Place animation frames in:
 ```
 assets/characters/[animal-name]/[color]/
 ```
+
+**CRITICAL: DO NOT use `__` (double underscore) prefix in filenames!**
+
+❌ **WRONG**: `__red_kangaroo_no_joey_moving_000.png`
+✅ **CORRECT**: `red_kangaroo_no_joey_moving_000.png`
+
+**Why?** GitHub Pages blocks files starting with `__` (treats them as private/hidden files). Your game will work locally but fail on GitHub Pages deployment with 404 errors.
 
 ### 2. Add Configuration
 
@@ -52,13 +59,13 @@ wombat: {
 
     animations: {
         idle: {
-            prefix: '__wombat_idle',    // Match filename prefix
-            frameCount: 20,              // Count PNG files
+            prefix: 'wombat_idle',    // Match filename prefix (NO __ prefix!)
+            frameCount: 20,           // Count PNG files
             frameRate: 12,
             repeat: -1
         },
         moving: {
-            prefix: '__wombat_moving',
+            prefix: 'wombat_moving',  // NO __ prefix!
             frameCount: 16,
             frameRate: 20,
             repeat: -1
@@ -176,7 +183,7 @@ kangaroo: {
 
     animations: {
         moving: {
-            prefix: '__red_kangaroo_no_joey_moving',
+            prefix: 'red_kangaroo_no_joey_moving',  // NO __ prefix!
             frameCount: 16,
             frameRate: 20,
             repeat: -1
@@ -261,8 +268,16 @@ ls assets/characters/kangaroo/brown/ | grep "moving" | wc -l
 ### Find Sprite Dimensions
 Open PNG in image editor and check properties, or:
 ```bash
-identify assets/characters/kangaroo/brown/__red_kangaroo_no_joey_moving_000.png
+identify assets/characters/kangaroo/brown/red_kangaroo_no_joey_moving_000.png
 ```
+
+### Fix Existing Files with `__` Prefix
+If you accidentally used `__` prefix, rename all files:
+```bash
+cd assets/characters/[animal]/[color]
+for f in __*; do mv "$f" "${f#__}"; done
+```
+Then update the `prefix` values in `CharacterConfig.js` to remove the `__`.
 
 ## Architecture Summary
 
