@@ -43,7 +43,7 @@ export const CHARACTER_CONFIGS = {
         animations: {
             // Idle/standing animation
             idle: {
-                prefix: '__red_kangaroo_no_joey_idle',
+                prefix: 'red_kangaroo_no_joey_idle',
                 frameCount: 20,
                 frameRate: 12,
                 repeat: -1 // Loop forever
@@ -51,7 +51,7 @@ export const CHARACTER_CONFIGS = {
 
             // Running/moving animation (main gameplay animation)
             moving: {
-                prefix: '__red_kangaroo_no_joey_moving',
+                prefix: 'red_kangaroo_no_joey_moving',
                 frameCount: 16,
                 frameRate: 20,
                 repeat: -1
@@ -59,7 +59,7 @@ export const CHARACTER_CONFIGS = {
 
             // Jump animation
             jump: {
-                prefix: '__red_kangaroo_no_joey_jump_from_idle',
+                prefix: 'red_kangaroo_no_joey_jump_from_idle',
                 frameCount: 10,
                 frameRate: 15,
                 repeat: 0 // Play once
@@ -67,7 +67,7 @@ export const CHARACTER_CONFIGS = {
 
             // Death animation
             die: {
-                prefix: '__red_kangaroo_no_joey_die',
+                prefix: 'red_kangaroo_no_joey_die',
                 frameCount: 5,
                 frameRate: 10,
                 repeat: 0
@@ -110,13 +110,13 @@ export const CHARACTER_CONFIGS = {
 
         animations: {
             idle: {
-                prefix: '__ostrich_idle',
+                prefix: 'ostrich_idle',
                 frameCount: 20,
                 frameRate: 12,
                 repeat: -1
             },
             moving: {
-                prefix: '__ostrich_run_neck_up',
+                prefix: 'ostrich_run_neck_up',
                 frameCount: 10,
                 frameRate: 20,
                 repeat: -1
@@ -152,13 +152,13 @@ export const CHARACTER_CONFIGS = {
 
         animations: {
             idle: {
-                prefix: '__camel_one_hump_no_cover_idle',
+                prefix: 'camel_one_hump_no_cover_idle',
                 frameCount: 20,
                 frameRate: 12,
                 repeat: -1
             },
             moving: {
-                prefix: '__camel_one_hump_no_cover_run',
+                prefix: 'camel_one_hump_no_cover_run',
                 frameCount: 16,
                 frameRate: 20,
                 repeat: -1
@@ -195,7 +195,7 @@ export const CHARACTER_CONFIGS = {
 
         animations: {
             idle: {
-                spriteSheet: '__standing_crocodile_bright_green_idle',
+                spriteSheet: 'standing_crocodile_bright_green_idle',
                 frameWidth: 511,
                 frameHeight: 1048,
                 frameCount: 5,
@@ -203,7 +203,7 @@ export const CHARACTER_CONFIGS = {
                 repeat: -1
             },
             moving: {
-                spriteSheet: '__standing_crocodile_bright_green_walk_snapping_slow',
+                spriteSheet: 'standing_crocodile_bright_green_walk_snapping_slow',
                 frameWidth: 511,
                 frameHeight: 262,
                 frameCount: 15,
