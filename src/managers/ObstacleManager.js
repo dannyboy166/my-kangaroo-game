@@ -71,7 +71,7 @@ export default class ObstacleManager {
         const STRAIGHTEN_TIME = 0.3; // Time magpie stays at ground (seconds)
 
         const magpieHeight = magpie.y;
-        const targetY = this.groundY - 20; // Where magpie swoops to
+        const targetY = this.groundY - 100; // Where magpie swoops to (higher up)
         const verticalDistance = targetY - magpieHeight; // How far down (in pixels)
 
         // Time needed to swoop down (in seconds)
@@ -101,7 +101,7 @@ export default class ObstacleManager {
         if (magpie.getData('swoopStarted') && !isClimbingBack) {
             // Swoop down towards ground level at CONSTANT speed
             const CONSTANT_SWOOP_SPEED = 400; // Same as trigger calculation
-            const targetY = this.groundY - 20; // Slightly above ground
+            const targetY = this.groundY - 100; // Slightly above ground (higher up)
             const currentY = magpie.y;
 
             if (currentY < targetY) {
