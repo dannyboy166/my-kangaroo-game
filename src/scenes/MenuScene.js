@@ -118,6 +118,10 @@ export default class MenuScene extends Phaser.Scene {
         // ========================================
         // Buttons
         this.load.image('btn_green', 'assets/images/ui/buttons/bttn_green.png');
+        this.load.image('btn_sq_green', 'assets/images/ui/buttons/bttn2_sq_green.png');
+        this.load.image('btn_sq_gray', 'assets/images/ui/buttons/bttn2_sq_gray.png');
+        this.load.image('btn_little_green', 'assets/images/ui/buttons/bttn2_little_green.png');
+        this.load.image('btn_little_gray', 'assets/images/ui/buttons/bttn2_little_gray.png');
         this.load.image('btn_blue', 'assets/images/ui/buttons/bttn_blue.png');
         this.load.image('btn_red', 'assets/images/ui/buttons/bttn_red.png');
         this.load.image('btn_yellow', 'assets/images/ui/buttons/bttn_yellow.png');
@@ -156,6 +160,8 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('panel_shop', 'assets/images/ui/title/back_shop.png');
         this.load.image('panel_small', 'assets/images/ui/title/back_small.png');
         this.load.image('panel_uppanel', 'assets/images/ui/title/back_uppanel.png');
+        this.load.image('back_days', 'assets/images/ui/title/back_days.png');
+        this.load.image('back_myname', 'assets/images/ui/title/back_myname.png');
         this.load.image('ui_background', 'assets/images/ui/title/background_1920x1080.png');
 
         // Arrows
@@ -259,7 +265,7 @@ export default class MenuScene extends Phaser.Scene {
         titleRibbon.setScale(0.7);
         titleRibbon.setDepth(999);
 
-        this.add.text(400, 130, 'KANGAROO HOP', {
+        this.add.text(400, 120, 'KANGAROO HOP', {
             fontSize: '42px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
@@ -267,26 +273,26 @@ export default class MenuScene extends Phaser.Scene {
             strokeThickness: 4
         }).setOrigin(0.5).setDepth(1000); // High depth to be in front
 
-        // Add subtitle
+        // Add subtitle - green color to match play button
         const startText = this.add.text(400, 230, 'Tap or Press SPACE to Play!', {
             fontSize: '26px',
             fontFamily: 'Arial',
-            color: '#FFFFFF',
+            color: '#4CAF50',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5).setDepth(1000);
 
         // Add green arrow pointing down to indicate "tap here"
         const playArrow = this.add.image(400, 280, 'arrow_green');
-        playArrow.setScale(0.4);
+        playArrow.setScale(0.5);
         playArrow.setDepth(1000);
 
-        // Add pulsing effect to start text and arrow
+        // Add pulsing effect to start text and play arrow together
         this.tweens.add({
             targets: [startText, playArrow],
-            scaleX: '*=1.05',
-            scaleY: '*=1.05',
-            duration: 1000,
+            scaleX: '*=1.15',
+            scaleY: '*=1.15',
+            duration: 800,
             ease: 'Sine.easeInOut',
             yoyo: true,
             repeat: -1
@@ -313,14 +319,14 @@ export default class MenuScene extends Phaser.Scene {
         // No need for createSimpleGround - using parallax ground layer instead
 
         // Add shop button with new UI graphics - DOWN LEFT
-        const shopButtonContainer = this.add.container(250, 450).setDepth(1000);
+        const shopButtonContainer = this.add.container(250, 400).setDepth(1000);
         const shopButtonBg = this.add.image(0, 0, 'btn_blue');
         shopButtonBg.setScale(0.4);
-        const shopIcon = this.add.image(-35, 0, 'icon_shop');
+        const shopIcon = this.add.image(-35, -3, 'icon_shop');
         shopIcon.setScale(0.3);
-        const shopButtonText = this.add.text(15, 0, 'SHOP', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
+        const shopButtonText = this.add.text(15, -3, 'SHOP', {
+            fontSize: '20px',
+            fontFamily: 'Arial Black',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -358,17 +364,18 @@ export default class MenuScene extends Phaser.Scene {
         const currentTheme = this.gameDataManager.getBackgroundTheme();
         const themeName = BACKGROUND_THEMES[currentTheme]?.name || 'Outback';
 
-        this.bgButtonContainer = this.add.container(550, 450).setDepth(1000);
+        this.bgButtonContainer = this.add.container(550, 400).setDepth(1000);
         const bgButtonBg = this.add.image(0, 0, 'btn_yellow');
         bgButtonBg.setScale(0.4);
-        const bgIcon = this.add.image(-35, 0, 'icon_star');
+        const bgIcon = this.add.image(-90, -3, 'icon_star');
         bgIcon.setScale(0.3);
-        this.bgButtonText = this.add.text(15, 0, themeName.toUpperCase(), {
-            fontSize: '24px',
-            fontFamily: 'Arial',
+        this.bgButtonText = this.add.text(5, -3, themeName, {
+            fontSize: '20px',
+            fontFamily: 'Arial Black',
             color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2
+            strokeThickness: 2,
+            align: 'center'
         }).setOrigin(0.5);
         this.bgButtonContainer.add([bgButtonBg, bgIcon, this.bgButtonText]);
 

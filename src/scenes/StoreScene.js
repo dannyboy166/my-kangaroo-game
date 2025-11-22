@@ -16,18 +16,17 @@ export default class StoreScene extends Phaser.Scene {
     }
 
     create() {
-        // Add background color gradient effect
-        const graphics = this.add.graphics();
-        graphics.fillGradientStyle(0x39cef9, 0x39cef9, 0x7dd9fc, 0x7dd9fc, 1);
-        graphics.fillRect(0, 0, 800, 600);
+        // Add background image
+        const bg = this.add.image(400, 300, 'ui_background');
+        bg.setDisplaySize(800, 600);
 
         // Add title with ribbon background
-        const titleRibbon = this.add.image(400, 55, 'ribbon_blue');
+        const titleRibbon = this.add.image(400, 65, 'ribbon_red');
         titleRibbon.setScale(0.65);
 
-        this.add.text(400, 55, 'SHOP', {
+        this.add.text(400, 53, 'SHOP', {
             fontSize: '36px',
-            fontFamily: 'Arial',
+            fontFamily: 'Arial Black',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 3
@@ -87,8 +86,8 @@ export default class StoreScene extends Phaser.Scene {
     createShopItems() {
         // Helmet temporarily disabled - needs helmet sprite for new kangaroo character
         const items = ['shield', 'magnet', 'doubleJump'];
-        const startY = 140;
-        const spacing = 110; // Increased from 90 to 110 for more space
+        const startY = 200;
+        const spacing = 120;
 
         items.forEach((item, index) => {
             const y = startY + (index * spacing);
@@ -99,12 +98,9 @@ export default class StoreScene extends Phaser.Scene {
     createShopItem(type, x, y) {
         const container = this.add.container(x, y);
 
-        // Background panel for the item - INCREASED HEIGHT
-        const panel = this.add.graphics();
-        panel.fillStyle(0x000000, 0.3);
-        panel.fillRoundedRect(-350, -45, 700, 90, 10); // Increased height from 70 to 90, adjusted y from -35 to -45
-        panel.lineStyle(2, 0xFFFFFF, 0.5);
-        panel.strokeRoundedRect(-350, -45, 700, 90, 10);
+        // Background panel for the item - using UI pack panel
+        const panel = this.add.image(0, 0, 'back_myname');
+        panel.setScale(1.1, 1.3);
         container.add(panel);
 
         // Item icon - use animated sprites for powerups, static image for helmet
@@ -141,22 +137,18 @@ export default class StoreScene extends Phaser.Scene {
         const price = this.storeManager.getPowerUpPrice(type);
         const count = this.storeManager.getPowerUpCount(type);
 
-        const nameText = this.add.text(-220, -25, name, { // Title at top
+        const nameText = this.add.text(-220, -15, name, { // Title at top
             fontSize: '20px',
-            fontFamily: 'Arial',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 1
+            fontFamily: 'Arial Black',
+            color: '#000000'
         });
         nameText.setOrigin(0, 0.5);
         container.add(nameText);
 
-        const descText = this.add.text(-220, 5, description, { // Description in middle
+        const descText = this.add.text(-220, 10, description, { // Description in middle
             fontSize: '14px',
             fontFamily: 'Arial',
-            color: '#CCCCCC',
-            stroke: '#000000',
-            strokeThickness: 1
+            color: '#333333'
         });
         descText.setOrigin(0, 0.5);
         container.add(descText);
@@ -177,46 +169,38 @@ export default class StoreScene extends Phaser.Scene {
             }
 
             const keyInstructionText = this.add.text(-220, 30, `Press ${keyNumber} to activate`, { // Key instruction at bottom
-                fontSize: '14px',
+                fontSize: '12px',
                 fontFamily: 'Arial',
-                color: '#FFD700',
-                stroke: '#000000',
-                strokeThickness: 1,
+                color: '#666666',
                 fontStyle: 'italic'
             });
             keyInstructionText.setOrigin(0, 0.5);
             container.add(keyInstructionText);
         } else {
             // For helmet, add a third line explaining it's auto-equipped
-            const autoEquipText = this.add.text(-220, 30, 'Auto-equipped when owned', {
-                fontSize: '14px',
+            const autoEquipText = this.add.text(-220, 30, 'Auto-equipped', {
+                fontSize: '12px',
                 fontFamily: 'Arial',
-                color: '#FFD700', // Light blue color
-                stroke: '#000000',
-                strokeThickness: 1,
+                color: '#666666',
                 fontStyle: 'italic'
             });
             autoEquipText.setOrigin(0, 0.5);
             container.add(autoEquipText);
         }
 
-        // Price and count display - BETTER SPACING
-        const priceText = this.add.text(150, -20, `${price} coins`, { // Price at top right
+        // Price and count display
+        const priceText = this.add.text(80, -10, `${price} coins`, { // Price at top right
             fontSize: '16px',
-            fontFamily: 'Arial',
-            color: '#FFD700',
-            stroke: '#000000',
-            strokeThickness: 1
+            fontFamily: 'Arial Black',
+            color: '#000000'
         });
         priceText.setOrigin(0, 0.5);
         container.add(priceText);
 
-        const countText = this.add.text(150, 0, `Owned: ${count}${type === 'helmet' ? '/1' : '/3'}`, { // Count in middle right
+        const countText = this.add.text(80, 15, `Owned: ${count}${type === 'helmet' ? '/1' : '/3'}`, { // Count below price
             fontSize: '14px',
             fontFamily: 'Arial',
-            color: '#CCCCCC',
-            stroke: '#000000',
-            strokeThickness: 1
+            color: '#333333'
         });
         countText.setOrigin(0, 0.5);
         container.add(countText);
@@ -226,10 +210,10 @@ export default class StoreScene extends Phaser.Scene {
         const playerCoins = this.gameDataManager.getCoins();
         const canBuy = playerCoins >= price && count < maxCount;
 
-        // Use graphical buttons from UI pack
-        const buttonKey = canBuy ? 'btn_green' : 'btn_gray';
-        const buyButtonBg = this.add.image(280, 0, buttonKey);
-        buyButtonBg.setScale(0.45);
+        // Use graphical buttons from UI pack - little buttons
+        const buttonKey = canBuy ? 'btn_little_green' : 'btn_little_gray';
+        const buyButtonBg = this.add.image(245, 0, buttonKey);
+        buyButtonBg.setScale(0.5);
         container.add(buyButtonBg);
 
         // Determine button text based on specific conditions
@@ -239,12 +223,12 @@ export default class StoreScene extends Phaser.Scene {
         } else if (count >= maxCount) {
             buttonText = 'MAX';
         } else {
-            buttonText = 'NEED $';
+            buttonText = '---';
         }
 
-        const buyText = this.add.text(280, 0, buttonText, {
+        const buyText = this.add.text(245, -3, buttonText, {
             fontSize: '18px',
-            fontFamily: 'Arial',
+            fontFamily: 'Arial Black',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -287,12 +271,12 @@ export default class StoreScene extends Phaser.Scene {
             });
 
             buyButtonBg.on('pointerover', () => {
-                buyButtonBg.setScale(0.5);
+                buyButtonBg.setScale(0.55);
                 buyText.setScale(1.1);
             });
 
             buyButtonBg.on('pointerout', () => {
-                buyButtonBg.setScale(0.45);
+                buyButtonBg.setScale(0.5);
                 buyText.setScale(1);
             });
         }

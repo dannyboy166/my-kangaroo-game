@@ -116,7 +116,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         this.add(this.backdrop);
 
         // Use panel from UI pack as background
-        this.panelBg = this.scene.add.image(0, 0, 'panel_small');
+        this.panelBg = this.scene.add.image(0, 0, 'back_days');
         this.panelBg.setScale(0.55);
         this.add(this.panelBg);
 

@@ -12,28 +12,28 @@ export default class StoreManager {
                 count: this.loadCount('kangaroo_hop_double_jump'),
                 price: 50,
                 name: 'Double Jump',
-                description: 'Jump twice in the air!\nLasts 10 seconds',
+                description: 'Jump twice in mid-air!',
                 maxCount: 3
             },
             shield: {
                 count: this.loadCount('kangaroo_hop_shield'),
                 price: 50,
                 name: 'Shield',
-                description: 'Protects from one hit!\nLasts 10 seconds',
+                description: 'Survive one hit!',
                 maxCount: 3
             },
             magnet: {
                 count: this.loadCount('kangaroo_hop_magnet'),
                 price: 50,
                 name: 'Coin Magnet',
-                description: 'Attracts nearby coins!\nLasts 10 seconds',
+                description: 'Attracts nearby coins!',
                 maxCount: 3
             },
             helmet: {
                 count: this.loadCount('kangaroo_hop_helmet'),
                 price: 100,
                 name: 'Magpie Helmet',
-                description: 'Protects from magpie swoops!\nLasts one game',
+                description: 'Blocks magpie swoops!',
                 maxCount: 1
             }
         };
