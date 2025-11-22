@@ -113,6 +113,54 @@ export default class MenuScene extends Phaser.Scene {
         // Load helmet image (only static image we still use)
         this.load.image('helmet', 'assets/images/helmet.png');
 
+        // ========================================
+        // NEW UI PACK ASSETS
+        // ========================================
+        // Buttons
+        this.load.image('btn_green', 'assets/images/ui/buttons/bttn_green.png');
+        this.load.image('btn_blue', 'assets/images/ui/buttons/bttn_blue.png');
+        this.load.image('btn_red', 'assets/images/ui/buttons/bttn_red.png');
+        this.load.image('btn_yellow', 'assets/images/ui/buttons/bttn_yellow.png');
+        this.load.image('btn_pink', 'assets/images/ui/buttons/bttn_pink.png');
+        this.load.image('btn_gray', 'assets/images/ui/buttons/bttn_gray.png');
+        this.load.image('btn_long_green', 'assets/images/ui/buttons/bttn_long_green.png');
+        this.load.image('btn_long_blue', 'assets/images/ui/buttons/bttn_long_blue.png');
+        this.load.image('btn_long_yellow', 'assets/images/ui/buttons/bttn_long_yellow.png');
+        this.load.image('btn_long_red', 'assets/images/ui/buttons/bttn_long_red.png');
+        this.load.image('btn_sq_green', 'assets/images/ui/buttons/bttn_square_green.png');
+        this.load.image('btn_sq_blue', 'assets/images/ui/buttons/bttn_square_blue.png');
+        this.load.image('btn_sq_red', 'assets/images/ui/buttons/bttn_square_red.png');
+
+        // Icons (64x64 size - good for game UI)
+        this.load.image('icon_shop', 'assets/images/ui/icons/icons_color/64x64/shop.png');
+        this.load.image('icon_house', 'assets/images/ui/icons/icons_color/64x64/house.png');
+        this.load.image('icon_settings', 'assets/images/ui/icons/icons_color/64x64/settings.png');
+        this.load.image('icon_sound', 'assets/images/ui/icons/icons_color/64x64/sound.png');
+        this.load.image('icon_sound_off', 'assets/images/ui/icons/icons_color/64x64/sound_off.png');
+        this.load.image('icon_star', 'assets/images/ui/icons/icons_color/64x64/star.png');
+        this.load.image('icon_close', 'assets/images/ui/icons/icons_color/64x64/close.png');
+        this.load.image('icon_ok', 'assets/images/ui/icons/icons_color/64x64/ok.png');
+        this.load.image('icon_gold', 'assets/images/ui/icons/icons_color/64x64/gold.png');
+
+        // Gold coin icon (for UI displays)
+        this.load.image('ui_coin', 'assets/images/ui/icons/icon_coins_gems/64x64/coin_gold1.png');
+
+        // Ribbons (for titles)
+        this.load.image('ribbon_orange', 'assets/images/ui/ribbons/ribbon_orange.png');
+        this.load.image('ribbon_green', 'assets/images/ui/ribbons/ribbon_green.png');
+        this.load.image('ribbon_blue', 'assets/images/ui/ribbons/ribbon_blue.png');
+        this.load.image('ribbon_red', 'assets/images/ui/ribbons/ribbon_red.png');
+
+        // Panels/backgrounds
+        this.load.image('panel_score', 'assets/images/ui/title/back_score.png');
+        this.load.image('panel_shop', 'assets/images/ui/title/back_shop.png');
+        this.load.image('panel_small', 'assets/images/ui/title/back_small.png');
+        this.load.image('panel_uppanel', 'assets/images/ui/title/back_uppanel.png');
+        this.load.image('ui_background', 'assets/images/ui/title/background_1920x1080.png');
+
+        // Arrows
+        this.load.image('arrow_green', 'assets/images/ui/buttons/arrow_green.png');
+
         // Load audio files
         this.load.audio('button_click', 'assets/audio/sfx/button_click.mp3');
         this.load.audio('jump', 'assets/audio/sfx/jump.mp3');
@@ -206,17 +254,21 @@ export default class MenuScene extends Phaser.Scene {
         // Create background based on selected theme
         this.createThemeBackground();
 
-        // Add title with better positioning
-        this.add.text(400, 150, 'KANGAROO HOP', {
-            fontSize: '52px',
+        // Add title with ribbon background
+        const titleRibbon = this.add.image(400, 130, 'ribbon_orange');
+        titleRibbon.setScale(0.7);
+        titleRibbon.setDepth(999);
+
+        this.add.text(400, 130, 'KANGAROO HOP', {
+            fontSize: '42px',
             fontFamily: 'Arial',
-            color: '#FF6B35',
+            color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 4
         }).setOrigin(0.5).setDepth(1000); // High depth to be in front
 
         // Add subtitle
-        const startText = this.add.text(400, 230, 'Press SPACE or Click to Start!', {
+        const startText = this.add.text(400, 230, 'Tap or Press SPACE to Play!', {
             fontSize: '26px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
@@ -224,11 +276,16 @@ export default class MenuScene extends Phaser.Scene {
             strokeThickness: 2
         }).setOrigin(0.5).setDepth(1000);
 
-        // Add pulsing effect to start text
+        // Add green arrow pointing down to indicate "tap here"
+        const playArrow = this.add.image(400, 280, 'arrow_green');
+        playArrow.setScale(0.4);
+        playArrow.setDepth(1000);
+
+        // Add pulsing effect to start text and arrow
         this.tweens.add({
-            targets: startText,
-            scaleX: 1.05,
-            scaleY: 1.05,
+            targets: [startText, playArrow],
+            scaleX: '*=1.05',
+            scaleY: '*=1.05',
             duration: 1000,
             ease: 'Sine.easeInOut',
             yoyo: true,
@@ -237,14 +294,13 @@ export default class MenuScene extends Phaser.Scene {
 
 
 
-        // Add coin UI (top left) - keep this as it's functional
-        const coinIcon = this.add.sprite(30, 30, 'coin', 0);
-        coinIcon.play('coin_spin');
-        coinIcon.setScale(0.5); // Increased from 0.17 for new 64x64 coin sprite
-        coinIcon.setOrigin(0, 0.5);
+        // Add coin UI (top left) with new UI coin icon
+        const coinIcon = this.add.image(35, 30, 'ui_coin');
+        coinIcon.setScale(0.6);
+        coinIcon.setOrigin(0.5, 0.5);
         coinIcon.setDepth(1000);
 
-        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
+        this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFD700',
@@ -256,26 +312,30 @@ export default class MenuScene extends Phaser.Scene {
 
         // No need for createSimpleGround - using parallax ground layer instead
 
-        // Add shop button
-        const shopButton = this.add.text(300, 330, 'SHOP', {
-            fontSize: '24px',
+        // Add shop button with new UI graphics - DOWN LEFT
+        const shopButtonContainer = this.add.container(250, 450).setDepth(1000);
+        const shopButtonBg = this.add.image(0, 0, 'btn_blue');
+        shopButtonBg.setScale(0.4);
+        const shopIcon = this.add.image(-20, 0, 'icon_shop');
+        shopIcon.setScale(0.3);
+        const shopButtonText = this.add.text(10, 0, 'SHOP', {
+            fontSize: '20px',
             fontFamily: 'Arial',
-            color: '#00FFFF',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2,
-            backgroundColor: '#008888',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setDepth(1000);
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        shopButtonContainer.add([shopButtonBg, shopIcon, shopButtonText]);
 
-        shopButton.setInteractive();
-        shopButton.on('pointerdown', () => {
+        shopButtonBg.setInteractive();
+        shopButtonBg.on('pointerdown', () => {
             this.audioManager.playButtonClick();
             this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'MenuScene' });
         });
 
         // Add pulsing effect to shop button
         const shopPulseTween = this.tweens.add({
-            targets: shopButton,
+            targets: shopButtonContainer,
             scaleX: 1.05,
             scaleY: 1.05,
             duration: 1500,
@@ -285,38 +345,40 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         // Add hover effect to shop button
-        shopButton.on('pointerover', () => {
+        shopButtonBg.on('pointerover', () => {
             shopPulseTween.pause();
-            shopButton.setScale(1.2);
+            shopButtonContainer.setScale(1.15);
         });
-        shopButton.on('pointerout', () => {
-            shopButton.setScale(1);
+        shopButtonBg.on('pointerout', () => {
+            shopButtonContainer.setScale(1);
             shopPulseTween.resume();
         });
 
-        // Add background theme selector button
+        // Add background theme selector button with new UI graphics - DOWN RIGHT
         const currentTheme = this.gameDataManager.getBackgroundTheme();
         const themeName = BACKGROUND_THEMES[currentTheme]?.name || 'Outback';
 
-        this.bgButton = this.add.text(500, 330, `Theme: ${themeName}`, {
-            fontSize: '20px',
+        this.bgButtonContainer = this.add.container(550, 450).setDepth(1000);
+        const bgButtonBg = this.add.image(0, 0, 'btn_yellow');
+        bgButtonBg.setScale(0.4);
+        this.bgButtonText = this.add.text(0, 0, themeName, {
+            fontSize: '18px',
             fontFamily: 'Arial',
-            color: '#FFD700',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2,
-            backgroundColor: '#886600',
-            padding: { x: 15, y: 10 }
-        }).setOrigin(0.5).setDepth(1000);
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        this.bgButtonContainer.add([bgButtonBg, this.bgButtonText]);
 
-        this.bgButton.setInteractive();
-        this.bgButton.on('pointerdown', () => {
+        bgButtonBg.setInteractive();
+        bgButtonBg.on('pointerdown', () => {
             this.audioManager.playButtonClick();
             this.toggleBackgroundTheme();
         });
 
         // Add pulsing effect to background button
         const bgPulseTween = this.tweens.add({
-            targets: this.bgButton,
+            targets: this.bgButtonContainer,
             scaleX: 1.05,
             scaleY: 1.05,
             duration: 1500,
@@ -326,12 +388,12 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         // Add hover effect to background button
-        this.bgButton.on('pointerover', () => {
+        bgButtonBg.on('pointerover', () => {
             bgPulseTween.pause();
-            this.bgButton.setScale(1.2);
+            this.bgButtonContainer.setScale(1.15);
         });
-        this.bgButton.on('pointerout', () => {
-            this.bgButton.setScale(1);
+        bgButtonBg.on('pointerout', () => {
+            this.bgButtonContainer.setScale(1);
             bgPulseTween.resume();
         });
 
@@ -407,10 +469,6 @@ export default class MenuScene extends Phaser.Scene {
 
         // Save new theme
         this.gameDataManager.setBackgroundTheme(nextTheme);
-
-        // Update button text
-        const themeName = BACKGROUND_THEMES[nextTheme].name;
-        this.bgButton.setText(`Theme: ${themeName}`);
 
         // Restart the scene to show new background
         this.scene.restart();

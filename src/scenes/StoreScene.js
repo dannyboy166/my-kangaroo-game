@@ -21,22 +21,24 @@ export default class StoreScene extends Phaser.Scene {
         graphics.fillGradientStyle(0x39cef9, 0x39cef9, 0x7dd9fc, 0x7dd9fc, 1);
         graphics.fillRect(0, 0, 800, 600);
 
-        // Add title
-        this.add.text(400, 60, 'KANGAROO SHOP', {
-            fontSize: '42px',
+        // Add title with ribbon background
+        const titleRibbon = this.add.image(400, 55, 'ribbon_blue');
+        titleRibbon.setScale(0.65);
+
+        this.add.text(400, 55, 'SHOP', {
+            fontSize: '36px',
             fontFamily: 'Arial',
-            color: '#FF6B35',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 4
+            strokeThickness: 3
         }).setOrigin(0.5);
 
-        // Add coin display (top left)
-        const coinIcon = this.add.sprite(30, 30, 'coin', 0);
-        coinIcon.play('coin_spin');
-        coinIcon.setScale(0.5); // Increased from 0.17 for new 64x64 coin sprite
-        coinIcon.setOrigin(0, 0.5);
+        // Add coin display (top left) with new UI coin icon
+        const coinIcon = this.add.image(35, 30, 'ui_coin');
+        coinIcon.setScale(0.6);
+        coinIcon.setOrigin(0.5, 0.5);
 
-        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
+        this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFD700',
@@ -48,17 +50,23 @@ export default class StoreScene extends Phaser.Scene {
         // Create shop items
         this.createShopItems();
 
-        // Add back button
-        const backButton = this.add.text(400, 550, `Back to ${this.fromScene === 'GameOverScene' ? 'Game Over' : 'Menu'}`, {
-            fontSize: '20px',
+        // Add back button with new UI graphics
+        const backButtonContainer = this.add.container(400, 550);
+        const backButtonBg = this.add.image(0, 0, 'btn_long_red');
+        backButtonBg.setScale(0.5);
+        const backIcon = this.add.image(-55, 0, 'icon_house');
+        backIcon.setScale(0.4);
+        const backButtonText = this.add.text(10, 0, this.fromScene === 'GameOverScene' ? 'BACK' : 'MENU', {
+            fontSize: '22px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
+        backButtonContainer.add([backButtonBg, backIcon, backButtonText]);
 
-        backButton.setInteractive();
-        backButton.on('pointerdown', () => {
+        backButtonBg.setInteractive();
+        backButtonBg.on('pointerdown', () => {
             this.audioManager.playButtonClick();
             if (this.fromScene === 'GameOverScene') {
                 // Don't show fun fact when returning from shop
@@ -69,11 +77,11 @@ export default class StoreScene extends Phaser.Scene {
         });
 
         // Add hover effect to back button
-        backButton.on('pointerover', () => {
-            backButton.setScale(1.1);
+        backButtonBg.on('pointerover', () => {
+            backButtonContainer.setScale(1.1);
         });
-        backButton.on('pointerout', () => {
-            backButton.setScale(1);
+        backButtonBg.on('pointerout', () => {
+            backButtonContainer.setScale(1);
         });
     }
     createShopItems() {
@@ -218,42 +226,36 @@ export default class StoreScene extends Phaser.Scene {
         const playerCoins = this.gameDataManager.getCoins();
         const canBuy = playerCoins >= price && count < maxCount;
 
-
-        const buttonColor = canBuy ? '#00FF00' : '#666666';
-        const buttonTextColor = canBuy ? '#000000' : '#999999';
-
-        const buyButton = this.add.graphics();
-        buyButton.fillStyle(buttonColor === '#00FF00' ? 0x00FF00 : 0x666666);
-        buyButton.fillRoundedRect(-50, -15, 100, 30, 5);
-        buyButton.lineStyle(2, 0x000000);
-        buyButton.strokeRoundedRect(-50, -15, 100, 30, 5);
-        buyButton.x = 280;
-        container.add(buyButton);
+        // Use graphical buttons from UI pack
+        const buttonKey = canBuy ? 'btn_green' : 'btn_gray';
+        const buyButtonBg = this.add.image(280, 0, buttonKey);
+        buyButtonBg.setScale(0.45);
+        container.add(buyButtonBg);
 
         // Determine button text based on specific conditions
         let buttonText;
         if (canBuy) {
             buttonText = 'BUY';
         } else if (count >= maxCount) {
-            buttonText = 'SOLD OUT';
+            buttonText = 'MAX';
         } else {
-            buttonText = 'NEED COINS';
+            buttonText = 'NEED $';
         }
 
         const buyText = this.add.text(280, 0, buttonText, {
-            fontSize: '14px',
+            fontSize: '18px',
             fontFamily: 'Arial',
-            color: buttonTextColor,
-            stroke: buttonTextColor === '#000000' ? '#FFFFFF' : '#000000',
-            strokeThickness: 1
+            color: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
         });
         buyText.setOrigin(0.5);
         container.add(buyText);
 
         // Make button interactive if can buy
         if (canBuy) {
-            buyButton.setInteractive(new Phaser.Geom.Rectangle(-40, -15, 80, 30), Phaser.Geom.Rectangle.Contains);
-            buyButton.on('pointerdown', () => {
+            buyButtonBg.setInteractive();
+            buyButtonBg.on('pointerdown', () => {
                 const itemPrice = this.storeManager.getPowerUpPrice(type);
                 const itemCount = this.storeManager.getPowerUpCount(type);
                 const itemMaxCount = type === 'helmet' ? 1 : 3;
@@ -284,13 +286,13 @@ export default class StoreScene extends Phaser.Scene {
                 }
             });
 
-            buyButton.on('pointerover', () => {
-                buyButton.setScale(1.1);
+            buyButtonBg.on('pointerover', () => {
+                buyButtonBg.setScale(0.5);
                 buyText.setScale(1.1);
             });
 
-            buyButton.on('pointerout', () => {
-                buyButton.setScale(1);
+            buyButtonBg.on('pointerout', () => {
+                buyButtonBg.setScale(0.45);
                 buyText.setScale(1);
             });
         }

@@ -60,37 +60,25 @@ export default class ObstacleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
+        // Constants for swoop behavior - DEFINED ONCE
+        const SWOOP_SPEED = 400; // Fixed swoop speed (px/sec)
+        const CLIMB_SPEED = 300; // Climb speed (px/sec)
+        const STRAIGHTEN_TIME = 0.3; // Time magpie stays at ground (seconds)
+        const SWOOP_TARGET_Y = this.groundY - 50; // How low magpie swoops (close to kangaroo!)
+
         // Check if magpie is close enough to start swooping
         const distanceToKangaroo = magpie.x - kangaroo.x;
 
         // Calculate swoop distance using physics: distance = speed × time
-        // Magpies swoop at CONSTANT speed (400px/sec)
-        // Trigger distance scales with game speed automatically
-
-        const CONSTANT_SWOOP_SPEED = 400; // Fixed swoop speed (px/sec)
-        const STRAIGHTEN_TIME = 0.3; // Time magpie stays at ground (seconds)
-
         const magpieHeight = magpie.y;
-        const targetY = this.groundY - 100; // Where magpie swoops to (higher up)
-        const verticalDistance = targetY - magpieHeight; // How far down (in pixels)
-
-        // Time needed to swoop down (in seconds)
-        const timeToSwoop = verticalDistance / CONSTANT_SWOOP_SPEED;
-
-        // Total time before magpie is safe to hit
+        const verticalDistance = SWOOP_TARGET_Y - magpieHeight;
+        const timeToSwoop = verticalDistance / SWOOP_SPEED;
         const totalTime = timeToSwoop + STRAIGHTEN_TIME;
-
-        // In that time, kangaroo travels this far (distance = speed × time)
-        // At 300 speed: travels ~X px
-        // At 600 speed: travels ~2X px (automatically doubles!)
-        // At 900 speed: travels ~3X px (automatically triples!)
-        const swoopDistance = this.gameSpeed * totalTime * 2; // 10% safety buffer
+        const swoopDistance = this.gameSpeed * totalTime * 2;
 
         const swoopStarted = magpie.getData('swoopStarted');
         const willSwoop = magpie.getData('willSwoop');
         const isClimbingBack = magpie.getData('isClimbingBack');
-        // swoopSpeed already declared above for physics calculation
-        const climbSpeed = magpie.getData('climbSpeed');
         const initialY = magpie.getData('initialY');
 
         if (!swoopStarted && distanceToKangaroo <= swoopDistance && willSwoop) {
@@ -99,34 +87,28 @@ export default class ObstacleManager {
         }
 
         if (magpie.getData('swoopStarted') && !isClimbingBack) {
-            // Swoop down towards ground level at CONSTANT speed
-            const CONSTANT_SWOOP_SPEED = 400; // Same as trigger calculation
-            const targetY = this.groundY - 100; // Slightly above ground (higher up)
+            // Swoop down towards ground level
             const currentY = magpie.y;
 
-            if (currentY < targetY) {
+            if (currentY < SWOOP_TARGET_Y) {
                 // Dive down at constant speed
-                magpie.y += CONSTANT_SWOOP_SPEED * delta / 1000;
+                magpie.y += SWOOP_SPEED * delta / 1000;
                 magpie.setRotation(-Math.PI / 4); // -45 degrees (diving tilt)
             } else {
                 // Reached bottom, stay down until past kangaroo
                 magpie.setRotation(0);
 
                 // Check if magpie is now behind the kangaroo
-                const isBehindKangaroo = magpie.x < kangaroo.x;
-
-                if (isBehindKangaroo) {
-                    // Climb as soon as past kangaroo
+                if (magpie.x < kangaroo.x) {
                     magpie.setData('isClimbingBack', true);
                 }
             }
         }
 
         if (magpie.getData('isClimbingBack')) {
-            // Climb back up to original height at CONSTANT speed
-            const CONSTANT_CLIMB_SPEED = 300; // Constant climb speed (px/sec)
+            // Climb back up to original height
             if (magpie.y > initialY) {
-                magpie.y -= CONSTANT_CLIMB_SPEED * delta / 1000;
+                magpie.y -= CLIMB_SPEED * delta / 1000;
                 magpie.setRotation(Math.PI / 6); // +30 degrees (climbing tilt)
             } else {
                 // Back to normal flying

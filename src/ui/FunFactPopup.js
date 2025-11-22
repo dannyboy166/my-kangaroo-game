@@ -108,35 +108,31 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
     }
 
     createPopup() {
-        // Semi-transparent backdrop - FIXED: Ensure proper bounds
+        // Semi-transparent backdrop
         this.backdrop = this.scene.add.graphics();
         this.backdrop.fillStyle(0x000000, 0.7);
-        this.backdrop.fillRect(-400, -300, 800, 600); // FIXED: Centered on container origin
+        this.backdrop.fillRect(-400, -300, 800, 600);
         this.backdrop.setInteractive(new Phaser.Geom.Rectangle(-400, -300, 800, 600), Phaser.Geom.Rectangle.Contains);
         this.add(this.backdrop);
 
-        // Clean modern popup background - Smaller size
-        this.popupBg = this.scene.add.graphics();
-        this.popupBg.fillStyle(0x2C3E50, 1); // Dark blue-gray
-        this.popupBg.fillRoundedRect(-180, -120, 360, 240, 15);
-        
-        // Subtle border
-        this.popupBg.lineStyle(2, 0x3498DB, 1); // Light blue border
-        this.popupBg.strokeRoundedRect(-180, -120, 360, 240, 15);
-        this.add(this.popupBg);
+        // Use panel from UI pack as background
+        this.panelBg = this.scene.add.image(0, 0, 'panel_small');
+        this.panelBg.setScale(0.55);
+        this.add(this.panelBg);
 
-        // Add subtle inner glow - Smaller size
-        const innerGlow = this.scene.add.graphics();
-        innerGlow.fillStyle(0x3498DB, 0.1);
-        innerGlow.fillRoundedRect(-175, -115, 350, 230, 12);
-        this.add(innerGlow);
+        // Title ribbon
+        this.titleRibbon = this.scene.add.image(0, -85, 'ribbon_orange');
+        this.titleRibbon.setScale(0.35);
+        this.add(this.titleRibbon);
 
-        // Clean title
-        this.titleText = this.scene.add.text(0, -90, 'DID YOU KNOW?', {
-            fontSize: '24px',
+        // Title text
+        this.titleText = this.scene.add.text(0, -85, 'DID YOU KNOW?', {
+            fontSize: '18px',
             fontFamily: 'Arial',
-            color: '#E74C3C',
-            fontStyle: 'bold'
+            color: '#FFFFFF',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
         }).setOrigin(0.5);
         this.add(this.titleText);
 
@@ -145,62 +141,59 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         const randomFact = Phaser.Utils.Array.GetRandom(facts);
         const emoji = this.obstacleEmojis[this.obstacleType] || '🪨';
 
-        // Clean fact text
+        // Fact text - BLACK color
         this.factText = this.scene.add.text(0, -10, `${emoji} ${randomFact}`, {
-            fontSize: '18px',
+            fontSize: '16px',
             fontFamily: 'Arial',
-            color: '#ECF0F1',
+            color: '#000000',
             align: 'center',
-            wordWrap: { width: 320 },
+            wordWrap: { width: 280 },
             lineSpacing: 6
         }).setOrigin(0.5);
         this.add(this.factText);
 
-        // Clean modern button - Adjusted position
-        this.awesomeBtn = this.scene.add.graphics();
-        this.awesomeBtn.fillStyle(0x27AE60, 1); // Green
-        this.awesomeBtn.fillRoundedRect(-70, 60, 140, 40, 8);
-        this.awesomeBtn.lineStyle(2, 0x2ECC71, 1);
-        this.awesomeBtn.strokeRoundedRect(-70, 60, 140, 40, 8);
+        // Use green button from UI pack
+        this.awesomeBtn = this.scene.add.image(0, 75, 'btn_green');
+        this.awesomeBtn.setScale(0.45);
         this.add(this.awesomeBtn);
 
-        this.awesomeBtnText = this.scene.add.text(0, 80, 'AWESOME!', {
-            fontSize: '18px',
+        // Button icon - separated a bit more from text
+        this.btnIcon = this.scene.add.image(-40, 75, 'icon_ok');
+        this.btnIcon.setScale(0.35);
+        this.add(this.btnIcon);
+
+        this.awesomeBtnText = this.scene.add.text(20, 75, 'GOT IT!', {
+            fontSize: '20px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
-            fontStyle: 'bold'
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
         }).setOrigin(0.5);
         this.add(this.awesomeBtnText);
 
         // Make button interactive
-        const buttonBounds = new Phaser.Geom.Rectangle(-70, 60, 140, 40);
-        this.awesomeBtn.setInteractive(buttonBounds, Phaser.Geom.Rectangle.Contains);
-        
+        this.awesomeBtn.setInteractive({ useHandCursor: true });
+
         this.awesomeBtn.on('pointerdown', () => {
             this.close();
         });
 
         this.awesomeBtn.on('pointerover', () => {
-            this.awesomeBtn.clear();
-            this.awesomeBtn.fillStyle(0x2ECC71, 1); // Lighter green on hover
-            this.awesomeBtn.fillRoundedRect(-70, 60, 140, 40, 8);
-            this.awesomeBtn.lineStyle(2, 0x27AE60, 1);
-            this.awesomeBtn.strokeRoundedRect(-70, 60, 140, 40, 8);
+            this.awesomeBtn.setScale(0.5);
+            this.btnIcon.setScale(0.38);
+            this.awesomeBtnText.setScale(1.1);
         });
 
         this.awesomeBtn.on('pointerout', () => {
-            this.awesomeBtn.clear();
-            this.awesomeBtn.fillStyle(0x27AE60, 1); // Original green
-            this.awesomeBtn.fillRoundedRect(-70, 60, 140, 40, 8);
-            this.awesomeBtn.lineStyle(2, 0x2ECC71, 1);
-            this.awesomeBtn.strokeRoundedRect(-70, 60, 140, 40, 8);
+            this.awesomeBtn.setScale(0.45);
+            this.btnIcon.setScale(0.35);
+            this.awesomeBtnText.setScale(1);
         });
 
-        // FIXED: Position the container in the center of the screen with proper depth
+        // Position in center
         this.setPosition(400, 300);
-        this.setDepth(1000); // Ensure it's on top of everything
-        
-        // FIXED: Set bounds on the container itself to prevent overflow
+        this.setDepth(1000);
         this.setSize(800, 600);
     }
 

@@ -25,22 +25,21 @@ export default class GameOverScene extends Phaser.Scene {
 
     create() {
 
-        // Add background
+        // Add UI background image
+        const bg = this.add.image(400, 300, 'ui_background');
+        bg.setDisplaySize(800, 600);
+
+        // Add semi-transparent overlay for better text readability
         const graphics = this.add.graphics();
-        graphics.fillGradientStyle(0x330066, 0x330066, 0x87CEEB, 0x87CEEB, 1);
+        graphics.fillStyle(0x000000, 0.5);
         graphics.fillRect(0, 0, 800, 600);
 
-        // Add semi-transparent overlay
-        graphics.fillStyle(0x000000, 0.6);
-        graphics.fillRect(0, 0, 800, 600);
+        // Add coin UI (top left) with new UI coin icon
+        const coinIcon = this.add.image(35, 30, 'ui_coin');
+        coinIcon.setScale(0.6);
+        coinIcon.setOrigin(0.5, 0.5);
 
-        // Add coin UI (top left)
-        const coinIcon = this.add.sprite(30, 30, 'coin', 0);
-        coinIcon.play('coin_spin');
-        coinIcon.setScale(0.5); // Increased from 0.17 for new 64x64 coin sprite
-        coinIcon.setOrigin(0, 0.5);
-        
-        this.coinText = this.add.text(70, 30, `${this.gameDataManager.getCoins()}`, {
+        this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFD700',
@@ -49,46 +48,56 @@ export default class GameOverScene extends Phaser.Scene {
         });
         this.coinText.setOrigin(0, 0.5);
 
+        // Game Over ribbon with all info - HIGHER position
+        const titleRibbon = this.add.image(400, 150, 'ribbon_red');
+        titleRibbon.setScale(0.85);
+
         // Game Over title
-        const gameOverText = this.add.text(400, 150, 'GAME OVER', {
-            fontSize: '48px',
+        this.add.text(400, 100, 'GAME OVER', {
+            fontSize: '32px',
             fontFamily: 'Arial',
-            color: '#FF4444',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 4
+            strokeThickness: 3
         }).setOrigin(0.5);
 
-        // Add pulsing effect to game over text
-        this.tweens.add({
-            targets: gameOverText,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 1000,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
-
-        // Score display
-        this.add.text(400, 220, `Score: ${this.finalScore}`, {
-            fontSize: '32px',
+        // Score in ribbon
+        this.add.text(400, 135, `Score: ${this.finalScore}`, {
+            fontSize: '22px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
 
-        // High score display
-        const highScoreColor = this.isNewRecord ? '#FFD700' : '#CCCCCC';
+        // High score in ribbon
+        const highScoreColor = this.isNewRecord ? '#FFD700' : '#FFFFFF';
         const highScoreText = this.isNewRecord ? `NEW RECORD: ${this.highScore}!` : `Best: ${this.highScore}`;
 
-        this.add.text(400, 270, highScoreText, {
-            fontSize: '24px',
+        // Add star icon for new high score
+        if (this.isNewRecord) {
+            const starIcon = this.add.image(290, 185, 'icon_star');
+            starIcon.setScale(0.4);
+        }
+
+        this.add.text(400, 165, highScoreText, {
+            fontSize: '18px',
             fontFamily: 'Arial',
             color: highScoreColor,
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
+
+        // Add pulsing effect to ribbon
+        this.tweens.add({
+            targets: titleRibbon,
+            scaleX: 0.88,
+            scaleY: 0.88,
+            duration: 1000,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
 
         // Show fun fact popup after a short delay (only if not returning from shop)
         if (this.showFunFact) {
@@ -100,85 +109,91 @@ export default class GameOverScene extends Phaser.Scene {
             });
         }
 
-        // Play again button
-        const playAgainBtn = this.add.text(400, 380, 'PLAY AGAIN', {
-            fontSize: '28px',
+        // Play again button with new UI graphics - HIGHER
+        const playAgainContainer = this.add.container(400, 320);
+        const playAgainBg = this.add.image(0, 0, 'btn_long_green');
+        playAgainBg.setScale(0.7);
+        const playAgainIcon = this.add.image(-80, 0, 'icon_ok');
+        playAgainIcon.setScale(0.55);
+        const playAgainText = this.add.text(10, 0, 'PLAY AGAIN', {
+            fontSize: '26px',
             fontFamily: 'Arial',
-            color: '#00FF00',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2,
-            backgroundColor: '#004400',
-            padding: { x: 20, y: 10 }
+            strokeThickness: 2
         }).setOrigin(0.5);
+        playAgainContainer.add([playAgainBg, playAgainIcon, playAgainText]);
 
-        playAgainBtn.setInteractive({ useHandCursor: true });
-        playAgainBtn.on('pointerdown', () => {
+        playAgainBg.setInteractive({ useHandCursor: true });
+        playAgainBg.on('pointerdown', () => {
             this.audioManager?.playButtonClick();
             this.scene.start('GameScene', { audioManager: this.audioManager });
         });
 
-        playAgainBtn.on('pointerover', () => {
-            playAgainBtn.setTint(0xccffcc);
-            playAgainBtn.setScale(1.1);
+        playAgainBg.on('pointerover', () => {
+            playAgainContainer.setScale(1.1);
         });
 
-        playAgainBtn.on('pointerout', () => {
-            playAgainBtn.clearTint();
-            playAgainBtn.setScale(1);
+        playAgainBg.on('pointerout', () => {
+            playAgainContainer.setScale(1);
         });
 
-        // Shop button
-        const shopBtn = this.add.text(250, 450, 'SHOP', {
-            fontSize: '28px',
+        // Shop button - LEFT side
+        const shopContainer = this.add.container(200, 460);
+        const shopBg = this.add.image(0, 0, 'btn_blue');
+        shopBg.setScale(0.45);
+        const shopIcon = this.add.image(-22, 0, 'icon_shop');
+        shopIcon.setScale(0.35);
+        const shopText = this.add.text(14, 0, 'SHOP', {
+            fontSize: '20px',
             fontFamily: 'Arial',
-            color: '#00FFFF',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2,
-            backgroundColor: '#004444',
-            padding: { x: 20, y: 10 }
+            strokeThickness: 2
         }).setOrigin(0.5);
+        shopContainer.add([shopBg, shopIcon, shopText]);
 
-        shopBtn.setInteractive({ useHandCursor: true });
-        shopBtn.on('pointerdown', () => {
+        shopBg.setInteractive({ useHandCursor: true });
+        shopBg.on('pointerdown', () => {
             this.audioManager?.playButtonClick();
             this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'GameOverScene' });
         });
 
-        shopBtn.on('pointerover', () => {
-            shopBtn.setTint(0xccffff);
-            shopBtn.setScale(1.1);
+        shopBg.on('pointerover', () => {
+            shopContainer.setScale(1.1);
         });
 
-        shopBtn.on('pointerout', () => {
-            shopBtn.clearTint();
-            shopBtn.setScale(1);
+        shopBg.on('pointerout', () => {
+            shopContainer.setScale(1);
         });
 
-        // Menu button
-        const menuBtn = this.add.text(550, 450, 'MAIN MENU', {
-            fontSize: '28px',
+        // Menu button - RIGHT side
+        const menuContainer = this.add.container(600, 460);
+        const menuBg = this.add.image(0, 0, 'btn_yellow');
+        menuBg.setScale(0.45);
+        const menuIcon = this.add.image(-22, 0, 'icon_house');
+        menuIcon.setScale(0.35);
+        const menuText = this.add.text(12, 0, 'MENU', {
+            fontSize: '20px',
             fontFamily: 'Arial',
-            color: '#FFD700',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2,
-            backgroundColor: '#444400',
-            padding: { x: 20, y: 10 }
+            strokeThickness: 2
         }).setOrigin(0.5);
+        menuContainer.add([menuBg, menuIcon, menuText]);
 
-        menuBtn.setInteractive({ useHandCursor: true });
-        menuBtn.on('pointerdown', () => {
+        menuBg.setInteractive({ useHandCursor: true });
+        menuBg.on('pointerdown', () => {
             this.audioManager?.playButtonClick();
             this.scene.start('MenuScene');
         });
 
-        menuBtn.on('pointerover', () => {
-            menuBtn.setTint(0xffffcc);
-            menuBtn.setScale(1.1);
+        menuBg.on('pointerover', () => {
+            menuContainer.setScale(1.1);
         });
 
-        menuBtn.on('pointerout', () => {
-            menuBtn.clearTint();
-            menuBtn.setScale(1);
+        menuBg.on('pointerout', () => {
+            menuContainer.setScale(1);
         });
 
         // Add instruction text
