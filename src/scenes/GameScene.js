@@ -66,6 +66,9 @@ export default class GameScene extends Phaser.Scene {
         this.key1 = null;
         this.key2 = null;
         this.key3 = null;
+
+        // Track if we were in air last frame (for proper landing detection)
+        this.wasInAir = false;
     }
 
     /**
@@ -464,9 +467,15 @@ export default class GameScene extends Phaser.Scene {
         if (isOnGround) {
             if (currentAnim !== runAnimKey) {
                 this.kangaroo.play(runAnimKey);
+            }
+            // Only reset double jump when ACTUALLY landing (was in air, now on ground)
+            if (this.wasInAir) {
                 this.powerupManager.resetDoubleJump();
+                this.wasInAir = false;
             }
         } else {
+            // We're in the air
+            this.wasInAir = true;
             if (currentAnim !== jumpAnimKey) {
                 this.kangaroo.play(jumpAnimKey);
             }

@@ -316,10 +316,10 @@ export default class MenuScene extends Phaser.Scene {
         const shopButtonContainer = this.add.container(250, 450).setDepth(1000);
         const shopButtonBg = this.add.image(0, 0, 'btn_blue');
         shopButtonBg.setScale(0.4);
-        const shopIcon = this.add.image(-20, 0, 'icon_shop');
+        const shopIcon = this.add.image(-35, 0, 'icon_shop');
         shopIcon.setScale(0.3);
-        const shopButtonText = this.add.text(10, 0, 'SHOP', {
-            fontSize: '20px',
+        const shopButtonText = this.add.text(15, 0, 'SHOP', {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
             stroke: '#000000',
@@ -361,14 +361,16 @@ export default class MenuScene extends Phaser.Scene {
         this.bgButtonContainer = this.add.container(550, 450).setDepth(1000);
         const bgButtonBg = this.add.image(0, 0, 'btn_yellow');
         bgButtonBg.setScale(0.4);
-        this.bgButtonText = this.add.text(0, 0, themeName, {
-            fontSize: '18px',
+        const bgIcon = this.add.image(-35, 0, 'icon_star');
+        bgIcon.setScale(0.3);
+        this.bgButtonText = this.add.text(15, 0, themeName.toUpperCase(), {
+            fontSize: '24px',
             fontFamily: 'Arial',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        this.bgButtonContainer.add([bgButtonBg, this.bgButtonText]);
+        this.bgButtonContainer.add([bgButtonBg, bgIcon, this.bgButtonText]);
 
         bgButtonBg.setInteractive();
         bgButtonBg.on('pointerdown', () => {
