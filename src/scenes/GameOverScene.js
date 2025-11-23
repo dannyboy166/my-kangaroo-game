@@ -88,16 +88,6 @@ export default class GameOverScene extends Phaser.Scene {
             strokeThickness: 2
         }).setOrigin(0.5);
 
-        // Add pulsing effect to ribbon
-        this.tweens.add({
-            targets: titleRibbon,
-            scaleX: 0.88,
-            scaleY: 0.88,
-            duration: 1000,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
 
         // Show fun fact popup after a short delay (only if not returning from shop)
         if (this.showFunFact) {
@@ -113,16 +103,19 @@ export default class GameOverScene extends Phaser.Scene {
         const playAgainContainer = this.add.container(400, 320);
         const playAgainBg = this.add.image(0, 0, 'btn_long_green');
         playAgainBg.setScale(0.7);
-        const playAgainIcon = this.add.image(-80, 0, 'icon_ok');
-        playAgainIcon.setScale(0.55);
-        const playAgainText = this.add.text(10, 0, 'PLAY AGAIN', {
-            fontSize: '30px',
+        // Sub-container for icon+text (so they move together)
+        const playAgainContent = this.add.container(0, -5);
+        const playAgainText = this.add.text(0, 0, 'PLAY AGAIN', {
+            fontSize: '34px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        playAgainContainer.add([playAgainBg, playAgainIcon, playAgainText]);
+        const playAgainIcon = this.add.image(-(playAgainText.width / 2) - 25, 0, 'icon_ok');
+        playAgainIcon.setScale(0.55);
+        playAgainContent.add([playAgainIcon, playAgainText]);
+        playAgainContainer.add([playAgainBg, playAgainContent]);
 
         playAgainBg.setInteractive({ useHandCursor: true });
         playAgainBg.on('pointerdown', () => {
@@ -138,20 +131,34 @@ export default class GameOverScene extends Phaser.Scene {
             playAgainContainer.setScale(1);
         });
 
+        // Add pulsing effect to play again button
+        this.tweens.add({
+            targets: playAgainContainer,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 800,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
         // Shop button - LEFT side
         const shopContainer = this.add.container(200, 460);
         const shopBg = this.add.image(0, 0, 'btn_blue');
         shopBg.setScale(0.45);
-        const shopIcon = this.add.image(-35, 0, 'icon_shop');
-        shopIcon.setScale(0.35);
-        const shopText = this.add.text(14, 0, 'SHOP', {
-            fontSize: '24px',
+        // Sub-container for icon+text (so they move together)
+        const shopContent = this.add.container(0, -5);
+        const shopText = this.add.text(0, 0, 'SHOP', {
+            fontSize: '28px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        shopContainer.add([shopBg, shopIcon, shopText]);
+        const shopIcon = this.add.image(-(shopText.width / 2) - 20, 0, 'icon_shop');
+        shopIcon.setScale(0.35);
+        shopContent.add([shopIcon, shopText]);
+        shopContainer.add([shopBg, shopContent]);
 
         shopBg.setInteractive({ useHandCursor: true });
         shopBg.on('pointerdown', () => {
@@ -171,16 +178,19 @@ export default class GameOverScene extends Phaser.Scene {
         const menuContainer = this.add.container(600, 460);
         const menuBg = this.add.image(0, 0, 'btn_yellow');
         menuBg.setScale(0.45);
-        const menuIcon = this.add.image(-35, 0, 'icon_house');
-        menuIcon.setScale(0.35);
-        const menuText = this.add.text(12, 0, 'MENU', {
-            fontSize: '24px',
+        // Sub-container for icon+text (so they move together)
+        const menuContent = this.add.container(0, -5);
+        const menuText = this.add.text(0, 0, 'MENU', {
+            fontSize: '28px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        menuContainer.add([menuBg, menuIcon, menuText]);
+        const menuIcon = this.add.image(-(menuText.width / 2) - 20, 0, 'icon_house');
+        menuIcon.setScale(0.35);
+        menuContent.add([menuIcon, menuText]);
+        menuContainer.add([menuBg, menuContent]);
 
         menuBg.setInteractive({ useHandCursor: true });
         menuBg.on('pointerdown', () => {

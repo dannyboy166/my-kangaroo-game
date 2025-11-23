@@ -115,9 +115,41 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         this.backdrop.setInteractive(new Phaser.Geom.Rectangle(-400, -300, 800, 600), Phaser.Geom.Rectangle.Contains);
         this.add(this.backdrop);
 
-        // Use panel from UI pack as background
+        // Get random fact and emoji first (to measure text height)
+        const facts = this.obstacleFacts[this.obstacleType] || this.obstacleFacts.rock;
+        const randomFact = Phaser.Utils.Array.GetRandom(facts);
+        const emoji = this.obstacleEmojis[this.obstacleType] || '🪨';
+
+        // Create fact text with top-center origin so it grows downward
+        // Position it below the ribbon (ribbon is at -85, give some padding)
+        const factTextTop = -20; // Start below the ribbon
+        this.factText = this.scene.add.text(0, factTextTop, `${emoji} ${randomFact}`, {
+            fontSize: '20px',
+            fontFamily: 'Carter One',
+            color: '#000000',
+            align: 'center',
+            wordWrap: { width: 280 },
+            lineSpacing: 6
+        }).setOrigin(0.5, 0); // Top-center origin - text grows downward
+
+        // Calculate button Y position based on fact text height
+        const factTextBottom = factTextTop + this.factText.height;
+        const buttonY = factTextBottom + 65; // 35px spacing below fact text
+
+        // Calculate required panel height and scale
+        // Panel needs to fit: ribbon at -85, fact text, button at buttonY + some padding
+        const contentBottom = buttonY + 30; // Button height + padding
+        const contentTop = -110; // Above ribbon
+        const totalContentHeight = contentBottom - contentTop;
+
+        // Base panel scale is 1.5, base panel height at that scale
+        const baseScale = 1.5;
+        const minScale = baseScale;
+        const neededScale = Math.max(minScale, totalContentHeight / 140); // 140 is rough panel height estimate
+
+        // Use panel from UI pack as background (now with dynamic scale)
         this.panelBg = this.scene.add.image(0, 0, 'back_days');
-        this.panelBg.setScale(1.5);
+        this.panelBg.setScale(1.5, neededScale);
         this.add(this.panelBg);
 
         // Title ribbon
@@ -126,7 +158,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         this.add(this.titleRibbon);
 
         // Title text
-        this.titleText = this.scene.add.text(0, -85, 'DID YOU KNOW?', {
+        this.titleText = this.scene.add.text(0, -93, 'DID YOU KNOW?', {
             fontSize: '18px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
@@ -136,33 +168,20 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         }).setOrigin(0.5);
         this.add(this.titleText);
 
-        // Get random fact and emoji
-        const facts = this.obstacleFacts[this.obstacleType] || this.obstacleFacts.rock;
-        const randomFact = Phaser.Utils.Array.GetRandom(facts);
-        const emoji = this.obstacleEmojis[this.obstacleType] || '🪨';
-
-        // Fact text - BLACK color
-        this.factText = this.scene.add.text(0, -10, `${emoji} ${randomFact}`, {
-            fontSize: '20px',
-            fontFamily: 'Carter One',
-            color: '#000000',
-            align: 'center',
-            wordWrap: { width: 280 },
-            lineSpacing: 6
-        }).setOrigin(0.5);
+        // Now add fact text to container
         this.add(this.factText);
 
         // Use green button from UI pack
-        this.awesomeBtn = this.scene.add.image(0, 75, 'btn_green');
+        this.awesomeBtn = this.scene.add.image(0, buttonY, 'btn_green');
         this.awesomeBtn.setScale(0.35);
         this.add(this.awesomeBtn);
 
         // Button icon - separated a bit more from text
-        this.btnIcon = this.scene.add.image(-40, 75, 'icon_ok');
+        this.btnIcon = this.scene.add.image(-40, buttonY, 'icon_ok');
         this.btnIcon.setScale(0.35);
         this.add(this.btnIcon);
 
-        this.awesomeBtnText = this.scene.add.text(20, 75, 'GOT IT!', {
+        this.awesomeBtnText = this.scene.add.text(20, buttonY, 'GOT IT!', {
             fontSize: '20px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
