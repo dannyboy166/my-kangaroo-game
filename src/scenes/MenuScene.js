@@ -262,20 +262,20 @@ export default class MenuScene extends Phaser.Scene {
         this.createThemeBackground();
 
         // Add title with ribbon background
-        const titleRibbon = this.add.image(400, 130, 'ribbon_orange');
+        const titleContainer = this.add.container(400, 130).setDepth(1000);
+        const titleRibbon = this.add.image(0, 0, 'ribbon_orange');
         titleRibbon.setScale(0.7);
-        titleRibbon.setDepth(999);
-
-        this.add.text(400, 120, 'KANGAROO HOP', {
+        const titleText = this.add.text(0, -15, 'KANGAROO HOP', {
             fontSize: '42px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 4
-        }).setOrigin(0.5).setDepth(1000); // High depth to be in front
+        }).setOrigin(0.5);
+        titleContainer.add([titleRibbon, titleText]);
 
         // Add subtitle - green color to match play button
-        const startText = this.add.text(400, 230, 'Tap or Press SPACE to Play!', {
+        const startText = this.add.text(400, 235, 'Tap or Press SPACE to Play!', {
             fontSize: '26px',
             fontFamily: 'Carter One',
             color: '#4CAF50',
@@ -323,16 +323,19 @@ export default class MenuScene extends Phaser.Scene {
         const shopButtonContainer = this.add.container(250, 400).setDepth(1000);
         const shopButtonBg = this.add.image(0, 0, 'btn_blue');
         shopButtonBg.setScale(0.4);
-        const shopIcon = this.add.image(-35, -3, 'icon_shop');
-        shopIcon.setScale(0.3);
-        const shopButtonText = this.add.text(15, -3, 'SHOP', {
+        // Sub-container for icon+text (so they move together)
+        const shopContent = this.add.container(0, -5);
+        const shopButtonText = this.add.text(0, 0, 'SHOP', {
             fontSize: '24px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        shopButtonContainer.add([shopButtonBg, shopIcon, shopButtonText]);
+        const shopIcon = this.add.image(-(shopButtonText.width / 2) - 22, 0, 'icon_shop');
+        shopIcon.setScale(0.38);
+        shopContent.add([shopIcon, shopButtonText]);
+        shopButtonContainer.add([shopButtonBg, shopContent]);
 
         shopButtonBg.setInteractive();
         shopButtonBg.on('pointerdown', () => {
@@ -368,9 +371,9 @@ export default class MenuScene extends Phaser.Scene {
         this.bgButtonContainer = this.add.container(550, 400).setDepth(1000);
         const bgButtonBg = this.add.image(0, 0, 'btn_yellow');
         bgButtonBg.setScale(0.4);
-        const bgIcon = this.add.image(-90, -3, 'icon_star');
-        bgIcon.setScale(0.3);
-        this.bgButtonText = this.add.text(5, -3, themeName, {
+        // Sub-container for icon+text (so they move together)
+        const bgContent = this.add.container(0, -5);
+        this.bgButtonText = this.add.text(0, 0, themeName, {
             fontSize: '24px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
@@ -378,7 +381,10 @@ export default class MenuScene extends Phaser.Scene {
             strokeThickness: 2,
             align: 'center'
         }).setOrigin(0.5);
-        this.bgButtonContainer.add([bgButtonBg, bgIcon, this.bgButtonText]);
+        const bgIcon = this.add.image(-(this.bgButtonText.width / 2) - 22, 0, 'icon_star');
+        bgIcon.setScale(0.38);
+        bgContent.add([bgIcon, this.bgButtonText]);
+        this.bgButtonContainer.add([bgButtonBg, bgContent]);
 
         bgButtonBg.setInteractive();
         bgButtonBg.on('pointerdown', () => {
@@ -407,14 +413,6 @@ export default class MenuScene extends Phaser.Scene {
             bgPulseTween.resume();
         });
 
-        // Add instructions
-        this.add.text(400, 520, 'Jump over obstacles and collect coins!', {
-            fontSize: '18px',
-            fontFamily: 'Carter One',
-            color: '#CCCCCC',
-            stroke: '#000000',
-            strokeThickness: 1
-        }).setOrigin(0.5).setDepth(1000);
 
         // Input handling - only for non-interactive areas
         this.input.keyboard.on('keydown-SPACE', this.startGame, this);
