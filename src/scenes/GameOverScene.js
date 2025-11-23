@@ -41,7 +41,7 @@ export default class GameOverScene extends Phaser.Scene {
 
         this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFD700',
             stroke: '#000000',
             strokeThickness: 2
@@ -54,8 +54,8 @@ export default class GameOverScene extends Phaser.Scene {
 
         // Game Over title
         this.add.text(400, 100, 'GAME OVER', {
-            fontSize: '32px',
-            fontFamily: 'Arial',
+            fontSize: '38px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 3
@@ -63,8 +63,8 @@ export default class GameOverScene extends Phaser.Scene {
 
         // Score in ribbon
         this.add.text(400, 135, `Score: ${this.finalScore}`, {
-            fontSize: '22px',
-            fontFamily: 'Arial',
+            fontSize: '26px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -76,13 +76,13 @@ export default class GameOverScene extends Phaser.Scene {
 
         // Add star icon for new high score
         if (this.isNewRecord) {
-            const starIcon = this.add.image(290, 185, 'icon_star');
+            const starIcon = this.add.image(280, 165, 'icon_star');
             starIcon.setScale(0.4);
         }
 
         this.add.text(400, 165, highScoreText, {
-            fontSize: '18px',
-            fontFamily: 'Arial',
+            fontSize: '22px',
+            fontFamily: 'Carter One',
             color: highScoreColor,
             stroke: '#000000',
             strokeThickness: 2
@@ -116,8 +116,8 @@ export default class GameOverScene extends Phaser.Scene {
         const playAgainIcon = this.add.image(-80, 0, 'icon_ok');
         playAgainIcon.setScale(0.55);
         const playAgainText = this.add.text(10, 0, 'PLAY AGAIN', {
-            fontSize: '26px',
-            fontFamily: 'Arial',
+            fontSize: '30px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -142,11 +142,11 @@ export default class GameOverScene extends Phaser.Scene {
         const shopContainer = this.add.container(200, 460);
         const shopBg = this.add.image(0, 0, 'btn_blue');
         shopBg.setScale(0.45);
-        const shopIcon = this.add.image(-22, 0, 'icon_shop');
+        const shopIcon = this.add.image(-35, 0, 'icon_shop');
         shopIcon.setScale(0.35);
         const shopText = this.add.text(14, 0, 'SHOP', {
-            fontSize: '20px',
-            fontFamily: 'Arial',
+            fontSize: '24px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -171,11 +171,11 @@ export default class GameOverScene extends Phaser.Scene {
         const menuContainer = this.add.container(600, 460);
         const menuBg = this.add.image(0, 0, 'btn_yellow');
         menuBg.setScale(0.45);
-        const menuIcon = this.add.image(-22, 0, 'icon_house');
+        const menuIcon = this.add.image(-35, 0, 'icon_house');
         menuIcon.setScale(0.35);
         const menuText = this.add.text(12, 0, 'MENU', {
-            fontSize: '20px',
-            fontFamily: 'Arial',
+            fontSize: '24px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -198,8 +198,8 @@ export default class GameOverScene extends Phaser.Scene {
 
         // Add instruction text
         this.add.text(400, 530, 'Press SPACE to restart or click buttons above', {
-            fontSize: '18px',
-            fontFamily: 'Arial',
+            fontSize: '20px',
+            fontFamily: 'Carter One',
             color: '#CCCCCC',
             stroke: '#000000',
             strokeThickness: 1

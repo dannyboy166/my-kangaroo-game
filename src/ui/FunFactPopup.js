@@ -117,7 +117,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
 
         // Use panel from UI pack as background
         this.panelBg = this.scene.add.image(0, 0, 'back_days');
-        this.panelBg.setScale(0.55);
+        this.panelBg.setScale(1.5);
         this.add(this.panelBg);
 
         // Title ribbon
@@ -128,7 +128,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         // Title text
         this.titleText = this.scene.add.text(0, -85, 'DID YOU KNOW?', {
             fontSize: '18px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             fontStyle: 'bold',
             stroke: '#000000',
@@ -143,8 +143,8 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
 
         // Fact text - BLACK color
         this.factText = this.scene.add.text(0, -10, `${emoji} ${randomFact}`, {
-            fontSize: '16px',
-            fontFamily: 'Arial',
+            fontSize: '20px',
+            fontFamily: 'Carter One',
             color: '#000000',
             align: 'center',
             wordWrap: { width: 280 },
@@ -154,7 +154,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
 
         // Use green button from UI pack
         this.awesomeBtn = this.scene.add.image(0, 75, 'btn_green');
-        this.awesomeBtn.setScale(0.45);
+        this.awesomeBtn.setScale(0.35);
         this.add(this.awesomeBtn);
 
         // Button icon - separated a bit more from text
@@ -164,7 +164,7 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
 
         this.awesomeBtnText = this.scene.add.text(20, 75, 'GOT IT!', {
             fontSize: '20px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             fontStyle: 'bold',
             stroke: '#000000',
@@ -180,13 +180,13 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         });
 
         this.awesomeBtn.on('pointerover', () => {
-            this.awesomeBtn.setScale(0.5);
+            this.awesomeBtn.setScale(0.4);
             this.btnIcon.setScale(0.38);
             this.awesomeBtnText.setScale(1.1);
         });
 
         this.awesomeBtn.on('pointerout', () => {
-            this.awesomeBtn.setScale(0.45);
+            this.awesomeBtn.setScale(0.35);
             this.btnIcon.setScale(0.35);
             this.awesomeBtnText.setScale(1);
         });

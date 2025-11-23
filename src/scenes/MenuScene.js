@@ -122,6 +122,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('btn_sq_gray', 'assets/images/ui/buttons/bttn2_sq_gray.png');
         this.load.image('btn_little_green', 'assets/images/ui/buttons/bttn2_little_green.png');
         this.load.image('btn_little_gray', 'assets/images/ui/buttons/bttn2_little_gray.png');
+        this.load.image('btn2_red', 'assets/images/ui/buttons/bttn2_red.png');
         this.load.image('btn_blue', 'assets/images/ui/buttons/bttn_blue.png');
         this.load.image('btn_red', 'assets/images/ui/buttons/bttn_red.png');
         this.load.image('btn_yellow', 'assets/images/ui/buttons/bttn_yellow.png');
@@ -267,7 +268,7 @@ export default class MenuScene extends Phaser.Scene {
 
         this.add.text(400, 120, 'KANGAROO HOP', {
             fontSize: '42px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 4
@@ -276,14 +277,14 @@ export default class MenuScene extends Phaser.Scene {
         // Add subtitle - green color to match play button
         const startText = this.add.text(400, 230, 'Tap or Press SPACE to Play!', {
             fontSize: '26px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#4CAF50',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5).setDepth(1000);
 
         // Add green arrow pointing down to indicate "tap here"
-        const playArrow = this.add.image(400, 280, 'arrow_green');
+        const playArrow = this.add.image(400, 300, 'arrow_green');
         playArrow.setScale(0.5);
         playArrow.setDepth(1000);
 
@@ -308,7 +309,7 @@ export default class MenuScene extends Phaser.Scene {
 
         this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFD700',
             stroke: '#000000',
             strokeThickness: 2
@@ -325,8 +326,8 @@ export default class MenuScene extends Phaser.Scene {
         const shopIcon = this.add.image(-35, -3, 'icon_shop');
         shopIcon.setScale(0.3);
         const shopButtonText = this.add.text(15, -3, 'SHOP', {
-            fontSize: '20px',
-            fontFamily: 'Arial Black',
+            fontSize: '24px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -370,8 +371,8 @@ export default class MenuScene extends Phaser.Scene {
         const bgIcon = this.add.image(-90, -3, 'icon_star');
         bgIcon.setScale(0.3);
         this.bgButtonText = this.add.text(5, -3, themeName, {
-            fontSize: '20px',
-            fontFamily: 'Arial Black',
+            fontSize: '24px',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2,
@@ -409,7 +410,7 @@ export default class MenuScene extends Phaser.Scene {
         // Add instructions
         this.add.text(400, 520, 'Jump over obstacles and collect coins!', {
             fontSize: '18px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#CCCCCC',
             stroke: '#000000',
             strokeThickness: 1

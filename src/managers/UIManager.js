@@ -48,7 +48,7 @@ export default class UIManager {
         const config = GAME_CONFIG.UI;
         this.scoreText = this.scene.add.text(config.SCORE_X, config.SCORE_Y, 'Score: 0', {
             fontSize: '24px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -78,7 +78,7 @@ export default class UIManager {
             `${this.gameDataManager.getCoins()}`,
             {
                 fontSize: '24px',
-                fontFamily: 'Arial',
+                fontFamily: 'Carter One',
                 color: '#FFD700',
                 stroke: '#000000',
                 strokeThickness: 2
@@ -107,7 +107,7 @@ export default class UIManager {
 
         this.shieldCount = this.scene.add.text(70, startY, '0', {
             fontSize: '18px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FF69B4',  // Pink to match heart
             stroke: '#000000',
             strokeThickness: 2,
@@ -127,7 +127,7 @@ export default class UIManager {
 
         this.magnetCount = this.scene.add.text(70, startY + spacing, '0', {
             fontSize: '18px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#00BFFF',  // Blue to match gem
             stroke: '#000000',
             strokeThickness: 2,
@@ -147,7 +147,7 @@ export default class UIManager {
 
         this.doubleCount = this.scene.add.text(70, startY + (spacing * 2), '0', {
             fontSize: '18px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#00FF00',  // Green to match star
             stroke: '#000000',
             strokeThickness: 2,
@@ -206,7 +206,7 @@ export default class UIManager {
         // Time text
         const timeText = this.scene.add.text(130, 4, '', {
             fontSize: '12px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: color,
             fontStyle: 'bold'
         });

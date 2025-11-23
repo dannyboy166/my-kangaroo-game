@@ -26,7 +26,7 @@ export default class StoreScene extends Phaser.Scene {
 
         this.add.text(400, 53, 'SHOP', {
             fontSize: '36px',
-            fontFamily: 'Arial Black',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 3
@@ -39,7 +39,7 @@ export default class StoreScene extends Phaser.Scene {
 
         this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
             fontSize: '24px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFD700',
             stroke: '#000000',
             strokeThickness: 2
@@ -57,7 +57,7 @@ export default class StoreScene extends Phaser.Scene {
         backIcon.setScale(0.4);
         const backButtonText = this.add.text(10, 0, this.fromScene === 'GameOverScene' ? 'BACK' : 'MENU', {
             fontSize: '22px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
@@ -139,7 +139,7 @@ export default class StoreScene extends Phaser.Scene {
 
         const nameText = this.add.text(-220, -15, name, { // Title at top
             fontSize: '20px',
-            fontFamily: 'Arial Black',
+            fontFamily: 'Carter One',
             color: '#000000'
         });
         nameText.setOrigin(0, 0.5);
@@ -147,7 +147,7 @@ export default class StoreScene extends Phaser.Scene {
 
         const descText = this.add.text(-220, 10, description, { // Description in middle
             fontSize: '14px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#333333'
         });
         descText.setOrigin(0, 0.5);
@@ -170,7 +170,7 @@ export default class StoreScene extends Phaser.Scene {
 
             const keyInstructionText = this.add.text(-220, 30, `Press ${keyNumber} to activate`, { // Key instruction at bottom
                 fontSize: '12px',
-                fontFamily: 'Arial',
+                fontFamily: 'Carter One',
                 color: '#666666',
                 fontStyle: 'italic'
             });
@@ -180,7 +180,7 @@ export default class StoreScene extends Phaser.Scene {
             // For helmet, add a third line explaining it's auto-equipped
             const autoEquipText = this.add.text(-220, 30, 'Auto-equipped', {
                 fontSize: '12px',
-                fontFamily: 'Arial',
+                fontFamily: 'Carter One',
                 color: '#666666',
                 fontStyle: 'italic'
             });
@@ -191,7 +191,7 @@ export default class StoreScene extends Phaser.Scene {
         // Price and count display
         const priceText = this.add.text(80, -10, `${price} coins`, { // Price at top right
             fontSize: '16px',
-            fontFamily: 'Arial Black',
+            fontFamily: 'Carter One',
             color: '#000000'
         });
         priceText.setOrigin(0, 0.5);
@@ -199,7 +199,7 @@ export default class StoreScene extends Phaser.Scene {
 
         const countText = this.add.text(80, 15, `Owned: ${count}${type === 'helmet' ? '/1' : '/3'}`, { // Count below price
             fontSize: '14px',
-            fontFamily: 'Arial',
+            fontFamily: 'Carter One',
             color: '#333333'
         });
         countText.setOrigin(0, 0.5);
@@ -228,7 +228,7 @@ export default class StoreScene extends Phaser.Scene {
 
         const buyText = this.add.text(245, -3, buttonText, {
             fontSize: '18px',
-            fontFamily: 'Arial Black',
+            fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
