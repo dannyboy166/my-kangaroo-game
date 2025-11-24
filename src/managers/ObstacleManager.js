@@ -159,7 +159,7 @@ export default class ObstacleManager {
         if (currentTheme === 'beach') {
             groundObstacles = [
                 'rock', 'spider_rock',  // Rocks (universal)
-                'log', 'snake_log',     // Logs (universal)
+                'snake_log',            // Log with snake (universal)
                 'emu',                  // Emu (universal)
                 'croc'                  // Crocodile (beach/water)
             ];
@@ -167,7 +167,7 @@ export default class ObstacleManager {
             // Outback theme
             groundObstacles = [
                 'rock', 'spider_rock',  // Rocks (universal)
-                'log', 'snake_log',     // Logs (universal)
+                'snake_log',            // Log with snake (universal)
                 'emu',                  // Outback emu
                 'camel',                // Desert camel
                 'koala'                 // Australian koala
@@ -332,25 +332,24 @@ export default class ObstacleManager {
     }
 
     /**
-     * Spawn coins in safe positions around an obstacle
-     * @param {Object} obstacleInfo - Obstacle spawn information
+     * Spawn coins in safe positions anywhere on the map
+     * Uses obstacle spawn as a trigger, but places coins independently
+     * @param {Object} obstacleInfo - Obstacle spawn information (used as anchor)
      */
     spawnCoinsAroundObstacle(obstacleInfo) {
         const collectibleManager = this.scene.collectibleManager;
         if (!collectibleManager) return;
 
-        let coinX, coinY;
+        const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) return;
 
-        if (obstacleInfo.isFlying) {
-            // Flying obstacle (magpie) - spawn coins above or below it
-            const offsetY = Math.random() < 0.5 ? -80 : 80; // Above or below
-            coinX = obstacleInfo.x + Phaser.Math.Between(80, 200); // Random distance ahead (80-200px)
-            coinY = obstacleInfo.y + offsetY;
-        } else {
-            // Ground obstacle - spawn coins at jump height (random)
-            coinY = Phaser.Math.Between(250, 400); // Random height (not too high, above ground at 500)
-            coinX = obstacleInfo.x + Phaser.Math.Between(80, 200); // Random distance ahead (80-200px)
-        }
+        // Spawn coins in a wide area ahead of the kangaroo
+        // Range: 300-1200px ahead of kangaroo (giving time to see and react)
+        const coinX = kangaroo.x + Phaser.Math.Between(300, 1200);
+
+        // Height: anywhere from high jump (150px) to low jump (450px)
+        // Ground is at 500px, so this gives full jump range variation
+        const coinY = Phaser.Math.Between(150, 450);
 
         // Check if this position overlaps with ANY obstacle
         const overlapsObstacle = this.obstacles.children.entries.some(obstacle => {
@@ -370,25 +369,24 @@ export default class ObstacleManager {
     }
 
     /**
-     * Spawn powerup in safe positions around an obstacle
-     * @param {Object} obstacleInfo - Obstacle spawn information
+     * Spawn powerup in safe positions anywhere on the map
+     * Uses obstacle spawn as a trigger, but places powerups independently
+     * @param {Object} obstacleInfo - Obstacle spawn information (used as anchor)
      */
     spawnPowerupAroundObstacle(obstacleInfo) {
         const powerupManager = this.scene.powerupManager;
         if (!powerupManager) return;
 
-        let powerupX, powerupY;
+        const kangaroo = this.scene.kangaroo;
+        if (!kangaroo) return;
 
-        if (obstacleInfo.isFlying) {
-            // Flying obstacle - spawn powerup above or below it
-            const offsetY = Math.random() < 0.5 ? -100 : 100;
-            powerupX = obstacleInfo.x + Phaser.Math.Between(100, 250); // Random distance ahead (100-250px)
-            powerupY = obstacleInfo.y + offsetY;
-        } else {
-            // Ground obstacle - spawn powerup at jump height (random)
-            powerupY = Phaser.Math.Between(250, 400); // Random height (not too high, above ground at 500)
-            powerupX = obstacleInfo.x + Phaser.Math.Between(100, 250); // Random distance ahead (100-250px)
-        }
+        // Spawn powerups in a wide area ahead of the kangaroo
+        // Range: 400-1400px ahead of kangaroo (slightly further than coins for variety)
+        const powerupX = kangaroo.x + Phaser.Math.Between(400, 1400);
+
+        // Height: anywhere from high jump (150px) to low jump (450px)
+        // Ground is at 500px, so this gives full jump range variation
+        const powerupY = Phaser.Math.Between(150, 450);
 
         // Check if this position overlaps with ANY obstacle
         const overlapsObstacle = this.obstacles.children.entries.some(obstacle => {

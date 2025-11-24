@@ -65,7 +65,7 @@ export const GAME_CONFIG = {
     // Coin spawning (grouped spawning - coins spawn with obstacles)
     COINS: {
         SCALE: 1,       // Coin sprite scale
-        VALUE: 50,       // Coins earned per collection (DEBUG: normally 5)
+        VALUE: 5,       // Coins earned per collection
         SCORE_BONUS: 10 // Score points per collection
     },
 

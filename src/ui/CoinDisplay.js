@@ -2,13 +2,13 @@ import { UI_THEME } from '../config/UITheme.js';
 
 /**
  * Get the appropriate coin icon key based on amount
- * Thresholds: 10, 60, 110 (for debugging at 10, 60, 110, 160)
+ * Thresholds: 10, 100, 500
  * @param {number} amount - Coin amount
  * @returns {string} Icon texture key
  */
 export function getCoinIconForAmount(amount) {
-    if (amount >= 110) return 'ui_coin_4';
-    if (amount >= 60) return 'ui_coin_3';
+    if (amount >= 500) return 'ui_coin_4';
+    if (amount >= 100) return 'ui_coin_3';
     if (amount >= 10) return 'ui_coin_2';
     return 'ui_coin_1';
 }
@@ -19,9 +19,9 @@ export function getCoinIconForAmount(amount) {
  *
  * Icon changes dynamically based on coin count:
  * - ui_coin_1: 0-9 coins
- * - ui_coin_2: 10-59 coins
- * - ui_coin_3: 60-109 coins
- * - ui_coin_4: 110+ coins
+ * - ui_coin_2: 10-99 coins
+ * - ui_coin_3: 100-499 coins
+ * - ui_coin_4: 500+ coins
  *
  * Position defaults to UI_THEME.positions.coinDisplay for consistency across all scenes
  */
