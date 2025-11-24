@@ -1,5 +1,6 @@
 import Button from './Button.js';
 import { getCoinIconForAmount } from './CoinDisplay.js';
+import { GAME_CONFIG } from '../config/GameConfig.js';
 
 export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
     constructor(scene, itemType, itemPrice, onConfirm, onCancel) {
@@ -10,12 +11,12 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         this.onConfirm = onConfirm;
         this.onCancel = onCancel;
 
-        // Item display info (animations mapped to powerup types)
+        // Item display info (static images for powerups)
         this.itemInfo = {
-            doubleJump: { name: 'Double Jump', anim: 'powerup_star', description: 'Jump twice in mid-air!' },
-            shield: { name: 'Shield', anim: 'powerup_heart', description: 'Protect from one hit!' },
-            magnet: { name: 'Coin Magnet', anim: 'powerup_green_gem', description: 'Attract coins automatically!' },
-            helmet: { name: 'Zip Tie Helmet', staticTexture: 'helmet', description: 'Blocks magpie swoops!' }
+            doubleJump: { name: 'Double Jump', texture: 'powerup_double_jump', description: 'Jump twice in mid-air!' },
+            shield: { name: 'Shield', texture: 'powerup_shield', description: 'Protect from one hit!' },
+            magnet: { name: 'Coin Magnet', texture: 'powerup_magnet', description: 'Attract coins automatically!' },
+            helmet: { name: 'Zip Tie Helmet', texture: 'helmet', isHelmet: true, description: 'Blocks magpie swoops!' }
         };
 
         this.createPopup();
@@ -69,14 +70,15 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
 
         this.itemContainer = this.scene.add.container(0, -80);
 
-        // Item icon sprite (animated powerup or static helmet)
-        if (info.anim) {
-            this.itemSprite = this.scene.add.sprite(startX + iconWidth / 2, 0, 'powerup_items', 0);
-            this.itemSprite.play(info.anim);
-            this.itemSprite.setScale(2);
-        } else if (info.staticTexture) {
-            this.itemSprite = this.scene.add.sprite(startX + iconWidth / 2, 0, info.staticTexture);
+        // Item icon (static image for all items)
+        this.itemSprite = this.scene.add.image(startX + iconWidth / 2, 0, info.texture);
+        if (info.isHelmet) {
             this.itemSprite.setScale(0.5);
+        } else {
+            // Get scale from config (magnet is smaller since it fills more of its image)
+            const configType = this.itemType === 'doubleJump' ? 'double' : this.itemType;
+            const scale = GAME_CONFIG.POWERUPS.SCALES.POPUP[configType];
+            this.itemSprite.setScale(scale);
         }
 
         // Position text after icon

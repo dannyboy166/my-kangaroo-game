@@ -88,12 +88,15 @@ export default class MenuScene extends Phaser.Scene {
             frameHeight: 64
         });
 
-        // Load powerup items sprite sheet (animated items from itch.io - Dani Maccari)
-        // 32x32 per frame, 8 frames per row, 15 rows total
-        this.load.spritesheet('powerup_items', 'assets/images/powerup_items.png', {
-            frameWidth: 32,
-            frameHeight: 32
-        });
+        // Load powerup images (static with tween animations)
+        // Plain versions for shop/inventory UI
+        this.load.image('powerup_shield', 'assets/images/powerups/shield.png');
+        this.load.image('powerup_magnet', 'assets/images/powerups/magnet.png');
+        this.load.image('powerup_double_jump', 'assets/images/powerups/double_jump.png');
+        // Glow versions for in-game collectibles (more visible)
+        this.load.image('powerup_shield_glow', 'assets/images/powerups/shield_glow.png');
+        this.load.image('powerup_magnet_glow', 'assets/images/powerups/magnet_glow.png');
+        this.load.image('powerup_double_jump_glow', 'assets/images/powerups/double_jump_glow.png');
 
         // Load ground decoration
         this.load.image('weed', 'assets/images/weed.png');
@@ -209,47 +212,6 @@ export default class MenuScene extends Phaser.Scene {
                 key: 'coin_spin',
                 frames: this.anims.generateFrameNumbers('coin', { start: 0, end: 24 }), // 25 frames (0-24)
                 frameRate: 20,
-                repeat: -1
-            });
-        }
-
-        // Create powerup animations from sprite sheet
-        // Heart animation (row 1, frames 8-13) - for SHIELD (skip last 2 blank frames)
-        if (!this.anims.exists('powerup_heart')) {
-            this.anims.create({
-                key: 'powerup_heart',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 8, end: 13 }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Green gem animation (row 6, frames 48-55) - for MAGNET
-        if (!this.anims.exists('powerup_green_gem')) {
-            this.anims.create({
-                key: 'powerup_green_gem',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 48, end: 55 }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Star animation (row 7, frames 56-63) - for DOUBLE JUMP
-        if (!this.anims.exists('powerup_star')) {
-            this.anims.create({
-                key: 'powerup_star',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 56, end: 63 }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
-        // Mystery box animation (row 3, frames 24-31) - RESERVED for future random powerup
-        if (!this.anims.exists('powerup_mystery_box')) {
-            this.anims.create({
-                key: 'powerup_mystery_box',
-                frames: this.anims.generateFrameNumbers('powerup_items', { start: 24, end: 31 }),
-                frameRate: 10,
                 repeat: -1
             });
         }

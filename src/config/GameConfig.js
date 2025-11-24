@@ -71,21 +71,49 @@ export const GAME_CONFIG = {
 
     // Powerup system (grouped spawning - powerups spawn with obstacles)
     POWERUPS: {
-        SCALE: 2.0,      // Powerup sprite scale (32x32 sprites)
         DURATION: 10000, // Powerup duration (10 seconds)
+
+        // Individual powerup scales (images are ~900x1024, need different scales)
+        // Magnet image fills more of its canvas, so it needs smaller scale
+        SCALES: {
+            // In-game collectibles (glow versions)
+            GAME: {
+                shield: 0.12,
+                magnet: 0.10,      // Smaller - magnet fills more of its image
+                double: 0.12
+            },
+            // Shop icons (plain versions)
+            SHOP: {
+                shield: 0.08,
+                magnet: 0.065,    // Smaller
+                double: 0.08
+            },
+            // Inventory HUD icons (plain versions)
+            INVENTORY: {
+                shield: 0.035,
+                magnet: 0.028,    // Smaller
+                double: 0.035
+            },
+            // Purchase confirmation popup
+            POPUP: {
+                shield: 0.05,
+                magnet: 0.04,     // Smaller
+                double: 0.05
+            }
+        },
 
         // Powerup orb configuration
         ORBS: {
-            COUNT: 3,
+            COUNT: 7,
             RADIUS: 90, // Orbit radius - how far orbs circle from kangaroo (increased from 60)
             ROTATION_SPEED: 200, // degrees per second
-            OFFSET_X: 25,  // Centered horizontally on kangaroo
+            OFFSET_X: 10,  // Centered horizontally on kangaroo (moved back from 25)
             OFFSET_Y: -80, // Slightly higher (kangaroo is 1.2x bigger now)
 
             // Orb properties by type
             PROPERTIES: {
-                shield: { color: 0xFF69B4, radius: 20 },  // Pink circle (protective barrier)
-                magnet: { color: 0x00BFFF, radius: 16 },  // Blue orbs (attracting coins) - bigger
+                shield: { color: 0x4A90D9, radius: 20 },  // Blue glow (protective barrier)
+                magnet: { color: 0xCC0000, radius: 16 },  // Red orbs (to match magnet icon)
                 double: { color: 0x00FF00, radius: 16 }   // Green (lime green)
             },
 

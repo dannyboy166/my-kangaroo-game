@@ -4,6 +4,7 @@ import AudioManager from '../managers/AudioManager.js';
 import PurchaseConfirmPopup from '../ui/PurchaseConfirmPopup.js';
 import Button from '../ui/Button.js';
 import CoinDisplay, { getCoinIconForAmount } from '../ui/CoinDisplay.js';
+import { GAME_CONFIG } from '../config/GameConfig.js';
 
 export default class StoreScene extends Phaser.Scene {
     constructor() {
@@ -101,30 +102,25 @@ export default class StoreScene extends Phaser.Scene {
         panel.setScale(1.1, 1.3);
         container.add(panel);
 
-        // Item icon - use animated sprites for powerups, static image for helmet
+        // Item icon - use plain (non-glow) images for shop UI
         let icon;
         if (type === 'helmet') {
             // Helmet uses static image
             icon = this.add.image(-300, 0, 'helmet');
             icon.setScale(0.8);
         } else {
-            // Powerups use animated sprites
-            let animKey;
-            switch (type) {
-                case 'shield':
-                    animKey = 'powerup_heart'; // Pink heart
-                    break;
-                case 'magnet':
-                    animKey = 'powerup_green_gem'; // Green gem
-                    break;
-                case 'doubleJump':
-                    animKey = 'powerup_star'; // Star
-                    break;
-            }
+            // Powerups use plain static images with config-based scales
+            const imageMap = {
+                'shield': 'powerup_shield',
+                'magnet': 'powerup_magnet',
+                'doubleJump': 'powerup_double_jump'
+            };
+            // Map store type to config type
+            const configType = type === 'doubleJump' ? 'double' : type;
+            const scale = GAME_CONFIG.POWERUPS.SCALES.SHOP[configType];
 
-            icon = this.add.sprite(-300, 0, 'powerup_items', 0);
-            icon.play(animKey);
-            icon.setScale(2.5); // Scale up the 32x32 sprites
+            icon = this.add.image(-300, 0, imageMap[type]);
+            icon.setScale(scale);
         }
 
         container.add(icon);
@@ -195,9 +191,9 @@ export default class StoreScene extends Phaser.Scene {
         priceText.setOrigin(0, 0.5);
         container.add(priceText);
 
-        // Coin icon next to price - based on item price
+        // Coin icon next to price - based on item price (more gap for separation)
         const priceCoinIconKey = getCoinIconForAmount(price);
-        const priceCoinIcon = this.add.image(80 + priceText.width + 15, -10, priceCoinIconKey);
+        const priceCoinIcon = this.add.image(80 + priceText.width + 25, -10, priceCoinIconKey);
         priceCoinIcon.setScale(0.3);  // 128px * 0.3 = 38px display
         priceCoinIcon.setOrigin(0.5, 0.5);
         container.add(priceCoinIcon);

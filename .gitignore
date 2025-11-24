@@ -2,3 +2,6 @@ node_modules
 .DS_Store
 dist
 docs/screenshots
+
+# Source asset packs (keep locally, don't push to git)
+_source_assets/

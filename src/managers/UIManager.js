@@ -103,13 +103,13 @@ export default class UIManager {
      */
     createInventoryDisplay() {
         const config = GAME_CONFIG.UI;
+        const scales = GAME_CONFIG.POWERUPS.SCALES.INVENTORY;
         const startY = config.INVENTORY_START_Y;
         const spacing = config.INVENTORY_SPACING;
 
-        // Shield - use animated heart sprite
-        this.shieldIcon = this.scene.add.sprite(30, startY, 'powerup_items', 0);
-        this.shieldIcon.play('powerup_heart'); // Pink heart animation
-        this.shieldIcon.setScale(1.2);
+        // Shield - use plain static image (offset 1px left for visual alignment)
+        this.shieldIcon = this.scene.add.image(29, startY, 'powerup_shield');
+        this.shieldIcon.setScale(scales.shield);
         this.shieldIcon.setOrigin(0, 0.5);
         this.shieldIcon.setScrollFactor(0);
         this.shieldIcon.setDepth(1000);
@@ -117,7 +117,7 @@ export default class UIManager {
         this.shieldCount = this.scene.add.text(70, startY, '0', {
             fontSize: '18px',
             fontFamily: 'Carter One',
-            color: '#FF69B4',  // Pink to match heart
+            color: '#4A90D9',  // Blue to match shield
             stroke: '#000000',
             strokeThickness: 2,
             fontStyle: 'bold'
@@ -126,10 +126,9 @@ export default class UIManager {
         this.shieldCount.setScrollFactor(0);
         this.shieldCount.setDepth(1000);
 
-        // Magnet - use animated green gem sprite
-        this.magnetIcon = this.scene.add.sprite(30, startY + spacing, 'powerup_items', 0);
-        this.magnetIcon.play('powerup_green_gem'); // Green gem animation
-        this.magnetIcon.setScale(1.2);
+        // Magnet - use plain static image (smaller scale in config)
+        this.magnetIcon = this.scene.add.image(30, startY + spacing, 'powerup_magnet');
+        this.magnetIcon.setScale(scales.magnet);
         this.magnetIcon.setOrigin(0, 0.5);
         this.magnetIcon.setScrollFactor(0);
         this.magnetIcon.setDepth(1000);
@@ -137,7 +136,7 @@ export default class UIManager {
         this.magnetCount = this.scene.add.text(70, startY + spacing, '0', {
             fontSize: '18px',
             fontFamily: 'Carter One',
-            color: '#00BFFF',  // Blue to match gem
+            color: '#CC0000',  // Red to match magnet
             stroke: '#000000',
             strokeThickness: 2,
             fontStyle: 'bold'
@@ -146,10 +145,9 @@ export default class UIManager {
         this.magnetCount.setScrollFactor(0);
         this.magnetCount.setDepth(1000);
 
-        // Double Jump - use animated star sprite
-        this.doubleIcon = this.scene.add.sprite(30, startY + (spacing * 2), 'powerup_items', 0);
-        this.doubleIcon.play('powerup_star'); // Star animation
-        this.doubleIcon.setScale(1.2);
+        // Double Jump - use plain static image (offset 2px right for visual alignment)
+        this.doubleIcon = this.scene.add.image(32, startY + (spacing * 2), 'powerup_double_jump');
+        this.doubleIcon.setScale(scales.double);
         this.doubleIcon.setOrigin(0, 0.5);
         this.doubleIcon.setScrollFactor(0);
         this.doubleIcon.setDepth(1000);
@@ -157,7 +155,7 @@ export default class UIManager {
         this.doubleCount = this.scene.add.text(70, startY + (spacing * 2), '0', {
             fontSize: '18px',
             fontFamily: 'Carter One',
-            color: '#00FF00',  // Green to match star
+            color: '#00AA00',  // Green to match up arrow
             stroke: '#000000',
             strokeThickness: 2,
             fontStyle: 'bold'

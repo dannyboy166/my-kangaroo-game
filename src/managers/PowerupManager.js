@@ -82,24 +82,23 @@ export default class PowerupManager {
         const powerupTypes = ['shield', 'magnet', 'double'];
         const randomType = Phaser.Utils.Array.GetRandom(powerupTypes);
 
-        // Map powerup types to animations
-        const animMap = {
-            'shield': 'powerup_heart',
-            'magnet': 'powerup_green_gem',
-            'double': 'powerup_star'
+        // Map powerup types to glow images (more visible during gameplay)
+        const imageMap = {
+            'shield': 'powerup_shield_glow',
+            'magnet': 'powerup_magnet_glow',
+            'double': 'powerup_double_jump_glow'
         };
 
-        // Create powerup at specified position
-        const powerup = this.powerups.create(x, y, 'powerup_items', 0);
+        // Create powerup at specified position using static image
+        const powerup = this.powerups.create(x, y, imageMap[randomType]);
 
-        // Play animation
-        powerup.play(animMap[randomType]);
-
-        // Visual setup
-        powerup.setScale(config.SCALE);
+        // Get scale from config (magnet is smaller since it fills more of its image)
+        const baseScale = config.SCALES.GAME[randomType];
+        powerup.setScale(baseScale);
         powerup.setOrigin(0.5);
         powerup.setScrollFactor(1);
         powerup.powerupType = randomType;
+        powerup.baseScale = baseScale;
 
         // Physics setup - STATIC in world space
         // CRITICAL: Set these AFTER create() to prevent group from overriding
@@ -108,12 +107,13 @@ export default class PowerupManager {
         powerup.body.pushable = false;
         powerup.body.setVelocity(0, 0); // No movement
 
-        // Add glow effect
+        // Add bobbing + pulsing tween animation (replaces sprite animation)
         this.scene.tweens.add({
             targets: powerup,
-            scaleX: config.SCALE + 0.1,
-            scaleY: config.SCALE + 0.1,
-            duration: 1000,
+            y: y - 10,
+            scaleX: baseScale * 1.15,
+            scaleY: baseScale * 1.15,
+            duration: 800,
             ease: 'Sine.easeInOut',
             yoyo: true,
             repeat: -1
@@ -134,24 +134,23 @@ export default class PowerupManager {
         // Activate powerup
         this.activatePowerup(type);
 
-        // Visual effect - use animated sprite instead of static image
-        const animMap = {
-            'shield': 'powerup_heart',
-            'magnet': 'powerup_green_gem',
-            'double': 'powerup_star'
+        // Visual effect - use glow image for collection burst
+        const imageMap = {
+            'shield': 'powerup_shield_glow',
+            'magnet': 'powerup_magnet_glow',
+            'double': 'powerup_double_jump_glow'
         };
 
-        const effectPowerup = this.scene.add.sprite(powerup.x, powerup.y, 'powerup_items', 0);
-        effectPowerup.play(animMap[type]);
-        effectPowerup.setScale(2.0);
+        const effectPowerup = this.scene.add.image(powerup.x, powerup.y, imageMap[type]);
+        effectPowerup.setScale(0.1);
         effectPowerup.setDepth(100); // Make sure it's visible above everything
 
         this.scene.tweens.add({
             targets: effectPowerup,
-            scaleX: 10.0,  // Much bigger! (was 4.0)
-            scaleY: 10.0,
+            scaleX: 0.4,
+            scaleY: 0.4,
             alpha: 0,
-            duration: 500,  // Slightly longer animation
+            duration: 400,
             ease: 'Power2',
             onComplete: () => {
                 effectPowerup.destroy();
@@ -277,18 +276,24 @@ export default class PowerupManager {
         const orbConfig = config.PROPERTIES[type];
 
         if (type === 'shield') {
-            // Shield: Create pulsing circle (protective barrier)
+            // Shield: Create glowing blue filled circle around kangaroo
             const circle = this.scene.add.graphics();
-            circle.lineStyle(3, 0xFF69B4, 0.5); // Pink for shield
-            circle.strokeCircle(0, 0, 100); // Smaller protective circle around kangaroo
+            // Draw filled blue glow circle (larger radius)
+            circle.fillStyle(0x4A90D9, 0.25); // Blue, semi-transparent fill
+            circle.fillCircle(0, 0, 100);
+            // Add outer ring for definition
+            circle.lineStyle(3, 0x4A90D9, 0.6);
+            circle.strokeCircle(0, 0, 100);
             circle.setBlendMode(Phaser.BlendModes.ADD);
             circle.shieldPulseScale = 1.0;
+            // Fix to camera so it follows smoothly
+            circle.setScrollFactor(0);
             this.powerupOrbs[type].push(circle);
         } else if (type === 'double') {
             // Double Jump: Flash kangaroo green - no separate visual objects needed
             // The flashing is handled in updatePowerupOrbs by tinting the kangaroo sprite
         } else {
-            // Magnet: 3 spinning blue orbs (attracting coins)
+            // Magnet: 3 spinning red orbs (to match magnet icon)
             for (let i = 0; i < config.COUNT; i++) {
                 const orb = this.scene.add.graphics();
                 orb.fillStyle(orbConfig.color, 0.7);
@@ -298,6 +303,8 @@ export default class PowerupManager {
 
                 // Add glow effect
                 orb.setBlendMode(Phaser.BlendModes.ADD);
+                // Fix to camera so it follows smoothly (same as shield)
+                orb.setScrollFactor(0);
 
                 // Set initial position and rotation data
                 orb.orbType = type;
@@ -336,11 +343,14 @@ export default class PowerupManager {
             const orbs = this.powerupOrbs[type];
             if (orbs && this.activePowerups[type].active) {
                 if (type === 'shield') {
-                    // Shield: Pulsing pink circle at kangaroo position (protective barrier)
+                    // Shield: Pulsing blue glow at kangaroo position (protective barrier)
+                    // Uses screen coordinates since scrollFactor is 0 for smooth following
+                    const camera = this.scene.cameras.main;
                     orbs.forEach(circle => {
                         if (circle) {
-                            circle.x = kangaroo.x + config.OFFSET_X;
-                            circle.y = kangaroo.y + config.OFFSET_Y;
+                            // Convert world position to screen position
+                            circle.x = kangaroo.x - camera.scrollX + config.OFFSET_X;
+                            circle.y = kangaroo.y - camera.scrollY + config.OFFSET_Y;
 
                             // Pulse effect
                             circle.shieldPulseScale += delta / 1000;
@@ -364,16 +374,20 @@ export default class PowerupManager {
                     const tintColor = Phaser.Display.Color.GetColor(greenTint.r, greenTint.g, greenTint.b);
                     kangaroo.setTint(tintColor);
                 } else {
-                    // Magnet: Spinning blue orbs (attracting coins)
+                    // Magnet: Spinning red orbs (attracting coins)
+                    // Uses screen coordinates since scrollFactor is 0 for smooth following
+                    const camera = this.scene.cameras.main;
                     orbs.forEach(orb => {
                         if (orb) {
                             // Update rotation angle
                             orb.currentAngle += config.ROTATION_SPEED * delta / 1000;
 
-                            // Calculate position around kangaroo
+                            // Calculate position around kangaroo (screen coordinates)
                             const angleRad = Phaser.Math.DegToRad(orb.currentAngle);
-                            orb.x = kangaroo.x + config.OFFSET_X + Math.cos(angleRad) * orb.orbRadius;
-                            orb.y = kangaroo.y + config.OFFSET_Y + Math.sin(angleRad) * orb.orbRadius;
+                            const centerX = kangaroo.x - camera.scrollX + config.OFFSET_X;
+                            const centerY = kangaroo.y - camera.scrollY + config.OFFSET_Y;
+                            orb.x = centerX + Math.cos(angleRad) * orb.orbRadius;
+                            orb.y = centerY + Math.sin(angleRad) * orb.orbRadius;
                         }
                     });
                 }

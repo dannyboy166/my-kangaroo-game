@@ -120,7 +120,7 @@ export default class CollectibleManager {
      */
     drawAttractionLine(coinX, coinY, kangarooX, kangarooY) {
         // Draw curved line with gradient effect
-        this.magnetLines.lineStyle(2, 0x00BFFF, 0.6); // Blue color, semi-transparent
+        this.magnetLines.lineStyle(2, 0xCC0000, 0.6); // Red color to match magnet icon
 
         // Target point: center of kangaroo (offset upward and forward)
         const targetX = kangarooX + 20; // 20px forward from kangaroo center
