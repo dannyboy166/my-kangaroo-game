@@ -29,70 +29,96 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
 
         // Use panel_small (back_small.png) as background
         this.panelBg = this.scene.add.image(0, 0, 'panel_small');
-        this.panelBg.setScale(0.6);
+        this.panelBg.setScale(0.5);
         this.add(this.panelBg);
 
-        // Title text in the purple header area
-        this.titleText = this.scene.add.text(0, -145, 'CONFIRM PURCHASE', {
-            fontSize: '20px',
+        // ========================================
+        // TITLE - moved up 50px, 2x bigger
+        // ========================================
+        this.titleText = this.scene.add.text(0, -155, 'CONFIRM PURCHASE', {
+            fontSize: '32px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 2
+            strokeThickness: 3
         }).setOrigin(0.5);
         this.add(this.titleText);
 
-        // Get item info
+        // ========================================
+        // ITEM INFO CONTAINER - groups icon + name (moved up 100px)
+        // ========================================
         const info = this.itemInfo[this.itemType] || this.itemInfo.doubleJump;
+
+        // Create text first to measure width for centering
+        this.itemText = this.scene.add.text(0, 0, info.name, {
+            fontSize: '24px',
+            fontFamily: 'Carter One',
+            color: '#000000',
+            stroke: '#FFFFFF',
+            strokeThickness: 1
+        }).setOrigin(0, 0.5);
+
+        // Calculate centering: icon (44px visual size at scale 2) + gap (10px) + text width
+        const iconWidth = 40; // powerup sprite visual width (actual 64px but with padding)
+        const gap = 10;
+        const totalWidth = iconWidth + gap + this.itemText.width;
+        const startX = -totalWidth / 2;
+
+        this.itemContainer = this.scene.add.container(0, -80);
 
         // Item icon sprite (animated powerup or static helmet)
         if (info.anim) {
-            this.itemSprite = this.scene.add.sprite(-80, -35, 'powerup_items', 0);
+            this.itemSprite = this.scene.add.sprite(startX + iconWidth / 2, 0, 'powerup_items', 0);
             this.itemSprite.play(info.anim);
             this.itemSprite.setScale(2);
         } else if (info.staticTexture) {
-            this.itemSprite = this.scene.add.sprite(-80, -35, info.staticTexture);
+            this.itemSprite = this.scene.add.sprite(startX + iconWidth / 2, 0, info.staticTexture);
             this.itemSprite.setScale(0.5);
         }
-        this.add(this.itemSprite);
 
-        // Item name text - black for light background
-        this.itemText = this.scene.add.text(-40, -35, info.name, {
+        // Position text after icon
+        this.itemText.setX(startX + iconWidth + gap);
+
+        this.itemContainer.add([this.itemSprite, this.itemText]);
+        this.add(this.itemContainer);
+
+        // ========================================
+        // DESCRIPTION - moved up 100px
+        // ========================================
+        this.descText = this.scene.add.text(0, -25, info.description, {
             fontSize: '18px',
-            fontFamily: 'Carter One',
-            color: '#000000'
-        }).setOrigin(0, 0.5);
-        this.add(this.itemText);
-
-        // Description text
-        this.descText = this.scene.add.text(0, 5, info.description, {
-            fontSize: '14px',
             fontFamily: 'Carter One',
             color: '#333333',
             align: 'center'
         }).setOrigin(0.5);
         this.add(this.descText);
 
-        // Price display with coin
-        this.priceText = this.scene.add.text(20, 40, `${this.itemPrice}`, {
-            fontSize: '18px',
+        // ========================================
+        // PRICE CONTAINER - groups price text + coin animation (centered)
+        // ========================================
+        this.priceContainer = this.scene.add.container(0, 20);
+
+        this.priceText = this.scene.add.text(-20, 0, `${this.itemPrice}`, {
+            fontSize: '28px',
             fontFamily: 'Carter One',
             color: '#000000'
         }).setOrigin(0.5);
-        this.add(this.priceText);
 
-        // Coin icon next to price
-        this.coinSprite = this.scene.add.sprite(55, 40, 'coin', 0);
+        this.coinSprite = this.scene.add.sprite(25, 0, 'coin', 0);
         this.coinSprite.play('coin_spin');
-        this.coinSprite.setScale(0.35);
-        this.add(this.coinSprite);
+        this.coinSprite.setScale(0.45);
 
-        // Cancel button (red) - using btn2_red
+        this.priceContainer.add([this.priceText, this.coinSprite]);
+        this.add(this.priceContainer);
+
+        // ========================================
+        // CANCEL BUTTON CONTAINER
+        // ========================================
         this.cancelBtnContainer = this.scene.add.container(-90, 110);
         this.cancelBtnBg = this.scene.add.image(0, 0, 'btn2_red');
         this.cancelBtnBg.setScale(0.45);
         this.cancelBtnText = this.scene.add.text(0, -3, 'CANCEL', {
-            fontSize: '16px',
+            fontSize: '18px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
@@ -101,12 +127,14 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         this.cancelBtnContainer.add([this.cancelBtnBg, this.cancelBtnText]);
         this.add(this.cancelBtnContainer);
 
-        // Confirm button (green) - using btn_little_green
+        // ========================================
+        // CONFIRM BUTTON CONTAINER
+        // ========================================
         this.confirmBtnContainer = this.scene.add.container(90, 110);
         this.confirmBtnBg = this.scene.add.image(0, 0, 'btn_little_green');
         this.confirmBtnBg.setScale(0.55);
         this.confirmBtnText = this.scene.add.text(0, -3, 'BUY IT!', {
-            fontSize: '16px',
+            fontSize: '18px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',

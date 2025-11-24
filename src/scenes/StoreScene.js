@@ -160,7 +160,7 @@ export default class StoreScene extends Phaser.Scene {
         const price = this.storeManager.getPowerUpPrice(type);
         const count = this.storeManager.getPowerUpCount(type);
 
-        const nameText = this.add.text(-220, -15, name, { // Title at top
+        const nameText = this.add.text(-220, -20, name, { // Title at top
             fontSize: '20px',
             fontFamily: 'Carter One',
             color: '#000000'
@@ -168,7 +168,7 @@ export default class StoreScene extends Phaser.Scene {
         nameText.setOrigin(0, 0.5);
         container.add(nameText);
 
-        const descText = this.add.text(-220, 10, description, { // Description in middle
+        const descText = this.add.text(-220, 5, description, { // Description in middle
             fontSize: '14px',
             fontFamily: 'Carter One',
             color: '#333333'
@@ -191,7 +191,7 @@ export default class StoreScene extends Phaser.Scene {
                     break;
             }
 
-            const keyInstructionText = this.add.text(-220, 30, `Press ${keyNumber} to activate`, { // Key instruction at bottom
+            const keyInstructionText = this.add.text(-220, 25, `Press ${keyNumber} to activate`, { // Key instruction at bottom
                 fontSize: '12px',
                 fontFamily: 'Carter One',
                 color: '#666666',
@@ -201,7 +201,7 @@ export default class StoreScene extends Phaser.Scene {
             container.add(keyInstructionText);
         } else {
             // For helmet, add a third line explaining it's auto-equipped
-            const autoEquipText = this.add.text(-220, 30, 'Auto-equipped', {
+            const autoEquipText = this.add.text(-220, 25, 'Auto-equipped', {
                 fontSize: '12px',
                 fontFamily: 'Carter One',
                 color: '#666666',
