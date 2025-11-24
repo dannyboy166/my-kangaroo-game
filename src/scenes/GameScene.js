@@ -40,6 +40,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Core game state
         this.score = 0;
+        this.coinsCollectedThisRun = 0; // Track coins collected in this run (for bonus quiz)
         this.gameSpeed = GAME_CONFIG.DIFFICULTY.INITIAL_SPEED;
         this.isGameOver = false;
         this.lastSpeedIncrease = false;
@@ -146,6 +147,7 @@ export default class GameScene extends Phaser.Scene {
     resetGameState() {
         this.isGameOver = false;
         this.score = 0;
+        this.coinsCollectedThisRun = 0; // Reset coin counter for new run
         this.gameSpeed = GAME_CONFIG.DIFFICULTY.INITIAL_SPEED;
         this.collisionCooldown = false;
         this.lastSpeedIncrease = false;
@@ -575,6 +577,7 @@ export default class GameScene extends Phaser.Scene {
         const result = this.collectibleManager.collectCoin(coin, this.audioManager);
         if (result) {
             this.score += result.scoreBonus;
+            this.coinsCollectedThisRun += result.coinsAdded; // Track coins for bonus quiz
             this.uiManager.updateCoins();
         }
     }
@@ -644,6 +647,7 @@ export default class GameScene extends Phaser.Scene {
 
             this.scene.start('GameOverScene', {
                 score: this.score,
+                coinsCollected: this.coinsCollectedThisRun, // Pass coins for bonus quiz
                 audioManager: this.audioManager,
                 obstacleType: obstacleType
             });

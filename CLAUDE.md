@@ -420,7 +420,46 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes
 
-### Reusable UI Components & UITheme (2025-11-24) - Latest
+### Independent Collectible Spawning & Quiz System (2025-11-24) - Latest
+**The Goal**: Improve collectible variety and add optional bonus quiz feature.
+
+**Collectible Spawning Overhaul**:
+- **Removed normal log obstacle** - Only snake log variant spawns now
+- **Independent spawn positioning** - Coins/powerups no longer tied to obstacle positions
+  - Coins spawn 600-1400px ahead of kangaroo (always off-screen)
+  - Powerups spawn 650-1500px ahead of kangaroo
+  - Ensures collectibles appear smoothly into view
+- **Increased spawn rates**:
+  - 70% chance for coins per obstacle (up from 40%)
+  - 50% chance for 1-2 coins (better collection rate)
+  - 15% chance for powerups (down from 25%)
+  - 15% chance for nothing (down from 35%)
+- **Coin economy reset**: Coin value back to 5 (from debug value of 50)
+- **Coin stack thresholds updated**:
+  - 0-9 coins → coin1 image
+  - 10-99 coins → coin2 image
+  - 100-499 coins → coin3 image
+  - 500+ coins → coin4 image
+
+**Quiz System (Saved Feature)**:
+- **TrueFalseQuizPopup component** created (`src/ui/TrueFalseQuizPopup.js`)
+  - 30+ True/False questions about Australian wildlife
+  - Random bonus multiplier system (1x, 1.5x, 2x, 3x with weighted odds)
+  - Animated coin reward with +X COINS display
+  - Tracks coins collected per game run
+- **Currently disabled** - Fun fact popup active by default
+- **Easy to enable**: Set `showQuiz: true` in GameOverScene data
+- All quiz infrastructure ready (coin tracking, multiplier logic, animations)
+
+**Files Modified**:
+- `ObstacleManager.js`: Independent spawning, increased coin rates, removed normal log
+- `GameConfig.js`: Reset coin value to 5
+- `CoinDisplay.js`: Updated stack thresholds
+- `GameScene.js`: Added `coinsCollectedThisRun` tracking
+- `GameOverScene.js`: Quiz/fun fact toggle system
+- `TrueFalseQuizPopup.js`: New quiz component (saved for future use)
+
+### Reusable UI Components & UITheme (2025-11-24)
 **The Goal**: Reduce code duplication and create consistent UI across all scenes.
 
 **New Components Created**:
@@ -764,5 +803,5 @@ physics: {
 ---
 
 **Last Updated**: 2025-11-24
-**Game Version**: 3.1 (Reusable UI Components)
+**Game Version**: 3.2 (Independent Collectible Spawning + Quiz System)
 **Phaser Version**: 3.90.0

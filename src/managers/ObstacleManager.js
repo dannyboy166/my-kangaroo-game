@@ -321,14 +321,18 @@ export default class ObstacleManager {
 
         // Spawn collectibles around this obstacle
         const rand = Math.random();
-        if (rand < 0.4) {
-            // 40% chance: spawn coin
-            this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
-        } else if (rand < 0.65) {
-            // 25% chance: spawn powerup (increased from 10%)
+        if (rand < 0.7) {
+            // 70% chance: spawn coins (increased from 40%)
+            // Sometimes spawn multiple coins for better collection rate
+            const numCoins = Math.random() < 0.5 ? 1 : 2; // 50% chance for 1 or 2 coins
+            for (let i = 0; i < numCoins; i++) {
+                this.spawnCoinsAroundObstacle(obstacleSpawnInfo);
+            }
+        } else if (rand < 0.85) {
+            // 15% chance: spawn powerup (decreased from 25%)
             this.spawnPowerupAroundObstacle(obstacleSpawnInfo);
         }
-        // 35% chance: spawn nothing
+        // 15% chance: spawn nothing
     }
 
     /**
@@ -343,9 +347,11 @@ export default class ObstacleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
-        // Spawn coins in a wide area ahead of the kangaroo
-        // Range: 300-1200px ahead of kangaroo (giving time to see and react)
-        const coinX = kangaroo.x + Phaser.Math.Between(300, 1200);
+        // Camera setup: kangaroo at 250px from left, canvas 800px wide
+        // Right edge of screen = kangaroo.x + 550px
+        // Spawn coins OFF-SCREEN ahead of kangaroo
+        // Range: 600-1400px ahead of kangaroo (always off-screen)
+        const coinX = kangaroo.x + Phaser.Math.Between(600, 1400);
 
         // Height: anywhere from high jump (150px) to low jump (450px)
         // Ground is at 500px, so this gives full jump range variation
@@ -380,9 +386,11 @@ export default class ObstacleManager {
         const kangaroo = this.scene.kangaroo;
         if (!kangaroo) return;
 
-        // Spawn powerups in a wide area ahead of the kangaroo
-        // Range: 400-1400px ahead of kangaroo (slightly further than coins for variety)
-        const powerupX = kangaroo.x + Phaser.Math.Between(400, 1400);
+        // Camera setup: kangaroo at 250px from left, canvas 800px wide
+        // Right edge of screen = kangaroo.x + 550px
+        // Spawn powerups OFF-SCREEN ahead of kangaroo
+        // Range: 650-1500px ahead of kangaroo (slightly further than coins for variety)
+        const powerupX = kangaroo.x + Phaser.Math.Between(650, 1500);
 
         // Height: anywhere from high jump (150px) to low jump (450px)
         // Ground is at 500px, so this gives full jump range variation

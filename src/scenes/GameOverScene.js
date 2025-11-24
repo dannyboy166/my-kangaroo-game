@@ -1,5 +1,6 @@
 import GameDataManager from '../managers/GameDataManager.js';
 import FunFactPopup from '../ui/FunFactPopup.js';
+import TrueFalseQuizPopup from '../ui/TrueFalseQuizPopup.js';
 import Button from '../ui/Button.js';
 import CoinDisplay from '../ui/CoinDisplay.js';
 
@@ -11,13 +12,15 @@ export default class GameOverScene extends Phaser.Scene {
 
     init(data) {
         this.finalScore = data.score || 0;
+        this.coinsCollected = data.coinsCollected || 0; // Coins collected this run
         this.audioManager = data.audioManager;
         this.obstacleType = data.obstacleType || 'rock';
-        this.showFunFact = data.showFunFact !== false; // Default true, but can be overridden
-        
+        this.showFunFact = data.showFunFact !== false; // Default true (currently active)
+        this.showQuiz = data.showQuiz === true; // Show quiz only if explicitly enabled (false by default)
+
         // Load/save high score from localStorage
         this.highScore = parseInt(localStorage.getItem('kangaroo_hop_highscore')) || 0;
-        
+
         if (this.finalScore > this.highScore) {
             this.highScore = this.finalScore;
             localStorage.setItem('kangaroo_hop_highscore', this.highScore.toString());
@@ -83,8 +86,22 @@ export default class GameOverScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
 
-        // Show fun fact popup after a short delay (only if not returning from shop)
-        if (this.showFunFact) {
+        // Show fun fact popup (currently active) or quiz popup (saved feature)
+        // To enable quiz: pass showQuiz: true in scene data
+        if (this.showQuiz) {
+            // Quiz popup with bonus multiplier (saved for future use)
+            this.time.delayedCall(300, () => {
+                const popup = new TrueFalseQuizPopup(this, this.coinsCollected, (bonusCoins, wasCorrect) => {
+                    // Award bonus coins if correct
+                    if (bonusCoins > 0) {
+                        this.gameDataManager.addCoins(bonusCoins);
+                        this.coinDisplay.setCount(this.gameDataManager.getCoins());
+                    }
+                });
+                this.add.existing(popup);
+            });
+        } else if (this.showFunFact) {
+            // Fun fact popup (currently active)
             this.time.delayedCall(300, () => {
                 const popup = new FunFactPopup(this, this.obstacleType, () => {
                     // Callback when popup is closed - can add any cleanup here if needed
