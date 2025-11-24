@@ -628,13 +628,7 @@ export default class GameScene extends Phaser.Scene {
         this.collectibleManager.setGameOver(true);
         this.environmentManager.setGameOver(true);
 
-        // Crash animation
-        this.tweens.add({
-            targets: this.kangaroo,
-            angle: 90,
-            duration: 500,
-            ease: 'Power2'
-        });
+        // Death animation is already playing (line 618), no need for rotation
 
         // Transition to game over scene
         this.time.delayedCall(1000, () => {
