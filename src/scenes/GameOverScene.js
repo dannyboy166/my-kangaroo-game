@@ -26,6 +26,8 @@ export default class GameOverScene extends Phaser.Scene {
     }
 
     create() {
+        // Start menu music (will not restart if already playing)
+        this.audioManager?.playMusic('music_menu', 0.3, true);
 
         // Add UI background image
         const bg = this.add.image(400, 300, 'ui_background');
@@ -136,7 +138,7 @@ export default class GameOverScene extends Phaser.Scene {
             textStyle: { fontSize: '28px' },
             onClick: () => {
                 this.audioManager?.playButtonClick();
-                this.scene.start('MenuScene');
+                this.scene.start('MenuScene', { audioManager: this.audioManager });
             }
         });
 
@@ -157,7 +159,7 @@ export default class GameOverScene extends Phaser.Scene {
 
         this.input.keyboard.on('keydown-ESC', () => {
             this.audioManager?.playButtonClick();
-            this.scene.start('MenuScene');
+            this.scene.start('MenuScene', { audioManager: this.audioManager });
         });
     }
 }

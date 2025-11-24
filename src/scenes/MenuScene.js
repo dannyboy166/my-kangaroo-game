@@ -9,7 +9,12 @@ export default class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
         this.gameDataManager = GameDataManager.getInstance();
-        this.audioManager = new AudioManager();
+        this.audioManager = null; // Will be set in create() from data or created new
+    }
+
+    init(data) {
+        // Reuse existing AudioManager if passed from another scene
+        this.audioManager = data?.audioManager || new AudioManager();
     }
 
     preload() {
@@ -154,6 +159,10 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('icon_ok', 'assets/images/ui/icons/icons_color/64x64/ok.png');
         this.load.image('icon_gold', 'assets/images/ui/icons/icons_color/64x64/gold.png');
 
+        // Music toggle icons (256x256 for better quality)
+        this.load.image('icon_music', 'assets/images/ui/icons/icons_color/256x256/music.png');
+        this.load.image('icon_music_off', 'assets/images/ui/icons/icons_color/256x256/music_off.png');
+
         // Gold coin icons (128x128 for crisp scaling)
         // Different sizes based on coin count - using higher res shop icons
         this.load.image('ui_coin_1', 'assets/images/ui/icons/icons_for_shop/128x128/coin_gold1_shop.png');
@@ -191,6 +200,11 @@ export default class MenuScene extends Phaser.Scene {
         this.load.audio('double_jump', 'assets/audio/sfx/double_jump.mp3');
         this.load.audio('shield_activate', 'assets/audio/sfx/shield_activate.mp3');
         this.load.audio('magnet_activate', 'assets/audio/sfx/magnet_activate.mp3');
+
+        // Load background music
+        this.load.audio('music_menu', 'assets/audio/music/menu_music.mp3');
+        this.load.audio('music_outback', 'assets/audio/music/outback_music.mp3');
+        this.load.audio('music_beach', 'assets/audio/music/beach_music.mp3');
     }
 
     create() {
@@ -216,22 +230,32 @@ export default class MenuScene extends Phaser.Scene {
             });
         }
 
-        // Initialize audio manager
+        // Initialize audio manager (only set sounds if not already set)
         this.audioManager.init(this);
-        this.audioManager.setSounds({
-            button_click: this.sound.add('button_click'),
-            jump: this.sound.add('jump'),
-            land: this.sound.add('land'),
-            coin_collect: this.sound.add('coin_collect'),
-            collision: this.sound.add('collision'),
-            game_over: this.sound.add('game_over'),
-            double_jump: this.sound.add('double_jump'),
-            shield_activate: this.sound.add('shield_activate'),
-            magnet_activate: this.sound.add('magnet_activate')
-        });
+
+        // Only create sound objects if they don't exist yet (first time setup)
+        if (!this.audioManager.sounds.button_click) {
+            this.audioManager.setSounds({
+                button_click: this.sound.add('button_click'),
+                jump: this.sound.add('jump'),
+                land: this.sound.add('land'),
+                coin_collect: this.sound.add('coin_collect'),
+                collision: this.sound.add('collision'),
+                game_over: this.sound.add('game_over'),
+                double_jump: this.sound.add('double_jump'),
+                shield_activate: this.sound.add('shield_activate'),
+                magnet_activate: this.sound.add('magnet_activate'),
+                music_menu: this.sound.add('music_menu'),
+                music_outback: this.sound.add('music_outback'),
+                music_beach: this.sound.add('music_beach')
+            });
+        }
 
         // Create background based on selected theme
         this.createThemeBackground();
+
+        // Start menu music
+        this.audioManager.playMusic('music_menu', 0.3, true);
 
         // Add title with ribbon background
         const titleContainer = this.add.container(400, 130).setDepth(1000);
@@ -321,6 +345,8 @@ export default class MenuScene extends Phaser.Scene {
         });
         this.bgButton.setDepth(1000);
 
+        // Add music toggle button (bottom-right corner)
+        this.createMusicToggle();
 
         // Input handling - only for non-interactive areas
         this.input.keyboard.on('keydown-SPACE', this.startGame, this);
@@ -386,8 +412,8 @@ export default class MenuScene extends Phaser.Scene {
         // Save new theme
         this.gameDataManager.setBackgroundTheme(nextTheme);
 
-        // Restart the scene to show new background
-        this.scene.restart();
+        // Restart the scene to show new background (pass audioManager to preserve it)
+        this.scene.restart({ audioManager: this.audioManager });
     }
 
     /**
@@ -489,5 +515,46 @@ export default class MenuScene extends Phaser.Scene {
                 });
             }
         });
+    }
+
+    /**
+     * Create music toggle button
+     */
+    createMusicToggle() {
+        const x = 750; // Bottom-right corner
+        const y = 560;
+
+        // Get current music state
+        const musicEnabled = this.audioManager.musicEnabled;
+        const iconKey = musicEnabled ? 'icon_music' : 'icon_music_off';
+
+        // Create container for button
+        this.musicToggleContainer = this.add.container(x, y).setDepth(2000);
+
+        // Create icon
+        this.musicToggleIcon = this.add.image(0, 0, iconKey);
+        this.musicToggleIcon.setScale(0.2); // Scale down from 256x256
+        this.musicToggleIcon.setInteractive({ useHandCursor: true });
+
+        // Add hover effect
+        this.musicToggleIcon.on('pointerover', () => {
+            this.musicToggleIcon.setScale(0.22);
+        });
+
+        this.musicToggleIcon.on('pointerout', () => {
+            this.musicToggleIcon.setScale(0.2);
+        });
+
+        // Add click handler
+        this.musicToggleIcon.on('pointerdown', () => {
+            this.audioManager.playButtonClick();
+            const newState = this.audioManager.toggleMusic();
+
+            // Update icon
+            const newIconKey = newState ? 'icon_music' : 'icon_music_off';
+            this.musicToggleIcon.setTexture(newIconKey);
+        });
+
+        this.musicToggleContainer.add(this.musicToggleIcon);
     }
 }

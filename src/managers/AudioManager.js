@@ -4,8 +4,10 @@ export default class AudioManager {
         this.musicEnabled = true;
         this.sounds = {};
         this.currentMusic = null;
+        this.currentMusicKey = null; // Track which music is playing
+        this.currentMusicVolume = 0.3; // Track volume for resume
         this.scene = null;
-        
+
         // Throttling for frequently played sounds
         this.lastPlayTimes = {
             jump: 0,
@@ -90,33 +92,54 @@ export default class AudioManager {
     
     playMusic(key, volume = 0.4, loop = true) {
         if (!this.musicEnabled || !this.sounds[key]) return;
-        
+
+        // If the same music is already playing, don't restart it
+        if (this.currentMusic === this.sounds[key] && this.currentMusic.isPlaying) {
+            return;
+        }
+
         this.stopMusic();
-        
+
         try {
-            this.currentMusic = this.sounds[key].play({ volume, loop });
+            // Store the sound object itself, not the return value of play()
+            this.currentMusic = this.sounds[key];
+            this.currentMusicKey = key; // Remember what's playing
+            this.currentMusicVolume = volume; // Remember volume
+            this.currentMusic.play({ volume, loop });
         } catch (e) {
             console.warn(`Failed to play music: ${key}`, e);
         }
     }
-    
+
     stopMusic() {
         if (this.currentMusic) {
-            this.currentMusic.stop();
+            // Check if sound is playing before stopping
+            if (this.currentMusic.isPlaying) {
+                this.currentMusic.stop();
+            }
             this.currentMusic = null;
+            // Don't clear currentMusicKey - we need it to resume
         }
     }
-    
+
     toggleSound() {
         this.soundEnabled = !this.soundEnabled;
         return this.soundEnabled;
     }
-    
+
     toggleMusic() {
         this.musicEnabled = !this.musicEnabled;
+
         if (!this.musicEnabled) {
+            // Turning music OFF - stop current music
             this.stopMusic();
+        } else {
+            // Turning music ON - resume last music if we have one
+            if (this.currentMusicKey && this.sounds[this.currentMusicKey]) {
+                this.playMusic(this.currentMusicKey, this.currentMusicVolume, true);
+            }
         }
+
         return this.musicEnabled;
     }
 }

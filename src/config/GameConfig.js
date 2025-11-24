@@ -78,9 +78,9 @@ export const GAME_CONFIG = {
         SCALES: {
             // In-game collectibles (glow versions)
             GAME: {
-                shield: 0.12,
-                magnet: 0.10,      // Smaller - magnet fills more of its image
-                double: 0.12
+                shield: 0.18,      // 1.5x larger (was 0.12)
+                magnet: 0.15,      // 1.5x larger (was 0.10) - magnet fills more of its image
+                double: 0.18       // 1.5x larger (was 0.12)
             },
             // Shop icons (plain versions)
             SHOP: {

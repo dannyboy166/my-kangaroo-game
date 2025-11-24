@@ -19,6 +19,9 @@ export default class StoreScene extends Phaser.Scene {
     }
 
     create() {
+        // Start menu music (will not restart if already playing)
+        this.audioManager?.playMusic('music_menu', 0.3, true);
+
         // Add background image
         const bg = this.add.image(400, 300, 'ui_background');
         bg.setDisplaySize(800, 600);
@@ -42,6 +45,9 @@ export default class StoreScene extends Phaser.Scene {
 
         // Create shop items
         this.createShopItems();
+
+        // Add music toggle button
+        this.createMusicToggle();
 
         // Add back button with new UI graphics
         this.backButton = new Button(this, 400, 550, {
@@ -278,5 +284,42 @@ export default class StoreScene extends Phaser.Scene {
                 buyText.setScale(1);
             });
         }
+    }
+
+    /**
+     * Create music toggle button (bottom-right corner)
+     */
+    createMusicToggle() {
+        const x = 750;
+        const y = 560;
+
+        // Get current music state
+        const musicEnabled = this.audioManager.musicEnabled;
+        const iconKey = musicEnabled ? 'icon_music' : 'icon_music_off';
+
+        // Create icon
+        this.musicToggleIcon = this.add.image(x, y, iconKey);
+        this.musicToggleIcon.setScale(0.2);
+        this.musicToggleIcon.setInteractive({ useHandCursor: true });
+        this.musicToggleIcon.setDepth(2000);
+
+        // Add hover effect
+        this.musicToggleIcon.on('pointerover', () => {
+            this.musicToggleIcon.setScale(0.22);
+        });
+
+        this.musicToggleIcon.on('pointerout', () => {
+            this.musicToggleIcon.setScale(0.2);
+        });
+
+        // Add click handler
+        this.musicToggleIcon.on('pointerdown', () => {
+            this.audioManager.playButtonClick();
+            const newState = this.audioManager.toggleMusic();
+
+            // Update icon
+            const newIconKey = newState ? 'icon_music' : 'icon_music_off';
+            this.musicToggleIcon.setTexture(newIconKey);
+        });
     }
 }

@@ -79,6 +79,14 @@ export default class GameScene extends Phaser.Scene {
         // Store audio manager from menu scene
         this.audioManager = data.audioManager;
 
+        // Start background music based on theme (higher volume than menu)
+        const currentTheme = this.gameDataManager.getBackgroundTheme();
+        if (currentTheme === 'outback') {
+            this.audioManager.playMusic('music_outback', 0.5, true);
+        } else if (currentTheme === 'beach') {
+            this.audioManager.playMusic('music_beach', 0.5, true);
+        }
+
         // Initialize managers
         this.initializeManagers();
 
@@ -587,6 +595,9 @@ export default class GameScene extends Phaser.Scene {
     triggerGameOver(obstacle) {
         this.collisionCooldown = true;
         this.isGameOver = true;
+
+        // Stop background music
+        this.audioManager?.stopMusic();
 
         // Play game over sound
         this.time.delayedCall(50, () => this.audioManager?.playGameOver());
