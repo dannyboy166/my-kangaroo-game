@@ -36,8 +36,8 @@ export default class GameOverScene extends Phaser.Scene {
         graphics.fillStyle(0x000000, 0.5);
         graphics.fillRect(0, 0, 800, 600);
 
-        // Add coin UI (top left)
-        this.coinDisplay = new CoinDisplay(this, 35, 30);
+        // Add coin UI (top left) - uses centralized position from UITheme
+        this.coinDisplay = new CoinDisplay(this);
         this.coinDisplay.setCount(this.gameDataManager.getCoins());
 
         // Game Over ribbon with all info - HIGHER position
@@ -96,10 +96,10 @@ export default class GameOverScene extends Phaser.Scene {
             text: 'PLAY AGAIN',
             bgKey: 'btn_long_green',
             bgScale: 0.7,
-            iconKey: 'icon_ok',
-            iconScale: 0.55,
-            iconWidth: 32,
-            gap: 10,
+            iconKey: 'arrow_green',
+            iconScale: 0.4,
+            iconWidth: 28,
+            gap: 18,
             textStyle: { fontSize: '34px' },
             pulse: true,
             pulseScale: 1.05,

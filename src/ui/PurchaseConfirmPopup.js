@@ -1,4 +1,5 @@
 import Button from './Button.js';
+import { getCoinIconForAmount } from './CoinDisplay.js';
 
 export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
     constructor(scene, itemType, itemPrice, onConfirm, onCancel) {
@@ -96,7 +97,7 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         this.add(this.descText);
 
         // ========================================
-        // PRICE CONTAINER - groups price text + coin animation (centered)
+        // PRICE CONTAINER - groups price text + coin icon (centered)
         // ========================================
         this.priceContainer = this.scene.add.container(0, 20);
 
@@ -106,11 +107,12 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
             color: '#000000'
         }).setOrigin(0.5);
 
-        this.coinSprite = this.scene.add.sprite(25, 0, 'coin', 0);
-        this.coinSprite.play('coin_spin');
-        this.coinSprite.setScale(0.45);
+        // Use coin icon based on item price
+        const coinIconKey = getCoinIconForAmount(this.itemPrice);
+        this.coinIcon = this.scene.add.image(30, 0, coinIconKey);
+        this.coinIcon.setScale(0.4);  // 128px * 0.4 = 51px display
 
-        this.priceContainer.add([this.priceText, this.coinSprite]);
+        this.priceContainer.add([this.priceText, this.coinIcon]);
         this.add(this.priceContainer);
 
         // ========================================

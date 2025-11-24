@@ -3,7 +3,7 @@ import GameDataManager from '../managers/GameDataManager.js';
 import AudioManager from '../managers/AudioManager.js';
 import PurchaseConfirmPopup from '../ui/PurchaseConfirmPopup.js';
 import Button from '../ui/Button.js';
-import CoinDisplay from '../ui/CoinDisplay.js';
+import CoinDisplay, { getCoinIconForAmount } from '../ui/CoinDisplay.js';
 
 export default class StoreScene extends Phaser.Scene {
     constructor() {
@@ -35,8 +35,8 @@ export default class StoreScene extends Phaser.Scene {
         }).setOrigin(0.5);
         titleContainer.add([titleRibbon, titleText]);
 
-        // Add coin display (top left)
-        this.coinDisplay = new CoinDisplay(this, 35, 30);
+        // Add coin display (top left) - uses centralized position from UITheme
+        this.coinDisplay = new CoinDisplay(this);
         this.coinDisplay.setCount(this.gameDataManager.getCoins());
 
         // Create shop items
@@ -186,14 +186,21 @@ export default class StoreScene extends Phaser.Scene {
             container.add(autoEquipText);
         }
 
-        // Price and count display
-        const priceText = this.add.text(80, -10, `${price} coins`, { // Price at top right
+        // Price and count display - with coin icon
+        const priceText = this.add.text(80, -10, `${price}`, { // Price at top right
             fontSize: '16px',
             fontFamily: 'Carter One',
             color: '#000000'
         });
         priceText.setOrigin(0, 0.5);
         container.add(priceText);
+
+        // Coin icon next to price - based on item price
+        const priceCoinIconKey = getCoinIconForAmount(price);
+        const priceCoinIcon = this.add.image(80 + priceText.width + 15, -10, priceCoinIconKey);
+        priceCoinIcon.setScale(0.3);  // 128px * 0.3 = 38px display
+        priceCoinIcon.setOrigin(0.5, 0.5);
+        container.add(priceCoinIcon);
 
         const countText = this.add.text(80, 15, `Owned: ${count}${type === 'helmet' ? '/1' : '/3'}`, { // Count below price
             fontSize: '14px',

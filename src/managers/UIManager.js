@@ -1,4 +1,6 @@
 import { GAME_CONFIG } from '../config/GameConfig.js';
+import { getCoinIconForAmount } from '../ui/CoinDisplay.js';
+import { UI_THEME } from '../config/UITheme.js';
 
 /**
  * UIManager
@@ -61,21 +63,28 @@ export default class UIManager {
      * Create coin display
      */
     createCoinDisplay() {
-        const config = GAME_CONFIG.UI;
+        const pos = UI_THEME.positions.coinDisplay;
+        const currentCoins = this.gameDataManager.getCoins();
+        const baseGap = 30;
 
-        // Coin icon (animated)
-        const coinIcon = this.scene.add.sprite(config.COIN_ICON_X, config.COIN_ICON_Y, 'coin', 0);
-        coinIcon.play('coin_spin');
-        coinIcon.setScale(config.COIN_ICON_SCALE);
-        coinIcon.setOrigin(0, 0.5);
-        coinIcon.setScrollFactor(0); // Fix to camera
-        coinIcon.setDepth(1000);
+        // Coin icon (static, changes based on coin count)
+        const coinIconKey = getCoinIconForAmount(currentCoins);
+        this.coinIcon = this.scene.add.image(pos.x, pos.y, coinIconKey);
+        this.coinIcon.setScale(0.4);  // 128px * 0.4 = 51px display
+        this.coinIcon.setOrigin(0.5, 0.5);
+        this.coinIcon.setScrollFactor(0); // Fix to camera
+        this.coinIcon.setDepth(1000);
+        this.currentCoinIconKey = coinIconKey;
 
-        // Coin text
+        // Calculate initial text position based on icon size (must match CoinDisplay.js)
+        const iconIndex = parseInt(coinIconKey.slice(-1));
+        const extraGap = (iconIndex - 1) * 4; // 0, 4, 8, 12 extra pixels
+
+        // Coin text - positioned to the right of icon
         this.coinText = this.scene.add.text(
-            config.COIN_TEXT_X,
-            config.COIN_ICON_Y,
-            `${this.gameDataManager.getCoins()}`,
+            pos.x + baseGap + extraGap,
+            pos.y,
+            `${currentCoins}`,
             {
                 fontSize: '24px',
                 fontFamily: 'Carter One',
@@ -234,7 +243,23 @@ export default class UIManager {
      * Update coin display
      */
     updateCoins() {
-        this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+        const currentCoins = this.gameDataManager.getCoins();
+        this.coinText.setText(`${currentCoins}`);
+
+        // Update icon if coin count crosses a threshold
+        const newIconKey = getCoinIconForAmount(currentCoins);
+        if (newIconKey !== this.currentCoinIconKey) {
+            this.currentCoinIconKey = newIconKey;
+            this.coinIcon.setTexture(newIconKey);
+
+            // Adjust text position based on icon size (larger icons need more gap)
+            // Must match CoinDisplay.js logic exactly for consistency
+            const pos = UI_THEME.positions.coinDisplay;
+            const baseGap = 30;
+            const iconIndex = parseInt(newIconKey.slice(-1));
+            const extraGap = (iconIndex - 1) * 4; // 0, 4, 8, 12 extra pixels
+            this.coinText.setX(pos.x + baseGap + extraGap);
+        }
     }
 
     /**

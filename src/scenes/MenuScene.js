@@ -151,8 +151,14 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('icon_ok', 'assets/images/ui/icons/icons_color/64x64/ok.png');
         this.load.image('icon_gold', 'assets/images/ui/icons/icons_color/64x64/gold.png');
 
-        // Gold coin icon (for UI displays)
-        this.load.image('ui_coin', 'assets/images/ui/icons/icon_coins_gems/64x64/coin_gold1.png');
+        // Gold coin icons (128x128 for crisp scaling)
+        // Different sizes based on coin count - using higher res shop icons
+        this.load.image('ui_coin_1', 'assets/images/ui/icons/icons_for_shop/128x128/coin_gold1_shop.png');
+        this.load.image('ui_coin_2', 'assets/images/ui/icons/icons_for_shop/128x128/coin_gold2_shop.png');
+        this.load.image('ui_coin_3', 'assets/images/ui/icons/icons_for_shop/128x128/coin_gold3_shop.png');
+        this.load.image('ui_coin_4', 'assets/images/ui/icons/icons_for_shop/128x128/coin_gold4_shop.png');
+        // Keep ui_coin as alias for backwards compatibility
+        this.load.image('ui_coin', 'assets/images/ui/icons/icons_for_shop/128x128/coin_gold1_shop.png');
 
         // Ribbons (for titles)
         this.load.image('ribbon_orange', 'assets/images/ui/ribbons/ribbon_orange.png');
@@ -305,8 +311,8 @@ export default class MenuScene extends Phaser.Scene {
 
 
 
-        // Add coin UI (top left)
-        this.coinDisplay = new CoinDisplay(this, 35, 30);
+        // Add coin UI (top left) - uses centralized position from UITheme
+        this.coinDisplay = new CoinDisplay(this);
         this.coinDisplay.setCount(this.gameDataManager.getCoins());
         this.coinDisplay.setDepth(1000);
 
@@ -333,10 +339,12 @@ export default class MenuScene extends Phaser.Scene {
         // Add background theme selector button with new UI graphics - DOWN RIGHT
         const currentTheme = this.gameDataManager.getBackgroundTheme();
         const themeName = BACKGROUND_THEMES[currentTheme]?.name || 'Outback';
+        // Use different button colors per theme: red for outback, yellow for beach
+        const themeBtnKey = currentTheme === 'outback' ? 'btn_red' : 'btn_yellow';
 
         this.bgButton = new Button(this, 550, 400, {
             text: themeName,
-            bgKey: 'btn_yellow',
+            bgKey: themeBtnKey,
             bgScale: 0.4,
             iconKey: 'icon_star',
             iconScale: 0.38,

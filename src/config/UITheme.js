@@ -121,6 +121,30 @@ export const UI_THEME = {
     spacing: {
         iconGap: 8,
         buttonTextOffsetY: -5
+    },
+
+    // Fixed UI element positions (consistent across all scenes)
+    positions: {
+        coinDisplay: { x: 45, y: 30 }
+    },
+
+    // Common button presets (for quick use)
+    buttonPresets: {
+        primary: {
+            bgKey: 'btn_green',
+            bgScale: 0.5,
+            textStyle: { fontSize: '24px' }
+        },
+        secondary: {
+            bgKey: 'btn_blue',
+            bgScale: 0.45,
+            textStyle: { fontSize: '22px' }
+        },
+        danger: {
+            bgKey: 'btn_red',
+            bgScale: 0.45,
+            textStyle: { fontSize: '22px' }
+        }
     }
 };
 
@@ -132,5 +156,16 @@ export const UI_THEME = {
  */
 export function getTextStyle(preset, overrides = {}) {
     const base = UI_THEME.textStyles[preset] || UI_THEME.textStyles.body;
+    return { ...base, ...overrides };
+}
+
+/**
+ * Helper to get button preset config with overrides
+ * @param {string} preset - Name of preset (primary, secondary, danger)
+ * @param {Object} overrides - Properties to override
+ * @returns {Object} Merged button config
+ */
+export function getButtonPreset(preset, overrides = {}) {
+    const base = UI_THEME.buttonPresets[preset] || UI_THEME.buttonPresets.primary;
     return { ...base, ...overrides };
 }
