@@ -88,32 +88,32 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         this.add(this.coinSprite);
 
         // Cancel button (red) - using btn2_red
-        this.cancelBtnBg = this.scene.add.image(-90, 110, 'btn2_red');
+        this.cancelBtnContainer = this.scene.add.container(-90, 110);
+        this.cancelBtnBg = this.scene.add.image(0, 0, 'btn2_red');
         this.cancelBtnBg.setScale(0.45);
-        this.add(this.cancelBtnBg);
-
-        this.cancelBtnText = this.scene.add.text(-90, 107, 'CANCEL', {
+        this.cancelBtnText = this.scene.add.text(0, -3, 'CANCEL', {
             fontSize: '16px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        this.add(this.cancelBtnText);
+        this.cancelBtnContainer.add([this.cancelBtnBg, this.cancelBtnText]);
+        this.add(this.cancelBtnContainer);
 
         // Confirm button (green) - using btn_little_green
-        this.confirmBtnBg = this.scene.add.image(90, 110, 'btn_little_green');
+        this.confirmBtnContainer = this.scene.add.container(90, 110);
+        this.confirmBtnBg = this.scene.add.image(0, 0, 'btn_little_green');
         this.confirmBtnBg.setScale(0.55);
-        this.add(this.confirmBtnBg);
-
-        this.confirmBtnText = this.scene.add.text(90, 107, 'BUY IT!', {
+        this.confirmBtnText = this.scene.add.text(0, -3, 'BUY IT!', {
             fontSize: '16px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        this.add(this.confirmBtnText);
+        this.confirmBtnContainer.add([this.confirmBtnBg, this.confirmBtnText]);
+        this.add(this.confirmBtnContainer);
 
         // Make buttons interactive
         this.setupButtonInteractions();
@@ -134,13 +134,11 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         });
 
         this.cancelBtnBg.on('pointerover', () => {
-            this.cancelBtnBg.setScale(0.5);
-            this.cancelBtnText.setScale(1.1);
+            this.cancelBtnContainer.setScale(1.1);
         });
 
         this.cancelBtnBg.on('pointerout', () => {
-            this.cancelBtnBg.setScale(0.45);
-            this.cancelBtnText.setScale(1);
+            this.cancelBtnContainer.setScale(1);
         });
 
         // Confirm button
@@ -152,13 +150,11 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         });
 
         this.confirmBtnBg.on('pointerover', () => {
-            this.confirmBtnBg.setScale(0.6);
-            this.confirmBtnText.setScale(1.1);
+            this.confirmBtnContainer.setScale(1.1);
         });
 
         this.confirmBtnBg.on('pointerout', () => {
-            this.confirmBtnBg.setScale(0.55);
-            this.confirmBtnText.setScale(1);
+            this.confirmBtnContainer.setScale(1);
         });
     }
 

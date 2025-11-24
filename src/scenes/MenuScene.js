@@ -122,6 +122,8 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('btn_sq_gray', 'assets/images/ui/buttons/bttn2_sq_gray.png');
         this.load.image('btn_little_green', 'assets/images/ui/buttons/bttn2_little_green.png');
         this.load.image('btn_little_gray', 'assets/images/ui/buttons/bttn2_little_gray.png');
+        this.load.image('btn3_gray', 'assets/images/ui/buttons/bttn3_gray.png');
+        this.load.image('btn3_green', 'assets/images/ui/buttons/bttn3_green.png');
         this.load.image('btn2_red', 'assets/images/ui/buttons/bttn2_red.png');
         this.load.image('btn_blue', 'assets/images/ui/buttons/bttn_blue.png');
         this.load.image('btn_red', 'assets/images/ui/buttons/bttn_red.png');

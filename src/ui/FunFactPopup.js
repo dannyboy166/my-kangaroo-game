@@ -136,20 +136,25 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         const factTextBottom = factTextTop + this.factText.height;
         const buttonY = factTextBottom + 65; // 35px spacing below fact text
 
-        // Calculate required panel height and scale
-        // Panel needs to fit: ribbon at -85, fact text, button at buttonY + some padding
-        const contentBottom = buttonY + 30; // Button height + padding
-        const contentTop = -110; // Above ribbon
+        // Calculate required panel height scale
+        // Content spans from ribbon (-85) to button bottom (buttonY + 25)
+        const contentBottom = buttonY + 25;
+        const contentTop = -100;
         const totalContentHeight = contentBottom - contentTop;
 
-        // Base panel scale is 1.5, base panel height at that scale
-        const baseScale = 1.5;
-        const minScale = baseScale;
-        const neededScale = Math.max(minScale, totalContentHeight / 140); // 140 is rough panel height estimate
+        // Panel at scale 1.5 is about 210px tall (140 * 1.5)
+        // We need to scale Y to fit our content
+        const baseYScale = 1.5;
+        const baseDisplayHeight = 210; // Panel height at 1.5 scale
+        const neededYScale = Math.max(baseYScale, (totalContentHeight / baseDisplayHeight) * baseYScale);
 
-        // Use panel from UI pack as background (now with dynamic scale)
-        this.panelBg = this.scene.add.image(0, 0, 'back_days');
-        this.panelBg.setScale(1.5, neededScale);
+        // Shift panel down so top edge stays fixed as it grows
+        const newDisplayHeight = (baseDisplayHeight / baseYScale) * neededYScale;
+        const panelYOffset = (newDisplayHeight - baseDisplayHeight) / 2;
+
+        // Use panel from UI pack as background
+        this.panelBg = this.scene.add.image(0, panelYOffset, 'back_days');
+        this.panelBg.setScale(1.5, neededYScale);
         this.add(this.panelBg);
 
         // Title ribbon

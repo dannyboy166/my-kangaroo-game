@@ -21,16 +21,17 @@ export default class StoreScene extends Phaser.Scene {
         bg.setDisplaySize(800, 600);
 
         // Add title with ribbon background
-        const titleRibbon = this.add.image(400, 65, 'ribbon_red');
-        titleRibbon.setScale(0.65);
-
-        this.add.text(400, 53, 'SHOP', {
+        const titleContainer = this.add.container(400, 65);
+        const titleRibbon = this.add.image(0, 0, 'ribbon_red');
+        titleRibbon.setScale(0.55);
+        const titleText = this.add.text(0, -12, 'SHOP', {
             fontSize: '36px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 3
         }).setOrigin(0.5);
+        titleContainer.add([titleRibbon, titleText]);
 
         // Add coin display (top left) with new UI coin icon
         const coinIcon = this.add.image(35, 30, 'ui_coin');
@@ -51,18 +52,21 @@ export default class StoreScene extends Phaser.Scene {
 
         // Add back button with new UI graphics
         const backButtonContainer = this.add.container(400, 550);
-        const backButtonBg = this.add.image(0, 0, 'btn_long_red');
+        const backButtonBg = this.add.image(0, 0, 'btn_long_yellow');
         backButtonBg.setScale(0.5);
-        const backIcon = this.add.image(-55, 0, 'icon_house');
-        backIcon.setScale(0.4);
-        const backButtonText = this.add.text(10, 0, this.fromScene === 'GameOverScene' ? 'BACK' : 'MENU', {
+        // Sub-container for icon+text (so they move together)
+        const backContent = this.add.container(0, -5);
+        const backButtonText = this.add.text(0, 0, this.fromScene === 'GameOverScene' ? 'BACK' : 'MENU', {
             fontSize: '22px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
-        backButtonContainer.add([backButtonBg, backIcon, backButtonText]);
+        const backIcon = this.add.image(-(backButtonText.width / 2) - 25, 0, 'icon_house');
+        backIcon.setScale(0.4);
+        backContent.add([backIcon, backButtonText]);
+        backButtonContainer.add([backButtonBg, backContent]);
 
         backButtonBg.setInteractive();
         backButtonBg.on('pointerdown', () => {
@@ -85,18 +89,37 @@ export default class StoreScene extends Phaser.Scene {
     }
     createShopItems() {
         // Helmet temporarily disabled - needs helmet sprite for new kangaroo character
-        const items = ['shield', 'magnet', 'doubleJump'];
+        this.shopItems = ['shield', 'magnet', 'doubleJump'];
+        this.itemContainers = {};
         const startY = 200;
         const spacing = 120;
 
-        items.forEach((item, index) => {
+        this.shopItems.forEach((item, index) => {
             const y = startY + (index * spacing);
             this.createShopItem(item, 400, y);
         });
     }
 
+    refreshAllItems() {
+        // Destroy all item containers and recreate them
+        const startY = 200;
+        const spacing = 120;
+
+        this.shopItems.forEach((item, index) => {
+            if (this.itemContainers[item]) {
+                this.itemContainers[item].destroy();
+            }
+            const y = startY + (index * spacing);
+            this.createShopItem(item, 400, y);
+        });
+
+        // Update coin display
+        this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+    }
+
     createShopItem(type, x, y) {
         const container = this.add.container(x, y);
+        this.itemContainers[type] = container; // Store reference for refreshing
 
         // Background panel for the item - using UI pack panel
         const panel = this.add.image(0, 0, 'back_myname');
@@ -210,10 +233,10 @@ export default class StoreScene extends Phaser.Scene {
         const playerCoins = this.gameDataManager.getCoins();
         const canBuy = playerCoins >= price && count < maxCount;
 
-        // Use graphical buttons from UI pack - little buttons
-        const buttonKey = canBuy ? 'btn_little_green' : 'btn_little_gray';
+        // Use graphical buttons from UI pack - matching green/gray buttons
+        const buttonKey = canBuy ? 'btn3_green' : 'btn3_gray';
         const buyButtonBg = this.add.image(245, 0, buttonKey);
-        buyButtonBg.setScale(0.5);
+        buyButtonBg.setScale(0.65);
         container.add(buyButtonBg);
 
         // Determine button text based on specific conditions
@@ -226,7 +249,7 @@ export default class StoreScene extends Phaser.Scene {
             buttonText = '---';
         }
 
-        const buyText = this.add.text(245, -3, buttonText, {
+        const buyText = this.add.text(245, -5, buttonText, {
             fontSize: '18px',
             fontFamily: 'Carter One',
             color: '#FFFFFF',
@@ -256,11 +279,8 @@ export default class StoreScene extends Phaser.Scene {
                             this.gameDataManager.spendCoins(itemPrice);
                             this.storeManager.addPowerUp(type);
                             this.audioManager.playButtonClick();
-                            // Refresh the display
-                            container.destroy();
-                            this.createShopItem(type, x, y);
-                            // Update coin display
-                            this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+                            // Refresh all items (so buttons gray out if can't afford)
+                            this.refreshAllItems();
                         },
                         () => {
                             // On cancel - just close popup
@@ -271,12 +291,12 @@ export default class StoreScene extends Phaser.Scene {
             });
 
             buyButtonBg.on('pointerover', () => {
-                buyButtonBg.setScale(0.55);
+                buyButtonBg.setScale(0.72);
                 buyText.setScale(1.1);
             });
 
             buyButtonBg.on('pointerout', () => {
-                buyButtonBg.setScale(0.5);
+                buyButtonBg.setScale(0.65);
                 buyText.setScale(1);
             });
         }
