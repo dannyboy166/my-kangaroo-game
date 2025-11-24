@@ -1,5 +1,7 @@
 import GameDataManager from '../managers/GameDataManager.js';
 import FunFactPopup from '../ui/FunFactPopup.js';
+import Button from '../ui/Button.js';
+import CoinDisplay from '../ui/CoinDisplay.js';
 
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
@@ -34,19 +36,9 @@ export default class GameOverScene extends Phaser.Scene {
         graphics.fillStyle(0x000000, 0.5);
         graphics.fillRect(0, 0, 800, 600);
 
-        // Add coin UI (top left) with new UI coin icon
-        const coinIcon = this.add.image(35, 30, 'ui_coin');
-        coinIcon.setScale(0.6);
-        coinIcon.setOrigin(0.5, 0.5);
-
-        this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
-            fontSize: '24px',
-            fontFamily: 'Carter One',
-            color: '#FFD700',
-            stroke: '#000000',
-            strokeThickness: 2
-        });
-        this.coinText.setOrigin(0, 0.5);
+        // Add coin UI (top left)
+        this.coinDisplay = new CoinDisplay(this, 35, 30);
+        this.coinDisplay.setCount(this.gameDataManager.getCoins());
 
         // Game Over ribbon with all info - HIGHER position
         const titleRibbon = this.add.image(400, 150, 'ribbon_red');
@@ -100,110 +92,52 @@ export default class GameOverScene extends Phaser.Scene {
         }
 
         // Play again button with new UI graphics - HIGHER
-        const playAgainContainer = this.add.container(400, 320);
-        const playAgainBg = this.add.image(0, 0, 'btn_long_green');
-        playAgainBg.setScale(0.7);
-        // Sub-container for icon+text (so they move together)
-        const playAgainContent = this.add.container(0, -5);
-        const playAgainText = this.add.text(0, 0, 'PLAY AGAIN', {
-            fontSize: '34px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        const playAgainIcon = this.add.image(-(playAgainText.width / 2) - 25, 0, 'icon_ok');
-        playAgainIcon.setScale(0.55);
-        playAgainContent.add([playAgainIcon, playAgainText]);
-        playAgainContainer.add([playAgainBg, playAgainContent]);
-
-        playAgainBg.setInteractive({ useHandCursor: true });
-        playAgainBg.on('pointerdown', () => {
-            this.audioManager?.playButtonClick();
-            this.scene.start('GameScene', { audioManager: this.audioManager });
-        });
-
-        playAgainBg.on('pointerover', () => {
-            playAgainContainer.setScale(1.1);
-        });
-
-        playAgainBg.on('pointerout', () => {
-            playAgainContainer.setScale(1);
-        });
-
-        // Add pulsing effect to play again button
-        this.tweens.add({
-            targets: playAgainContainer,
-            scaleX: 1.05,
-            scaleY: 1.05,
-            duration: 800,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
+        this.playAgainButton = new Button(this, 400, 320, {
+            text: 'PLAY AGAIN',
+            bgKey: 'btn_long_green',
+            bgScale: 0.7,
+            iconKey: 'icon_ok',
+            iconScale: 0.55,
+            iconWidth: 32,
+            gap: 10,
+            textStyle: { fontSize: '34px' },
+            pulse: true,
+            pulseScale: 1.05,
+            pulseDuration: 800,
+            onClick: () => {
+                this.audioManager?.playButtonClick();
+                this.scene.start('GameScene', { audioManager: this.audioManager });
+            }
         });
 
         // Shop button - LEFT side
-        const shopContainer = this.add.container(200, 460);
-        const shopBg = this.add.image(0, 0, 'btn_blue');
-        shopBg.setScale(0.45);
-        // Sub-container for icon+text (so they move together)
-        const shopContent = this.add.container(0, -5);
-        const shopText = this.add.text(0, 0, 'SHOP', {
-            fontSize: '28px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        const shopIcon = this.add.image(-(shopText.width / 2) - 20, 0, 'icon_shop');
-        shopIcon.setScale(0.35);
-        shopContent.add([shopIcon, shopText]);
-        shopContainer.add([shopBg, shopContent]);
-
-        shopBg.setInteractive({ useHandCursor: true });
-        shopBg.on('pointerdown', () => {
-            this.audioManager?.playButtonClick();
-            this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'GameOverScene' });
-        });
-
-        shopBg.on('pointerover', () => {
-            shopContainer.setScale(1.1);
-        });
-
-        shopBg.on('pointerout', () => {
-            shopContainer.setScale(1);
+        this.shopButton = new Button(this, 200, 460, {
+            text: 'SHOP',
+            bgKey: 'btn_blue',
+            bgScale: 0.45,
+            iconKey: 'icon_shop',
+            iconScale: 0.35,
+            iconWidth: 26,
+            textStyle: { fontSize: '28px' },
+            onClick: () => {
+                this.audioManager?.playButtonClick();
+                this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'GameOverScene' });
+            }
         });
 
         // Menu button - RIGHT side
-        const menuContainer = this.add.container(600, 460);
-        const menuBg = this.add.image(0, 0, 'btn_yellow');
-        menuBg.setScale(0.45);
-        // Sub-container for icon+text (so they move together)
-        const menuContent = this.add.container(0, -5);
-        const menuText = this.add.text(0, 0, 'MENU', {
-            fontSize: '28px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        const menuIcon = this.add.image(-(menuText.width / 2) - 20, 0, 'icon_house');
-        menuIcon.setScale(0.35);
-        menuContent.add([menuIcon, menuText]);
-        menuContainer.add([menuBg, menuContent]);
-
-        menuBg.setInteractive({ useHandCursor: true });
-        menuBg.on('pointerdown', () => {
-            this.audioManager?.playButtonClick();
-            this.scene.start('MenuScene');
-        });
-
-        menuBg.on('pointerover', () => {
-            menuContainer.setScale(1.1);
-        });
-
-        menuBg.on('pointerout', () => {
-            menuContainer.setScale(1);
+        this.menuButton = new Button(this, 600, 460, {
+            text: 'MENU',
+            bgKey: 'btn_yellow',
+            bgScale: 0.45,
+            iconKey: 'icon_house',
+            iconScale: 0.35,
+            iconWidth: 26,
+            textStyle: { fontSize: '28px' },
+            onClick: () => {
+                this.audioManager?.playButtonClick();
+                this.scene.start('MenuScene');
+            }
         });
 
         // Add instruction text

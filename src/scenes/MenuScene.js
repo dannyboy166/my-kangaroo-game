@@ -2,6 +2,8 @@ import GameDataManager from '../managers/GameDataManager.js';
 import AudioManager from '../managers/AudioManager.js';
 import { BACKGROUND_THEMES } from '../config/BackgroundConfig.js';
 import { CHARACTER_CONFIGS, getCharacterFramePaths } from '../config/CharacterConfig.js';
+import Button from '../ui/Button.js';
+import CoinDisplay from '../ui/CoinDisplay.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -303,117 +305,51 @@ export default class MenuScene extends Phaser.Scene {
 
 
 
-        // Add coin UI (top left) with new UI coin icon
-        const coinIcon = this.add.image(35, 30, 'ui_coin');
-        coinIcon.setScale(0.6);
-        coinIcon.setOrigin(0.5, 0.5);
-        coinIcon.setDepth(1000);
-
-        this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
-            fontSize: '24px',
-            fontFamily: 'Carter One',
-            color: '#FFD700',
-            stroke: '#000000',
-            strokeThickness: 2
-        });
-        this.coinText.setOrigin(0, 0.5);
-        this.coinText.setDepth(1000);
+        // Add coin UI (top left)
+        this.coinDisplay = new CoinDisplay(this, 35, 30);
+        this.coinDisplay.setCount(this.gameDataManager.getCoins());
+        this.coinDisplay.setDepth(1000);
 
         // No need for createSimpleGround - using parallax ground layer instead
 
         // Add shop button with new UI graphics - DOWN LEFT
-        const shopButtonContainer = this.add.container(250, 400).setDepth(1000);
-        const shopButtonBg = this.add.image(0, 0, 'btn_blue');
-        shopButtonBg.setScale(0.4);
-        // Sub-container for icon+text (so they move together)
-        const shopContent = this.add.container(0, -5);
-        const shopButtonText = this.add.text(0, 0, 'SHOP', {
-            fontSize: '24px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        const shopIcon = this.add.image(-(shopButtonText.width / 2) - 22, 0, 'icon_shop');
-        shopIcon.setScale(0.38);
-        shopContent.add([shopIcon, shopButtonText]);
-        shopButtonContainer.add([shopButtonBg, shopContent]);
-
-        shopButtonBg.setInteractive();
-        shopButtonBg.on('pointerdown', () => {
-            this.audioManager.playButtonClick();
-            this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'MenuScene' });
+        this.shopButton = new Button(this, 250, 400, {
+            text: 'Shop',
+            bgKey: 'btn_blue',
+            bgScale: 0.4,
+            iconKey: 'icon_shop',
+            iconScale: 0.38,
+            iconWidth: 28,
+            textStyle: { fontSize: '28px' },
+            pulse: true,
+            hoverScale: 1.15,
+            onClick: () => {
+                this.audioManager.playButtonClick();
+                this.scene.start('StoreScene', { audioManager: this.audioManager, from: 'MenuScene' });
+            }
         });
-
-        // Add pulsing effect to shop button
-        const shopPulseTween = this.tweens.add({
-            targets: shopButtonContainer,
-            scaleX: 1.05,
-            scaleY: 1.05,
-            duration: 1500,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
-
-        // Add hover effect to shop button
-        shopButtonBg.on('pointerover', () => {
-            shopPulseTween.pause();
-            shopButtonContainer.setScale(1.15);
-        });
-        shopButtonBg.on('pointerout', () => {
-            shopButtonContainer.setScale(1);
-            shopPulseTween.resume();
-        });
+        this.shopButton.setDepth(1000);
 
         // Add background theme selector button with new UI graphics - DOWN RIGHT
         const currentTheme = this.gameDataManager.getBackgroundTheme();
         const themeName = BACKGROUND_THEMES[currentTheme]?.name || 'Outback';
 
-        this.bgButtonContainer = this.add.container(550, 400).setDepth(1000);
-        const bgButtonBg = this.add.image(0, 0, 'btn_yellow');
-        bgButtonBg.setScale(0.4);
-        // Sub-container for icon+text (so they move together)
-        const bgContent = this.add.container(0, -5);
-        this.bgButtonText = this.add.text(0, 0, themeName, {
-            fontSize: '24px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2,
-            align: 'center'
-        }).setOrigin(0.5);
-        const bgIcon = this.add.image(-(this.bgButtonText.width / 2) - 22, 0, 'icon_star');
-        bgIcon.setScale(0.38);
-        bgContent.add([bgIcon, this.bgButtonText]);
-        this.bgButtonContainer.add([bgButtonBg, bgContent]);
-
-        bgButtonBg.setInteractive();
-        bgButtonBg.on('pointerdown', () => {
-            this.audioManager.playButtonClick();
-            this.toggleBackgroundTheme();
+        this.bgButton = new Button(this, 550, 400, {
+            text: themeName,
+            bgKey: 'btn_yellow',
+            bgScale: 0.4,
+            iconKey: 'icon_star',
+            iconScale: 0.38,
+            iconWidth: 28,
+            textStyle: { fontSize: '28px' },
+            pulse: true,
+            hoverScale: 1.15,
+            onClick: () => {
+                this.audioManager.playButtonClick();
+                this.toggleBackgroundTheme();
+            }
         });
-
-        // Add pulsing effect to background button
-        const bgPulseTween = this.tweens.add({
-            targets: this.bgButtonContainer,
-            scaleX: 1.05,
-            scaleY: 1.05,
-            duration: 1500,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
-
-        // Add hover effect to background button
-        bgButtonBg.on('pointerover', () => {
-            bgPulseTween.pause();
-            this.bgButtonContainer.setScale(1.15);
-        });
-        bgButtonBg.on('pointerout', () => {
-            this.bgButtonContainer.setScale(1);
-            bgPulseTween.resume();
-        });
+        this.bgButton.setDepth(1000);
 
 
         // Input handling - only for non-interactive areas

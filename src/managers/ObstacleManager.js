@@ -98,8 +98,8 @@ export default class ObstacleManager {
                 // Reached bottom, stay down until past kangaroo
                 magpie.setRotation(0);
 
-                // Check if magpie is now behind the kangaroo
-                if (magpie.x < kangaroo.x) {
+                // Check if magpie is close to or past the kangaroo (start climbing earlier)
+                if (magpie.x < kangaroo.x + 80) {
                     magpie.setData('isClimbingBack', true);
                 }
             }

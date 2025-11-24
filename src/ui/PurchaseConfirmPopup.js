@@ -1,3 +1,5 @@
+import Button from './Button.js';
+
 export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
     constructor(scene, itemType, itemPrice, onConfirm, onCancel) {
         super(scene);
@@ -112,78 +114,43 @@ export default class PurchaseConfirmPopup extends Phaser.GameObjects.Container {
         this.add(this.priceContainer);
 
         // ========================================
-        // CANCEL BUTTON CONTAINER
+        // CANCEL BUTTON
         // ========================================
-        this.cancelBtnContainer = this.scene.add.container(-90, 110);
-        this.cancelBtnBg = this.scene.add.image(0, 0, 'btn2_red');
-        this.cancelBtnBg.setScale(0.45);
-        this.cancelBtnText = this.scene.add.text(0, -3, 'CANCEL', {
-            fontSize: '18px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        this.cancelBtnContainer.add([this.cancelBtnBg, this.cancelBtnText]);
-        this.add(this.cancelBtnContainer);
+        this.cancelBtn = new Button(this.scene, -90, 110, {
+            text: 'CANCEL',
+            bgKey: 'btn2_red',
+            bgScale: 0.45,
+            textStyle: { fontSize: '18px' },
+            textOffsetY: -3,
+            addToScene: false,
+            onClick: () => {
+                this.close();
+                if (this.onCancel) this.onCancel();
+            }
+        });
+        this.add(this.cancelBtn);
 
         // ========================================
-        // CONFIRM BUTTON CONTAINER
+        // CONFIRM BUTTON
         // ========================================
-        this.confirmBtnContainer = this.scene.add.container(90, 110);
-        this.confirmBtnBg = this.scene.add.image(0, 0, 'btn_little_green');
-        this.confirmBtnBg.setScale(0.55);
-        this.confirmBtnText = this.scene.add.text(0, -3, 'BUY IT!', {
-            fontSize: '18px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        this.confirmBtnContainer.add([this.confirmBtnBg, this.confirmBtnText]);
-        this.add(this.confirmBtnContainer);
-
-        // Make buttons interactive
-        this.setupButtonInteractions();
+        this.confirmBtn = new Button(this.scene, 90, 110, {
+            text: 'BUY IT!',
+            bgKey: 'btn_little_green',
+            bgScale: 0.55,
+            textStyle: { fontSize: '18px' },
+            textOffsetY: -3,
+            addToScene: false,
+            onClick: () => {
+                this.close();
+                if (this.onConfirm) this.onConfirm();
+            }
+        });
+        this.add(this.confirmBtn);
 
         // Position and depth
         this.setPosition(400, 300);
         this.setDepth(2000);
         this.setSize(800, 600);
-    }
-
-    setupButtonInteractions() {
-        // Cancel button
-        this.cancelBtnBg.setInteractive({ useHandCursor: true });
-
-        this.cancelBtnBg.on('pointerdown', () => {
-            this.close();
-            if (this.onCancel) this.onCancel();
-        });
-
-        this.cancelBtnBg.on('pointerover', () => {
-            this.cancelBtnContainer.setScale(1.1);
-        });
-
-        this.cancelBtnBg.on('pointerout', () => {
-            this.cancelBtnContainer.setScale(1);
-        });
-
-        // Confirm button
-        this.confirmBtnBg.setInteractive({ useHandCursor: true });
-
-        this.confirmBtnBg.on('pointerdown', () => {
-            this.close();
-            if (this.onConfirm) this.onConfirm();
-        });
-
-        this.confirmBtnBg.on('pointerover', () => {
-            this.confirmBtnContainer.setScale(1.1);
-        });
-
-        this.confirmBtnBg.on('pointerout', () => {
-            this.confirmBtnContainer.setScale(1);
-        });
     }
 
     animateIn() {

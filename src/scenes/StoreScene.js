@@ -2,6 +2,8 @@ import StoreManager from '../managers/StoreManager.js';
 import GameDataManager from '../managers/GameDataManager.js';
 import AudioManager from '../managers/AudioManager.js';
 import PurchaseConfirmPopup from '../ui/PurchaseConfirmPopup.js';
+import Button from '../ui/Button.js';
+import CoinDisplay from '../ui/CoinDisplay.js';
 
 export default class StoreScene extends Phaser.Scene {
     constructor() {
@@ -33,58 +35,31 @@ export default class StoreScene extends Phaser.Scene {
         }).setOrigin(0.5);
         titleContainer.add([titleRibbon, titleText]);
 
-        // Add coin display (top left) with new UI coin icon
-        const coinIcon = this.add.image(35, 30, 'ui_coin');
-        coinIcon.setScale(0.6);
-        coinIcon.setOrigin(0.5, 0.5);
-
-        this.coinText = this.add.text(65, 30, `${this.gameDataManager.getCoins()}`, {
-            fontSize: '24px',
-            fontFamily: 'Carter One',
-            color: '#FFD700',
-            stroke: '#000000',
-            strokeThickness: 2
-        });
-        this.coinText.setOrigin(0, 0.5);
+        // Add coin display (top left)
+        this.coinDisplay = new CoinDisplay(this, 35, 30);
+        this.coinDisplay.setCount(this.gameDataManager.getCoins());
 
         // Create shop items
         this.createShopItems();
 
         // Add back button with new UI graphics
-        const backButtonContainer = this.add.container(400, 550);
-        const backButtonBg = this.add.image(0, 0, 'btn_long_yellow');
-        backButtonBg.setScale(0.5);
-        // Sub-container for icon+text (so they move together)
-        const backContent = this.add.container(0, -5);
-        const backButtonText = this.add.text(0, 0, this.fromScene === 'GameOverScene' ? 'BACK' : 'MENU', {
-            fontSize: '22px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        const backIcon = this.add.image(-(backButtonText.width / 2) - 25, 0, 'icon_house');
-        backIcon.setScale(0.4);
-        backContent.add([backIcon, backButtonText]);
-        backButtonContainer.add([backButtonBg, backContent]);
-
-        backButtonBg.setInteractive();
-        backButtonBg.on('pointerdown', () => {
-            this.audioManager.playButtonClick();
-            if (this.fromScene === 'GameOverScene') {
-                // Don't show fun fact when returning from shop
-                this.scene.start(this.fromScene, { audioManager: this.audioManager, showFunFact: false });
-            } else {
-                this.scene.start(this.fromScene, { audioManager: this.audioManager });
+        this.backButton = new Button(this, 400, 550, {
+            text: this.fromScene === 'GameOverScene' ? 'BACK' : 'MENU',
+            bgKey: 'btn_long_yellow',
+            bgScale: 0.5,
+            iconKey: 'icon_house',
+            iconScale: 0.4,
+            iconWidth: 28,
+            textStyle: { fontSize: '22px' },
+            onClick: () => {
+                this.audioManager.playButtonClick();
+                if (this.fromScene === 'GameOverScene') {
+                    // Don't show fun fact when returning from shop
+                    this.scene.start(this.fromScene, { audioManager: this.audioManager, showFunFact: false });
+                } else {
+                    this.scene.start(this.fromScene, { audioManager: this.audioManager });
+                }
             }
-        });
-
-        // Add hover effect to back button
-        backButtonBg.on('pointerover', () => {
-            backButtonContainer.setScale(1.1);
-        });
-        backButtonBg.on('pointerout', () => {
-            backButtonContainer.setScale(1);
         });
     }
     createShopItems() {
@@ -114,7 +89,7 @@ export default class StoreScene extends Phaser.Scene {
         });
 
         // Update coin display
-        this.coinText.setText(`${this.gameDataManager.getCoins()}`);
+        this.coinDisplay.setCount(this.gameDataManager.getCoins());
     }
 
     createShopItem(type, x, y) {

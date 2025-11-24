@@ -1,3 +1,5 @@
+import Button from './Button.js';
+
 export default class FunFactPopup extends Phaser.GameObjects.Container {
     constructor(scene, obstacleType, onClose) {
         super(scene);
@@ -176,44 +178,23 @@ export default class FunFactPopup extends Phaser.GameObjects.Container {
         // Now add fact text to container
         this.add(this.factText);
 
-        // Use green button from UI pack
-        this.awesomeBtn = this.scene.add.image(0, buttonY, 'btn_green');
-        this.awesomeBtn.setScale(0.35);
-        this.add(this.awesomeBtn);
-
-        // Button icon - separated a bit more from text
-        this.btnIcon = this.scene.add.image(-40, buttonY, 'icon_ok');
-        this.btnIcon.setScale(0.35);
-        this.add(this.btnIcon);
-
-        this.awesomeBtnText = this.scene.add.text(20, buttonY, 'GOT IT!', {
-            fontSize: '20px',
-            fontFamily: 'Carter One',
-            color: '#FFFFFF',
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        this.add(this.awesomeBtnText);
-
-        // Make button interactive
-        this.awesomeBtn.setInteractive({ useHandCursor: true });
-
-        this.awesomeBtn.on('pointerdown', () => {
-            this.close();
+        // GOT IT button using Button component
+        this.gotItBtn = new Button(this.scene, 0, buttonY, {
+            text: 'GOT IT!',
+            bgKey: 'btn_green',
+            bgScale: 0.35,
+            iconKey: 'icon_ok',
+            iconScale: 0.45,
+            iconWidth: 24,
+            gap: 5,
+            textOffsetY: -5,
+            textStyle: { fontSize: '24px', fontStyle: 'bold' },
+            addToScene: false,
+            onClick: () => {
+                this.close();
+            }
         });
-
-        this.awesomeBtn.on('pointerover', () => {
-            this.awesomeBtn.setScale(0.4);
-            this.btnIcon.setScale(0.38);
-            this.awesomeBtnText.setScale(1.1);
-        });
-
-        this.awesomeBtn.on('pointerout', () => {
-            this.awesomeBtn.setScale(0.35);
-            this.btnIcon.setScale(0.35);
-            this.awesomeBtnText.setScale(1);
-        });
+        this.add(this.gotItBtn);
 
         // Position in center
         this.setPosition(400, 300);

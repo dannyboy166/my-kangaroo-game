@@ -14,7 +14,7 @@
 export const BACKGROUND_THEMES = {
     outback: {
         id: 'outback',
-        name: 'AUSTRALIAN\nOUTBACK',
+        name: 'Outback',
         layers: [
             // Outback sky - lighter cyan gradient (game_background_2)
             {
@@ -60,7 +60,7 @@ export const BACKGROUND_THEMES = {
 
     beach: {
         id: 'beach',
-        name: 'BEACH\nPARADISE',
+        name: 'Beach',
         layers: [
             {
                 key: 'beach_sky',

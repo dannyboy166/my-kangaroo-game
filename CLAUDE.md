@@ -61,7 +61,9 @@ my-kangaroo-game/
 │       └── sfx/         # Sound effects
 ├── src/
 │   ├── config/
-│   │   └── GameConfig.js         # Central game configuration constants
+│   │   ├── GameConfig.js         # Central game configuration constants
+│   │   ├── BackgroundConfig.js   # Background theme definitions (Outback, Beach)
+│   │   └── UITheme.js            # Centralized UI styling (fonts, colors, text styles)
 │   ├── managers/
 │   │   ├── AudioManager.js       # Audio playback management
 │   │   ├── GameDataManager.js    # Persistent data (coins, high scores)
@@ -78,6 +80,8 @@ my-kangaroo-game/
 │   │   ├── StoreScene.js         # In-game shop
 │   │   └── QuizScene.js          # (Optional quiz feature)
 │   ├── ui/
+│   │   ├── Button.js             # Reusable button component (icon+text, hover, pulse)
+│   │   ├── CoinDisplay.js        # Reusable coin count display component
 │   │   ├── PurchaseConfirmPopup.js
 │   │   └── FunFactPopup.js
 │   └── main.js                   # Game initialization and config
@@ -142,6 +146,52 @@ The game follows a **manager-based architecture** for better separation of conce
    - Handles all in-game UI elements
    - Score display, coin counter, powerup indicators
    - Inventory display for purchased items
+
+### Reusable UI Components (`src/ui/`)
+
+The game uses reusable UI components for consistency and reduced code duplication:
+
+1. **Button.js** - Flexible button component
+   - Supports text-only or icon+text layouts
+   - Auto-centers icon and text as a group
+   - Built-in hover effects and optional pulse animation
+   - Uses UITheme for default styling
+   ```javascript
+   new Button(this, x, y, {
+       text: 'Shop',
+       bgKey: 'btn_blue',
+       bgScale: 0.4,
+       iconKey: 'icon_shop',
+       iconScale: 0.38,
+       iconWidth: 28,
+       textStyle: { fontSize: '28px' },
+       pulse: true,
+       hoverScale: 1.15,
+       onClick: () => { /* handler */ }
+   });
+   ```
+   - For popups, use `addToScene: false` and manually add to container
+
+2. **CoinDisplay.js** - Coin count display
+   - Shows coin icon + count text
+   - Simple `setCount(n)` method to update
+   ```javascript
+   this.coinDisplay = new CoinDisplay(this, 35, 30);
+   this.coinDisplay.setCount(this.gameDataManager.getCoins());
+   ```
+
+3. **UITheme.js** (`src/config/`) - Centralized styling
+   - All fonts, colors, and text styles in one place
+   - Presets: `title`, `button`, `buttonLarge`, `coinCount`, `score`, etc.
+   ```javascript
+   import { UI_THEME, getTextStyle } from '../config/UITheme.js';
+
+   // Use preset directly
+   this.add.text(x, y, 'Score', UI_THEME.textStyles.score);
+
+   // Use preset with overrides
+   this.add.text(x, y, 'Custom', getTextStyle('title', { fontSize: '32px' }));
+   ```
 
 ### Scene Flow
 
@@ -370,7 +420,38 @@ Edit values in `src/config/GameConfig.js`:
 
 ## Recent Changes
 
-### Industry-Standard Grouped Spawning System (2025-11-18) - Latest
+### Reusable UI Components & UITheme (2025-11-24) - Latest
+**The Goal**: Reduce code duplication and create consistent UI across all scenes.
+
+**New Components Created**:
+1. **Button.js** (`src/ui/`)
+   - Reusable button with icon+text or text-only layouts
+   - Auto-centers content, built-in hover/pulse effects
+   - Config: `text`, `bgKey`, `iconKey`, `iconScale`, `iconWidth`, `textStyle`, `pulse`, `onClick`
+   - Use `addToScene: false` for buttons inside popup containers
+
+2. **CoinDisplay.js** (`src/ui/`)
+   - Coin icon + count display
+   - `setCount(n)` method to update
+
+3. **UITheme.js** (`src/config/`)
+   - Centralized fonts, colors, text style presets
+   - All components import from here for consistency
+
+**Scenes Refactored**:
+- MenuScene: Shop button, Theme button, CoinDisplay
+- GameOverScene: Play Again, Shop, Menu buttons, CoinDisplay
+- StoreScene: Back button, CoinDisplay
+- PurchaseConfirmPopup: Cancel, Confirm buttons
+- FunFactPopup: Got It button
+
+**Code Reduction**: ~200+ lines removed through component reuse
+
+**Other Changes**:
+- Theme names simplified: "AUSTRALIAN\nOUTBACK" → "Outback", "BEACH\nPARADISE" → "Beach"
+- Magpie swoop behavior adjusted to climb back up 80px earlier
+
+### Industry-Standard Grouped Spawning System (2025-11-18)
 **The Goal**: Convert from independent timer-based spawning to coordinated grouped spawning (industry-standard pattern).
 
 **The Problem**:
@@ -682,6 +763,6 @@ physics: {
 
 ---
 
-**Last Updated**: 2025-11-18
-**Game Version**: 3.0 (Industry-Standard Grouped Spawning)
+**Last Updated**: 2025-11-24
+**Game Version**: 3.1 (Reusable UI Components)
 **Phaser Version**: 3.90.0
