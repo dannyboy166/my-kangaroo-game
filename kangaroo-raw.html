@@ -177,14 +177,61 @@
                 particles.push({
                     x: x + (Math.random() - 0.5) * 40,
                     y: y,
-                    vx: (Math.random() - 0.5) * 150, // Horizontal spread
-                    vy: -Math.random() * 80 - 20,    // Upward
+                    vx: (Math.random() - 0.5) * 150,
+                    vy: -Math.random() * 80 - 20,
                     size: 4 + Math.random() * 8,
-                    life: 0.4 + Math.random() * 0.3, // Lifetime in seconds
+                    life: 0.4 + Math.random() * 0.3,
                     maxLife: 0.4 + Math.random() * 0.3,
-                    color: Math.random() > 0.5 ? '#C4A574' : '#A68B5B' // Earthy colors
+                    color: Math.random() > 0.5 ? '#C4A574' : '#A68B5B',
+                    type: 'dust'
                 });
             }
+        }
+
+        function spawnCoinSparkles(x, y) {
+            // Spawn golden sparkles
+            const count = 12 + Math.floor(Math.random() * 6);
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+                const speed = 100 + Math.random() * 150;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: 3 + Math.random() * 5,
+                    life: 0.3 + Math.random() * 0.3,
+                    maxLife: 0.3 + Math.random() * 0.3,
+                    color: Math.random() > 0.5 ? '#FFD700' : '#FFF176',
+                    type: 'sparkle'
+                });
+            }
+        }
+
+        // Screen shake
+        let screenShake = { intensity: 0, duration: 0 };
+
+        function triggerScreenShake(intensity, duration) {
+            screenShake.intensity = intensity;
+            screenShake.duration = duration;
+        }
+
+        function updateScreenShake(dt) {
+            if (screenShake.duration > 0) {
+                screenShake.duration -= dt;
+            } else {
+                screenShake.intensity = 0;
+            }
+        }
+
+        function getShakeOffset() {
+            if (screenShake.intensity > 0) {
+                return {
+                    x: (Math.random() - 0.5) * screenShake.intensity * 2,
+                    y: (Math.random() - 0.5) * screenShake.intensity * 2
+                };
+            }
+            return { x: 0, y: 0 };
         }
 
         function updateParticles(dt) {
@@ -194,7 +241,15 @@
                 // Move
                 p.x += p.vx * dt;
                 p.y += p.vy * dt;
-                p.vy += 200 * dt; // Gravity on particles
+
+                // Gravity only for dust, not sparkles
+                if (p.type === 'dust') {
+                    p.vy += 200 * dt;
+                } else if (p.type === 'sparkle') {
+                    // Sparkles slow down
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                }
 
                 // Fade out
                 p.life -= dt;
@@ -208,12 +263,28 @@
 
         function drawParticles() {
             particles.forEach(p => {
-                const alpha = p.life / p.maxLife; // Fade out
-                ctx.globalAlpha = alpha * 0.7;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(Math.round(p.x), Math.round(p.y), p.size * alpha, 0, Math.PI * 2);
-                ctx.fill();
+                const alpha = p.life / p.maxLife;
+
+                if (p.type === 'sparkle') {
+                    // Sparkles are brighter and have glow effect
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = '#FFF';
+                    ctx.beginPath();
+                    ctx.arc(Math.round(p.x), Math.round(p.y), p.size * alpha * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(Math.round(p.x), Math.round(p.y), p.size * alpha, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Dust particles
+                    ctx.globalAlpha = alpha * 0.7;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(Math.round(p.x), Math.round(p.y), p.size * alpha, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             });
             ctx.globalAlpha = 1;
         }
@@ -225,6 +296,8 @@
         let coinsCollected = 0;
         let totalCoins = parseInt(localStorage.getItem('kangaroo_raw_coins')) || 0;
         let gameOver = false;
+        let showGameOverUI = false;
+        let gameOverTimer = 0;
         let gameStarted = false;
         let groundOffset = 0;
         let cloudsOffset = 0;
@@ -251,12 +324,23 @@
             scaleY: 1,
             squashTime: 0,
 
+            // Death animation
+            isDead: false,
+            deathRotation: 0,
+            deathVelocityY: 0,
+
             // Sprite sheet: 6 columns x 2 rows = 12 frames, each 128x128
             spriteWidth: 128,
             spriteHeight: 128,
             totalFrames: 12,
 
             update(dt) {
+                // Handle death animation separately
+                if (this.isDead) {
+                    this.updateDeath(dt);
+                    return;
+                }
+
                 this.wasOnGround = this.onGround;
 
                 // Gravity (using delta time)
@@ -302,7 +386,25 @@
                 }
             },
 
+            die() {
+                this.isDead = true;
+                this.deathVelocityY = -10; // Pop up
+                this.deathRotation = 0;
+            },
+
+            updateDeath(dt) {
+                if (!this.isDead) return;
+
+                // Fall and spin
+                this.deathVelocityY += 30 * dt; // Gravity
+                this.y += this.deathVelocityY;
+                this.deathRotation += 8 * dt; // Spin
+
+                // Fade out or fall off screen
+            },
+
             jump() {
+                if (this.isDead) return; // Can't jump when dead
                 if (this.onGround) {
                     // First jump
                     this.velocityY = JUMP_FORCE;
@@ -333,18 +435,26 @@
                 const scaledHeight = this.height * this.scaleY;
 
                 // Round positions to avoid sub-pixel jitter
-                // Anchor at bottom center for proper squash effect
-                const drawX = Math.round(this.x - scaledWidth / 2);
-                const drawY = Math.round(this.y - scaledHeight);
+                const drawX = Math.round(this.x);
+                const drawY = Math.round(this.y);
+
+                ctx.save();
+
+                // Apply death rotation if dead
+                if (this.isDead) {
+                    ctx.translate(drawX, drawY - scaledHeight / 2);
+                    ctx.rotate(this.deathRotation);
+                    ctx.translate(-drawX, -(drawY - scaledHeight / 2));
+                }
 
                 if (USE_SIMPLE_BOXES) {
                     // Simple brown box for kangaroo
                     ctx.fillStyle = '#8B4513';
-                    ctx.fillRect(drawX, drawY, scaledWidth, scaledHeight);
+                    ctx.fillRect(drawX - scaledWidth / 2, drawY - scaledHeight, scaledWidth, scaledHeight);
                     ctx.fillStyle = '#FFF';
                     ctx.font = 'bold 14px monospace';
                     ctx.textAlign = 'center';
-                    ctx.fillText('ROO', Math.round(this.x), Math.round(this.y - scaledHeight / 2));
+                    ctx.fillText('ROO', drawX, drawY - scaledHeight / 2);
                     ctx.textAlign = 'left';
                 } else if (assets.kangaroo) {
                     const col = this.frame % 6;
@@ -355,10 +465,12 @@
                     ctx.drawImage(
                         assets.kangaroo,
                         srcX, srcY, this.spriteWidth, this.spriteHeight,
-                        drawX, drawY,
+                        drawX - scaledWidth / 2, drawY - scaledHeight,
                         scaledWidth, scaledHeight
                     );
                 }
+
+                ctx.restore();
 
                 // Debug: draw hitbox
                 if (DEBUG) {
@@ -382,11 +494,12 @@
             getBounds() {
                 // Smaller hitbox for fair gameplay
                 const padding = 15;
+                const reducedHeight = (this.height - padding * 2) * 0.5; // 50% shorter
                 return {
                     x: this.x - this.width / 2 + padding,
-                    y: this.y - this.height + padding,
+                    y: this.y - reducedHeight - padding, // Anchored to bottom
                     width: this.width - padding * 2,
-                    height: this.height - padding * 2
+                    height: reducedHeight
                 };
             }
         };
@@ -604,6 +717,7 @@
                         totalCoins++;
                         score += 5;
                         playSound('coin');
+                        spawnCoinSparkles(coin.x, coin.y);
                     }
                 }
 
@@ -910,6 +1024,11 @@
             kangaroo.velocityY = 0;
             kangaroo.onGround = true;
             kangaroo.frame = 0;
+            kangaroo.isDead = false;
+            kangaroo.deathRotation = 0;
+            kangaroo.deathVelocityY = 0;
+            kangaroo.scaleX = 1;
+            kangaroo.scaleY = 1;
             obstacles = [];
             coins = [];
             particles = [];
@@ -917,10 +1036,29 @@
             score = 0;
             coinsCollected = 0;
             gameOver = false;
+            showGameOverUI = false;
+            gameOverTimer = 0;
             lastObstacleTime = Date.now();
         }
 
         function update(dt) {
+            // Always update these (even during game over)
+            updateScreenShake(dt);
+            updateParticles(dt);
+
+            // Update kangaroo death animation even when game over
+            if (gameOver && kangaroo.isDead) {
+                kangaroo.update(dt);
+
+                // Delay showing game over UI
+                if (!showGameOverUI) {
+                    gameOverTimer += dt;
+                    if (gameOverTimer >= 1.2) { // 1.2 second delay
+                        showGameOverUI = true;
+                    }
+                }
+            }
+
             if (!gameStarted || gameOver) return;
 
             // Use delta time (dt) for consistent movement
@@ -930,7 +1068,6 @@
             kangaroo.update(dt);
             updateObstacles(dt, pixelsPerSecond);
             updateCoins(dt, pixelsPerSecond);
-            updateParticles(dt);
 
             // Speed up gradually
             gameSpeed = Math.min(MAX_SPEED, gameSpeed + SPEED_INCREMENT);
@@ -943,6 +1080,8 @@
                 gameOver = true;
                 playSound('collision');
                 playSound('gameOver');
+                // Trigger death animation
+                kangaroo.die();
                 if (score > highScore) {
                     highScore = Math.floor(score);
                     localStorage.setItem('kangaroo_raw_high', highScore);
@@ -956,6 +1095,11 @@
             ctx.fillStyle = '#4A90D9';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+            // Apply screen shake
+            const shake = getShakeOffset();
+            ctx.save();
+            ctx.translate(shake.x, shake.y);
+
             drawBackground();
             drawGround();
 
@@ -965,9 +1109,13 @@
             } else if (gameOver) {
                 drawObstacles();
                 drawCoins();
+                drawParticles();
                 kangaroo.draw();
                 drawUI();
-                drawGameOver();
+                // Only show game over UI after delay
+                if (showGameOverUI) {
+                    drawGameOver();
+                }
             } else {
                 drawObstacles();
                 drawCoins();
@@ -975,6 +1123,8 @@
                 kangaroo.draw();
                 drawUI();
             }
+
+            ctx.restore(); // End screen shake
         }
 
         function gameLoop(currentTime) {
@@ -1005,7 +1155,10 @@
                 gameStarted = true;
                 reset();
             } else if (gameOver) {
-                reset();
+                // Only allow restart after UI shows
+                if (showGameOverUI) {
+                    reset();
+                }
             } else {
                 kangaroo.jump();
             }
