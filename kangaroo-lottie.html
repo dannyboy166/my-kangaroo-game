@@ -92,10 +92,10 @@
                 src: 'assets/lottie/crocodile_scooter.lottie',
                 width: 280,
                 height: 230,
-                hitboxWidth: 180,
-                hitboxHeight: 120,
-                hitboxOffsetY: 30,
-                groundOffset: -40,  // Push down to align with ground
+                hitboxWidth: 72,
+                hitboxHeight: 96,
+                hitboxOffsetY: 50,
+                groundOffset: -30,  // Push down to align with ground (moved up 10px)
                 flipX: false,  // Faces left naturally
                 speedMultiplier: 1.5,  // Moves 50% faster than normal obstacles
                 animationSpeed: 2.0    // Animation plays 2x faster
@@ -157,16 +157,51 @@
         const sounds = {
             jump: new Audio('assets/audio/sfx/jump.mp3'),
             doubleJump: new Audio('assets/audio/sfx/double_jump.mp3'),
+            land: new Audio('assets/audio/sfx/land.mp3'),
             coin: new Audio('assets/audio/sfx/coin_collect.mp3'),
             collision: new Audio('assets/audio/sfx/collision.mp3'),
-            gameOver: new Audio('assets/audio/sfx/game_over.mp3')
+            gameOver: new Audio('assets/audio/sfx/game_over.mp3'),
+            buttonClick: new Audio('assets/audio/sfx/button_click.mp3'),
+            // Music
+            musicMenu: new Audio('assets/audio/music/menu_music.mp3'),
+            musicGame: new Audio('assets/audio/music/outback_music.mp3')
         };
 
-        sounds.jump.volume = 0.5;
-        sounds.doubleJump.volume = 0.5;
-        sounds.coin.volume = 0.7;
-        sounds.collision.volume = 0.6;
-        sounds.gameOver.volume = 0.8;
+        sounds.jump.volume = 0.7;
+        sounds.doubleJump.volume = 0.8;
+        sounds.land.volume = 0.6;
+        sounds.coin.volume = 0.9;
+        sounds.collision.volume = 0.8;
+        sounds.gameOver.volume = 1.0;
+        sounds.buttonClick.volume = 0.6;
+        sounds.musicMenu.volume = 0.3;
+        sounds.musicGame.volume = 0.4;
+        sounds.musicMenu.loop = true;
+        sounds.musicGame.loop = true;
+
+        let currentMusic = null;
+
+        function playMusic(name) {
+            if (!soundEnabled) return;
+            // Stop current music
+            if (currentMusic) {
+                currentMusic.pause();
+                currentMusic.currentTime = 0;
+            }
+            const music = sounds[name];
+            if (music) {
+                currentMusic = music;
+                music.play().catch(() => {});
+            }
+        }
+
+        function stopMusic() {
+            if (currentMusic) {
+                currentMusic.pause();
+                currentMusic.currentTime = 0;
+                currentMusic = null;
+            }
+        }
 
         function playSound(name) {
             if (!soundEnabled) return;
@@ -200,7 +235,8 @@
         const INITIAL_SPEED = 6;
         const MAX_SPEED = 14;
         const SPEED_INCREMENT = 0.002;
-        const DEBUG = false;  // Set true to see hitboxes
+        const DEBUG = true;  // Set true to see hitboxes
+        const JUMP_DEBUG = false;  // Show 4 kangaroos with different jump animations
 
         // === PARTICLES ===
         let particles = [];
@@ -293,7 +329,7 @@
         // Kangaroo animation frames (from Phaser version's character system)
         const KANGAROO_ANIMATIONS = {
             moving: { prefix: 'red_kangaroo_no_joey_moving', frameCount: 16, frameRate: 20 },
-            jump: { prefix: 'red_kangaroo_no_joey_jump_from_idle', frameCount: 10, frameRate: 15 },
+            jump: { prefix: 'red_kangaroo_no_joey_jump_from_idle', frameStart: 0, frameEnd: 6, frameRate: 20, hold: true },  // Frames 0-6, hold on last
             die: { prefix: 'red_kangaroo_no_joey_die', frameCount: 5, frameRate: 10 },
             idle: { prefix: 'red_kangaroo_no_joey_idle', frameCount: 20, frameRate: 12 }
         };
@@ -307,9 +343,6 @@
         };
 
         const assetList = [
-            { name: 'ground', src: 'assets/images/parallax/_01_ground.png' },
-            { name: 'clouds', src: 'assets/images/parallax/_08_clouds.png' },
-            { name: 'hills', src: 'assets/images/parallax/_06_hill2.png' },
             { name: 'coin', src: 'assets/images/coin/coin-64x64.png' }
         ];
 
@@ -319,7 +352,11 @@
 
             // Calculate total frames to load
             Object.values(KANGAROO_ANIMATIONS).forEach(anim => {
-                total += anim.frameCount;
+                if (anim.frameStart !== undefined) {
+                    total += (anim.frameEnd - anim.frameStart + 1);
+                } else {
+                    total += anim.frameCount;
+                }
             });
 
             if (total === 0) {
@@ -350,11 +387,16 @@
 
             // Load kangaroo animation frames
             Object.entries(KANGAROO_ANIMATIONS).forEach(([animName, config]) => {
-                for (let i = 0; i < config.frameCount; i++) {
+                const start = config.frameStart !== undefined ? config.frameStart : 0;
+                const end = config.frameEnd !== undefined ? config.frameEnd : config.frameCount - 1;
+
+                let localIndex = 0;
+                for (let i = start; i <= end; i++) {
                     const frameNum = String(i).padStart(3, '0');
                     const img = new Image();
+                    const idx = localIndex;  // Capture for closure
                     img.onload = () => {
-                        kangarooFrames[animName][i] = img;
+                        kangarooFrames[animName][idx] = img;
                         loaded++;
                         checkComplete();
                     };
@@ -364,6 +406,7 @@
                         checkComplete();
                     };
                     img.src = `assets/characters/kangaroo/brown/${config.prefix}_${frameNum}.png`;
+                    localIndex++;
                 }
             });
         }
@@ -379,9 +422,6 @@
         let gameOverTimer = 0;
         let gameStarted = false;
         let soundEnabled = true;
-        let groundOffset = 0;
-        let cloudsOffset = 0;
-        let hillsOffset = 0;
         let deltaTime = 0;
         let lastFrameTime = performance.now();
 
@@ -416,6 +456,8 @@
             // Death state
             isDead: false,
             deathFrame: 0,
+            deathAnimStarted: false,
+            landSoundPlayed: false,
 
             update(dt) {
                 // Update animation frame
@@ -426,30 +468,64 @@
                 if (this.frameTimer >= frameDelay) {
                     this.frameTimer = 0;
 
-                    if (this.isDead) {
+                    if (this.isDead && this.deathAnimStarted) {
                         // Death animation plays once
                         if (this.deathFrame < KANGAROO_ANIMATIONS.die.frameCount - 1) {
                             this.deathFrame++;
                         }
-                    } else {
-                        // Loop other animations
+                    } else if (!this.isDead) {
                         const maxFrames = kangarooFrames[this.currentAnim].length;
-                        this.frame = (this.frame + 1) % maxFrames;
+                        // Check if animation should hold on last frame
+                        if (anim.hold && this.frame >= maxFrames - 1) {
+                            // Stay on last frame
+                            this.frame = maxFrames - 1;
+                        } else {
+                            // Loop animation
+                            this.frame = (this.frame + 1) % maxFrames;
+                        }
                     }
                 }
 
-                if (this.isDead) return;
+                // When dead, keep falling until hitting ground
+                if (this.isDead) {
+                    if (!this.onGround) {
+                        // Keep falling
+                        const gravityPerSecond = GRAVITY * 60;
+                        this.velocityY += gravityPerSecond * dt;
+                        this.y += this.velocityY * dt * 60;
+
+                        if (this.y >= GROUND_Y) {
+                            this.y = GROUND_Y;
+                            this.velocityY = 0;
+                            this.onGround = true;
+                            // Now start death animation
+                            this.deathAnimStarted = true;
+                            this.currentAnim = 'die';
+                            this.deathFrame = 0;
+                            this.frame = 0;
+                            spawnDustParticles(this.x, GROUND_Y);
+                        }
+                    }
+                    return;
+                }
 
                 this.wasOnGround = this.onGround;
                 const gravityPerSecond = GRAVITY * 60;
                 this.velocityY += gravityPerSecond * dt;
                 this.y += this.velocityY * dt * 60;
 
+                // Play land sound slightly before hitting ground (when close and descending)
+                if (!this.onGround && this.velocityY > 0 && this.y > GROUND_Y - 30 && !this.landSoundPlayed) {
+                    playSound('land');
+                    this.landSoundPlayed = true;
+                }
+
                 if (this.y >= GROUND_Y) {
                     this.y = GROUND_Y;
                     this.velocityY = 0;
                     this.onGround = true;
                     this.canDoubleJump = false;
+                    this.landSoundPlayed = false;  // Reset for next jump
 
                     // Switch to moving animation when landing
                     if (!this.wasOnGround) {
@@ -482,9 +558,15 @@
 
             die() {
                 this.isDead = true;
-                this.currentAnim = 'die';
-                this.deathFrame = 0;
-                this.frame = 0;
+                // If already on ground, start death anim immediately
+                if (this.onGround) {
+                    this.deathAnimStarted = true;
+                    this.currentAnim = 'die';
+                    this.deathFrame = 0;
+                    this.frame = 0;
+                } else {
+                    this.deathAnimStarted = false;  // Wait until on ground
+                }
             },
 
             jump() {
@@ -493,6 +575,7 @@
                     this.velocityY = JUMP_FORCE;
                     this.onGround = false;
                     this.canDoubleJump = true;
+                    this.landSoundPlayed = false;  // Reset for landing
                     this.currentAnim = 'jump';
                     this.frame = 0;
                     playSound('jump');
@@ -561,6 +644,93 @@
                 };
             }
         };
+
+        // === DEBUG: 4 KANGAROOS WITH DIFFERENT JUMP ANIMATIONS ===
+        const debugJumpConfigs = [
+            { label: '0-6', start: 0, end: 6 },
+            { label: '0-8', start: 0, end: 8 },
+            { label: '2-6', start: 2, end: 6 },
+            { label: '2-8', start: 2, end: 8 }
+        ];
+
+        const debugKangaroos = debugJumpConfigs.map((config, i) => ({
+            x: 100 + i * 180,
+            y: GROUND_Y,
+            velocityY: 0,
+            onGround: true,
+            frame: 0,
+            frameTimer: 0,
+            jumpTimer: 0,
+            jumpStart: config.start,
+            jumpEnd: config.end,
+            label: config.label,
+            currentAnim: 'moving',
+            width: 100,
+            height: 116
+        }));
+
+        function updateDebugKangaroos(dt) {
+            debugKangaroos.forEach(k => {
+                // Auto jump every 2 seconds
+                k.jumpTimer += dt;
+                if (k.jumpTimer > 2 && k.onGround) {
+                    k.velocityY = JUMP_FORCE;
+                    k.onGround = false;
+                    k.currentAnim = 'jump';
+                    k.frame = k.jumpStart;
+                    k.jumpTimer = 0;
+                }
+
+                // Physics
+                k.velocityY += GRAVITY * 60 * dt;
+                k.y += k.velocityY * dt * 60;
+
+                if (k.y >= GROUND_Y) {
+                    k.y = GROUND_Y;
+                    k.velocityY = 0;
+                    k.onGround = true;
+                    k.currentAnim = 'moving';
+                    k.frame = 0;
+                }
+
+                // Animate
+                k.frameTimer += dt;
+                const frameDelay = 1 / 20;
+                if (k.frameTimer >= frameDelay) {
+                    k.frameTimer = 0;
+                    if (k.currentAnim === 'jump') {
+                        if (k.frame < k.jumpEnd) {
+                            k.frame++;
+                        }
+                        // Hold on last frame
+                    } else {
+                        k.frame = (k.frame + 1) % kangarooFrames.moving.length;
+                    }
+                }
+            });
+        }
+
+        function drawDebugKangaroos() {
+            debugKangaroos.forEach(k => {
+                const frameImg = k.currentAnim === 'jump'
+                    ? kangarooFrames.jump[k.frame]
+                    : kangarooFrames.moving[k.frame];
+
+                if (frameImg) {
+                    ctx.save();
+                    ctx.translate(Math.round(k.x), Math.round(k.y) + 30);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(frameImg, -k.width / 2, -k.height, k.width, k.height);
+                    ctx.restore();
+                }
+
+                // Label
+                ctx.fillStyle = '#FFF';
+                ctx.font = 'bold 16px Poppins';
+                ctx.textAlign = 'center';
+                ctx.fillText(k.label, k.x, GROUND_Y + 30);
+            });
+        }
 
         // === OBSTACLES (Now with Lottie support!) ===
         let obstacles = [];
@@ -756,75 +926,21 @@
             return false;
         }
 
-        // === BACKGROUND ===
+        // === BACKGROUND (Simple) ===
         function drawBackground() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-            gradient.addColorStop(0, '#4A90D9');
-            gradient.addColorStop(0.5, '#87CEEB');
-            gradient.addColorStop(1, '#B0E0E6');
-            ctx.fillStyle = gradient;
+            // Simple sky blue
+            ctx.fillStyle = '#87CEEB';
             ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y);
-
-            if (assets.clouds) {
-                const cloudWidth = assets.clouds.width;
-                // Only scroll if not game over
-                if (!gameOver) {
-                    cloudsOffset = (cloudsOffset + gameSpeed * 60 * 0.1 * deltaTime) % cloudWidth;
-                }
-                ctx.globalAlpha = 0.6;
-                for (let x = -cloudsOffset; x < CANVAS_WIDTH + cloudWidth; x += cloudWidth) {
-                    ctx.drawImage(assets.clouds, Math.round(x), 40, cloudWidth * 0.8, 80);
-                }
-                ctx.globalAlpha = 1;
-            }
-
-            if (assets.hills) {
-                const hillWidth = assets.hills.width * 0.4;
-                // Only scroll if not game over
-                if (!gameOver) {
-                    hillsOffset = (hillsOffset + gameSpeed * 60 * 0.15 * deltaTime) % hillWidth;
-                }
-                ctx.globalAlpha = 0.5;
-                for (let x = -hillsOffset; x < CANVAS_WIDTH + hillWidth; x += hillWidth) {
-                    ctx.drawImage(assets.hills, Math.round(x), GROUND_Y - 120, hillWidth, 130);
-                }
-                ctx.globalAlpha = 1;
-            }
         }
 
         function drawGround() {
-            if (assets.ground) {
-                const groundWidth = assets.ground.width;
-                // Only scroll if not game over
-                if (!gameOver) {
-                    groundOffset = (groundOffset + gameSpeed * 60 * deltaTime) % groundWidth;
-                }
-                for (let x = -groundOffset; x < CANVAS_WIDTH + groundWidth; x += groundWidth) {
-                    ctx.drawImage(assets.ground, Math.round(x), GROUND_Y, groundWidth, CANVAS_HEIGHT - GROUND_Y + 20);
-                }
-            } else {
-                ctx.fillStyle = '#C4A574';
-                ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
-            }
+            // Simple brown ground
             ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
+
+            // Ground line
+            ctx.fillStyle = '#6B5344';
             ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, 4);
-
-            // Debug: show ground collision line
-            if (DEBUG) {
-                ctx.strokeStyle = '#00FF00';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([10, 5]);
-                ctx.beginPath();
-                ctx.moveTo(0, GROUND_Y);
-                ctx.lineTo(CANVAS_WIDTH, GROUND_Y);
-                ctx.stroke();
-                ctx.setLineDash([]);
-
-                // Label
-                ctx.fillStyle = '#00FF00';
-                ctx.font = '12px monospace';
-                ctx.fillText(`GROUND_Y = ${GROUND_Y}`, 10, GROUND_Y - 5);
-            }
         }
 
         // === UI ===
@@ -1000,6 +1116,11 @@
             kangaroo.squashTime = 0;
             kangaroo.isDead = false;
             kangaroo.deathFrame = 0;
+            kangaroo.deathAnimStarted = false;
+            kangaroo.landSoundPlayed = false;
+
+            // Resume Lottie animations
+            Object.values(lottieAnimations).forEach(anim => anim.play());
 
             // Reset game state
             obstacles = [];
@@ -1015,6 +1136,12 @@
         }
 
         function update(dt) {
+            // Jump debug mode - just update the 4 test kangaroos
+            if (JUMP_DEBUG) {
+                updateDebugKangaroos(dt);
+                return;
+            }
+
             // Always update particles
             updateParticles(dt);
 
@@ -1045,6 +1172,9 @@
                 gameOver = true;
                 playSound('collision');
                 playSound('gameOver');
+                playMusic('musicMenu');  // Switch to menu music
+                // Stop all Lottie animations
+                Object.values(lottieAnimations).forEach(anim => anim.pause());
                 kangaroo.die();
                 if (score > highScore) {
                     highScore = Math.floor(score);
@@ -1060,6 +1190,17 @@
 
             drawBackground();
             drawGround();
+
+            // Jump debug mode - show 4 kangaroos with different jump configs
+            if (JUMP_DEBUG) {
+                drawDebugKangaroos();
+                // Title
+                ctx.fillStyle = '#FFF';
+                ctx.font = 'bold 24px Poppins';
+                ctx.textAlign = 'center';
+                ctx.fillText('JUMP FRAME DEBUG - Pick the best one!', CANVAS_WIDTH / 2, 50);
+                return;
+            }
 
             if (!gameStarted) {
                 kangaroo.draw();
@@ -1093,10 +1234,16 @@
         // === INPUT ===
         function handleInput() {
             if (!gameStarted) {
+                playSound('buttonClick');
                 gameStarted = true;
+                playMusic('musicGame');  // Start game music
                 reset();
             } else if (gameOver) {
-                if (showGameOverUI) reset();
+                if (showGameOverUI) {
+                    playSound('buttonClick');
+                    playMusic('musicGame');  // Restart game music
+                    reset();
+                }
             } else {
                 kangaroo.jump();
             }
@@ -1127,6 +1274,7 @@
             await loadAllLotties();
 
             loadingEl.style.display = 'none';
+            playMusic('musicMenu');  // Start menu music
             gameLoop(performance.now());
         }
 
