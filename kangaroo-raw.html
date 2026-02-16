@@ -78,6 +78,7 @@
         sounds.gameOver.volume = 0.8;
 
         function playSound(name) {
+            if (!soundEnabled) return; // Respect sound toggle
             const sound = sounds[name];
             if (sound) {
                 sound.currentTime = 0; // Rewind to start
@@ -123,7 +124,11 @@
             { name: 'snakeLog', src: 'assets/images/snake_log.png' },
             { name: 'emu', src: 'assets/images/emu_sheet.png' },
             { name: 'magpie', src: 'assets/images/magpie_sheet.png' },
-            { name: 'coin', src: 'assets/images/coin/coin-64x64.png' }
+            { name: 'coin', src: 'assets/images/coin/coin-64x64.png' },
+            // Powerups
+            { name: 'powerupShield', src: 'assets/images/powerups/heart_glow.png' },
+            { name: 'powerupMagnet', src: 'assets/images/powerups/magnet_glow.png' },
+            { name: 'powerupDoubleJump', src: 'assets/images/powerups/star_glow.png' }
         ];
 
         function loadAssets(callback) {
@@ -299,6 +304,12 @@
         let showGameOverUI = false;
         let gameOverTimer = 0;
         let gameStarted = false;
+
+        // Menu animation
+        let menuKangarooY = 0;
+        let menuKangarooVel = 0;
+        let menuBounceTimer = 0;
+        let soundEnabled = true;
         let groundOffset = 0;
         let cloudsOffset = 0;
         let hillsOffset = 0;
@@ -416,10 +427,12 @@
                     this.scaleX = 0.8;
                     this.scaleY = 1.2;
                     this.squashTime = 0.1;
-                } else if (this.canDoubleJump) {
-                    // Double jump!
+                } else if (this.canDoubleJump || activePowerups.doubleJump.active) {
+                    // Double jump! (unlimited if powerup active)
                     this.velocityY = DOUBLE_JUMP_FORCE;
-                    this.canDoubleJump = false; // Used up
+                    if (!activePowerups.doubleJump.active) {
+                        this.canDoubleJump = false; // Only use up if no powerup
+                    }
                     this.frame = 3; // Reset jump frame
                     playSound('doubleJump');
                     // Stretch effect
@@ -439,6 +452,35 @@
                 const drawY = Math.round(this.y);
 
                 ctx.save();
+
+                // Draw powerup aura/glow
+                if (!this.isDead) {
+                    const glowTime = performance.now() / 1000;
+                    let glowColors = [];
+
+                    if (activePowerups.shield.active) glowColors.push('#FF69B4');
+                    if (activePowerups.magnet.active) glowColors.push('#00BFFF');
+                    if (activePowerups.doubleJump.active) glowColors.push('#00FF00');
+
+                    if (glowColors.length > 0) {
+                        const glowIndex = Math.floor(glowTime * 3) % glowColors.length;
+                        const glowColor = glowColors[glowIndex];
+                        const glowSize = 20 + Math.sin(glowTime * 5) * 8;
+
+                        ctx.globalAlpha = 0.4 + Math.sin(glowTime * 4) * 0.15;
+                        ctx.fillStyle = glowColor;
+                        ctx.beginPath();
+                        ctx.ellipse(
+                            drawX,
+                            drawY - scaledHeight * 0.35,  // Lower center (kangaroo art sits in bottom of sprite)
+                            scaledWidth / 2 + glowSize,
+                            scaledHeight / 2 + glowSize * 0.5,
+                            0, 0, Math.PI * 2
+                        );
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                }
 
                 // Apply death rotation if dead
                 if (this.isDead) {
@@ -520,12 +562,13 @@
         function spawnObstacle() {
             // Pick random type (magpie less common)
             let typeIndex;
-            if (Math.random() < 0.15 && score > 500) {
-                typeIndex = 4; // Magpie
-            } else if (Math.random() < 0.2 && score > 300) {
-                typeIndex = 3; // Emu
+            const rand = Math.random();
+            if (rand < 0.12) {
+                typeIndex = 4; // Magpie (12%)
+            } else if (rand < 0.25) {
+                typeIndex = 3; // Emu (13%)
             } else {
-                typeIndex = Math.floor(Math.random() * 3); // Rock, cactus, or snake log
+                typeIndex = Math.floor(Math.random() * 3); // Rock, cactus, or snake log (75%)
             }
 
             const type = obstacleTypes[typeIndex];
@@ -636,12 +679,26 @@
                         if (obs.type.animated) {
                             const safeFrame = Math.max(0, Math.min(obs.frame, obs.type.frames - 1));
                             const srcX = safeFrame * obs.type.frameWidth;
-                            ctx.drawImage(
-                                asset,
-                                srcX, 0, obs.type.frameWidth, obs.type.frameHeight,
-                                obs.x - obs.width / 2, obs.y - obs.height,
-                                obs.width, obs.height
-                            );
+
+                            // Flip magpie horizontally (it faces right in sprite, needs to face left)
+                            if (obs.type.flying) {
+                                ctx.save();
+                                ctx.scale(-1, 1);
+                                ctx.drawImage(
+                                    asset,
+                                    srcX, 0, obs.type.frameWidth, obs.type.frameHeight,
+                                    -(obs.x + obs.width / 2), obs.y - obs.height,
+                                    obs.width, obs.height
+                                );
+                                ctx.restore();
+                            } else {
+                                ctx.drawImage(
+                                    asset,
+                                    srcX, 0, obs.type.frameWidth, obs.type.frameHeight,
+                                    obs.x - obs.width / 2, obs.y - obs.height,
+                                    obs.width, obs.height
+                                );
+                            }
                         } else {
                             ctx.drawImage(
                                 asset,
@@ -764,6 +821,144 @@
             });
         }
 
+        // === POWERUPS ===
+        let powerups = [];
+        const POWERUP_DURATION = 10; // seconds
+        const POWERUP_SIZE = 50;
+
+        // Active powerup states
+        const activePowerups = {
+            shield: { active: false, timer: 0 },
+            magnet: { active: false, timer: 0 },
+            doubleJump: { active: false, timer: 0 }
+        };
+
+        const powerupTypes = [
+            { name: 'shield', asset: 'powerupShield', color: '#FF69B4' },      // Pink
+            { name: 'magnet', asset: 'powerupMagnet', color: '#00BFFF' },      // Blue
+            { name: 'doubleJump', asset: 'powerupDoubleJump', color: '#00FF00' } // Green
+        ];
+
+        function spawnPowerup(x) {
+            const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+            powerups.push({
+                x: x || CANVAS_WIDTH + Math.random() * 100,
+                y: GROUND_Y - 80 - Math.random() * 60,
+                size: POWERUP_SIZE,
+                type: type,
+                collected: false,
+                bobOffset: Math.random() * Math.PI * 2, // For floating animation
+                glowPhase: 0
+            });
+        }
+
+        function updatePowerups(dt, pixelsPerSecond) {
+            // Random powerup spawn (less frequent than coins)
+            if (Math.random() < 0.15 * dt && score > 100) {
+                spawnPowerup();
+            }
+
+            // Update active powerup timers
+            for (const key in activePowerups) {
+                if (activePowerups[key].active) {
+                    activePowerups[key].timer -= dt;
+                    if (activePowerups[key].timer <= 0) {
+                        activePowerups[key].active = false;
+                        activePowerups[key].timer = 0;
+                    }
+                }
+            }
+
+            // Update powerup positions
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                const p = powerups[i];
+
+                // Move
+                p.x -= pixelsPerSecond * dt;
+
+                // Floating bob animation
+                p.bobOffset += dt * 3;
+                p.glowPhase += dt * 5;
+
+                // Collect
+                if (!p.collected) {
+                    const k = kangaroo.getBounds();
+                    const px = p.x - p.size / 2;
+                    const py = p.y - p.size / 2 + Math.sin(p.bobOffset) * 8;
+
+                    if (k.x < px + p.size && k.x + k.width > px &&
+                        k.y < py + p.size && k.y + k.height > py) {
+                        p.collected = true;
+                        activatePowerup(p.type.name);
+                        playSound('coin'); // Reuse coin sound for now
+                        spawnCoinSparkles(p.x, p.y); // Sparkle effect
+                    }
+                }
+
+                // Remove
+                if (p.x < -100 || p.collected) {
+                    powerups.splice(i, 1);
+                }
+            }
+
+            // Magnet effect: attract coins
+            if (activePowerups.magnet.active) {
+                const magnetRange = 300;
+                const magnetForce = 400;
+                coins.forEach(coin => {
+                    const dx = kangaroo.x - coin.x;
+                    const dy = kangaroo.y - 50 - coin.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < magnetRange && dist > 0) {
+                        const force = magnetForce * dt * (1 - dist / magnetRange);
+                        coin.x += (dx / dist) * force;
+                        coin.y += (dy / dist) * force;
+                    }
+                });
+            }
+        }
+
+        function activatePowerup(type) {
+            activePowerups[type].active = true;
+            activePowerups[type].timer = POWERUP_DURATION;
+        }
+
+        function drawPowerups() {
+            powerups.forEach(p => {
+                const bobY = Math.sin(p.bobOffset) * 8;
+                const drawX = Math.round(p.x - p.size / 2);
+                const drawY = Math.round(p.y - p.size / 2 + bobY);
+
+                // Glow effect
+                const glowSize = p.size + 10 + Math.sin(p.glowPhase) * 5;
+                ctx.globalAlpha = 0.3 + Math.sin(p.glowPhase) * 0.1;
+                ctx.fillStyle = p.type.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y + bobY, glowSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // Draw powerup icon
+                const asset = assets[p.type.asset];
+                if (asset) {
+                    ctx.drawImage(asset, drawX, drawY, p.size, p.size);
+                } else {
+                    // Fallback colored circle
+                    ctx.fillStyle = p.type.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y + bobY, p.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Debug hitbox
+                if (DEBUG) {
+                    ctx.strokeStyle = p.type.color;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(drawX, drawY, p.size, p.size);
+                }
+            });
+        }
+
         // === COLLISION ===
         function checkCollisions() {
             const k = kangaroo.getBounds();
@@ -778,6 +973,19 @@
 
                 if (k.x < o.x + o.width && k.x + k.width > o.x &&
                     k.y < o.y + o.height && k.y + k.height > o.y) {
+
+                    // Shield protection - consume shield and destroy obstacle
+                    if (activePowerups.shield.active) {
+                        activePowerups.shield.active = false;
+                        activePowerups.shield.timer = 0;
+                        // Remove the obstacle we hit
+                        const idx = obstacles.indexOf(obs);
+                        if (idx > -1) obstacles.splice(idx, 1);
+                        // Visual feedback
+                        spawnCoinSparkles(obs.x, obs.y - obs.height / 2);
+                        playSound('coin');
+                        return false; // No death!
+                    }
                     return true;
                 }
             }
@@ -887,6 +1095,49 @@
             ctx.font = '600 14px Poppins';
             ctx.fillText(`+${coinsCollected}`, 65, 62);
 
+            // Active powerup indicators (below coin panel)
+            let powerupY = 95;
+            const powerupBarWidth = 100;
+            const powerupBarHeight = 8;
+
+            for (const type of powerupTypes) {
+                const powerup = activePowerups[type.name];
+                if (powerup.active) {
+                    // Background bar
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                    roundRect(ctx, 15, powerupY, powerupBarWidth + 30, 28, 8);
+                    ctx.fill();
+
+                    // Icon circle
+                    ctx.fillStyle = type.color;
+                    ctx.beginPath();
+                    ctx.arc(30, powerupY + 14, 10, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Progress bar background
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    roundRect(ctx, 48, powerupY + 8, powerupBarWidth, powerupBarHeight, 4);
+                    ctx.fill();
+
+                    // Progress bar fill
+                    const progress = powerup.timer / POWERUP_DURATION;
+                    ctx.fillStyle = type.color;
+                    if (progress > 0) {
+                        roundRect(ctx, 48, powerupY + 8, powerupBarWidth * progress, powerupBarHeight, 4);
+                        ctx.fill();
+                    }
+
+                    // Time remaining
+                    ctx.fillStyle = '#FFF';
+                    ctx.font = '600 10px Poppins';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${Math.ceil(powerup.timer)}s`, 145, powerupY + 18);
+                    ctx.textAlign = 'left';
+
+                    powerupY += 35;
+                }
+            }
+
             // Debug panel
             if (DEBUG) {
                 ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -907,32 +1158,77 @@
             }
         }
 
+        function updateMenu(dt) {
+            // Bounce the kangaroo
+            menuBounceTimer += dt;
+            if (menuBounceTimer > 1.2) {
+                menuBounceTimer = 0;
+                menuKangarooVel = -8; // Jump!
+            }
+
+            menuKangarooVel += 25 * dt; // Gravity
+            menuKangarooY += menuKangarooVel;
+
+            if (menuKangarooY > 0) {
+                menuKangarooY = 0;
+                menuKangarooVel = 0;
+            }
+        }
+
         function drawStartScreen() {
             // Dark overlay with gradient
             const overlay = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-            overlay.addColorStop(0, 'rgba(15, 23, 42, 0.9)');
-            overlay.addColorStop(1, 'rgba(15, 23, 42, 0.7)');
+            overlay.addColorStop(0, 'rgba(15, 23, 42, 0.85)');
+            overlay.addColorStop(1, 'rgba(15, 23, 42, 0.6)');
             ctx.fillStyle = overlay;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
             ctx.textAlign = 'center';
+            const centerX = CANVAS_WIDTH / 2;
 
-            // Title with gradient effect
-            ctx.font = '800 56px Poppins';
+            // Animated kangaroo (centered, above title)
+            if (assets.kangaroo) {
+                const frame = Math.floor(menuBounceTimer * 12) % 12;
+                const col = frame % 6;
+                const row = Math.floor(frame / 6);
+                const srcX = col * 128;
+                const srcY = row * 128;
+
+                const kY = 140 + menuKangarooY;
+
+                // Squash/stretch based on velocity
+                let scaleX = 1, scaleY = 1;
+                if (menuKangarooVel < -2) {
+                    scaleX = 0.85; scaleY = 1.15;
+                } else if (menuKangarooY === 0 && menuKangarooVel === 0) {
+                    scaleX = 1.1; scaleY = 0.9;
+                }
+
+                const kWidth = 100 * scaleX;
+                const kHeight = 100 * scaleY;
+
+                ctx.drawImage(
+                    assets.kangaroo,
+                    srcX, srcY, 128, 128,
+                    centerX - kWidth / 2, kY - kHeight,
+                    kWidth, kHeight
+                );
+            }
+
+            // Title (centered)
+            ctx.font = '800 48px Poppins';
             ctx.fillStyle = '#FFF';
-            ctx.fillText('KANGAROO', CANVAS_WIDTH / 2, 170);
+            ctx.fillText('KANGAROO', centerX, 220);
 
-            // Accent color for "HOP"
             ctx.fillStyle = '#4ADE80';
-            ctx.fillText('HOP', CANVAS_WIDTH / 2, 230);
+            ctx.fillText('HOP', centerX, 275);
 
-            // Play button
-            const btnX = CANVAS_WIDTH / 2 - 100;
-            const btnY = 300;
+            // Play button (centered)
             const btnW = 200;
             const btnH = 55;
+            const btnX = centerX - btnW / 2;
+            const btnY = 320;
 
-            // Button gradient
             const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH);
             btnGrad.addColorStop(0, '#4ADE80');
             btnGrad.addColorStop(1, '#22C55E');
@@ -942,17 +1238,36 @@
 
             ctx.fillStyle = '#FFF';
             ctx.font = '700 20px Poppins';
-            ctx.fillText('TAP TO PLAY', CANVAS_WIDTH / 2, btnY + 35);
+            ctx.fillText('TAP TO PLAY', centerX, btnY + 35);
 
-            // Stats
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.font = '400 16px Poppins';
-            ctx.fillText(`Best Score: ${highScore}  •  Coins: ${totalCoins}`, CANVAS_WIDTH / 2, 420);
+            // Stats panel (centered)
+            const statsW = 180;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            roundRect(ctx, centerX - statsW / 2, 420, statsW, 70, 12);
+            ctx.fill();
 
-            // Hint
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '600 16px Poppins';
+            ctx.fillText(`🏆 Best: ${highScore}`, centerX, 452);
+
+            ctx.fillStyle = '#4ADE80';
+            ctx.fillText(`💰 Coins: ${totalCoins}`, centerX, 478);
+
+            // Sound toggle button (top right)
+            const soundBtnX = CANVAS_WIDTH - 70;
+            const soundBtnY = 20;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            roundRect(ctx, soundBtnX, soundBtnY, 50, 50, 12);
+            ctx.fill();
+
+            ctx.font = '24px Poppins';
+            ctx.fillStyle = '#FFF';
+            ctx.fillText(soundEnabled ? '🔊' : '🔇', soundBtnX + 25, soundBtnY + 35);
+
+            // Hint (centered)
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = '400 14px Poppins';
-            ctx.fillText('Press SPACE or Click to jump • Double tap for double jump', CANVAS_WIDTH / 2, 550);
+            ctx.font = '400 13px Poppins';
+            ctx.fillText('SPACE or Click to jump • Double tap for double jump', centerX, 560);
         }
 
         function drawGameOver() {
@@ -1012,6 +1327,18 @@
             ctx.font = '700 18px Poppins';
             ctx.fillText('PLAY AGAIN', CANVAS_WIDTH / 2, btnY + 32);
 
+            // Sound toggle button
+            const soundBtnX = CANVAS_WIDTH - 70;
+            const soundBtnY = 20;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            roundRect(ctx, soundBtnX, soundBtnY, 50, 50, 12);
+            ctx.fill();
+
+            ctx.font = '24px Poppins';
+            ctx.fillStyle = '#FFF';
+            ctx.textAlign = 'center';
+            ctx.fillText(soundEnabled ? '🔊' : '🔇', soundBtnX + 25, soundBtnY + 35);
+
             // Hint
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '400 13px Poppins';
@@ -1032,6 +1359,12 @@
             obstacles = [];
             coins = [];
             particles = [];
+            powerups = [];
+            // Reset active powerups
+            for (const key in activePowerups) {
+                activePowerups[key].active = false;
+                activePowerups[key].timer = 0;
+            }
             gameSpeed = INITIAL_SPEED;
             score = 0;
             coinsCollected = 0;
@@ -1046,6 +1379,12 @@
             updateScreenShake(dt);
             updateParticles(dt);
 
+            // Animate menu when not started
+            if (!gameStarted) {
+                updateMenu(dt);
+                return;
+            }
+
             // Update kangaroo death animation even when game over
             if (gameOver && kangaroo.isDead) {
                 kangaroo.update(dt);
@@ -1059,7 +1398,7 @@
                 }
             }
 
-            if (!gameStarted || gameOver) return;
+            if (gameOver) return;
 
             // Use delta time (dt) for consistent movement
             // Convert gameSpeed from "pixels per frame" to "pixels per second"
@@ -1068,6 +1407,7 @@
             kangaroo.update(dt);
             updateObstacles(dt, pixelsPerSecond);
             updateCoins(dt, pixelsPerSecond);
+            updatePowerups(dt, pixelsPerSecond);
 
             // Speed up gradually
             gameSpeed = Math.min(MAX_SPEED, gameSpeed + SPEED_INCREMENT);
@@ -1119,6 +1459,7 @@
             } else {
                 drawObstacles();
                 drawCoins();
+                drawPowerups();
                 drawParticles();
                 kangaroo.draw();
                 drawUI();
@@ -1171,7 +1512,23 @@
             }
         });
 
-        canvas.addEventListener('click', handleInput);
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check sound button click (top right, 50x50)
+            if (!gameStarted || (gameOver && showGameOverUI)) {
+                const soundBtnX = CANVAS_WIDTH - 70;
+                const soundBtnY = 20;
+                if (x >= soundBtnX && x <= soundBtnX + 50 && y >= soundBtnY && y <= soundBtnY + 50) {
+                    soundEnabled = !soundEnabled;
+                    return;
+                }
+            }
+
+            handleInput();
+        });
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleInput();
