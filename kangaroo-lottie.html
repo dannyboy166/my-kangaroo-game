@@ -100,11 +100,11 @@
             },
             crocodile: {
                 src: 'assets/lottie/crocodile.json',
-                width: 280,
-                height: 230,
-                hitboxWidth: 72,
-                hitboxHeight: 96,
-                hitboxOffsetY: 50,
+                width: 252,           // 10% smaller
+                height: 207,          // 10% smaller
+                hitboxWidth: 65,
+                hitboxHeight: 110,    // Taller
+                hitboxOffsetY: 45,
                 groundOffset: -30,
                 flipX: false,
                 speedMultiplier: 1.5,
@@ -112,22 +112,22 @@
             },
             snake: {
                 src: 'assets/lottie/snake.json',
-                width: 150,
-                height: 100,
-                hitboxWidth: 100,
-                hitboxHeight: 50,
-                hitboxOffsetY: 20,
-                groundOffset: 0,
+                width: 120,           // 20% smaller
+                height: 80,           // 20% smaller
+                hitboxWidth: 80,
+                hitboxHeight: 40,
+                hitboxOffsetY: 16,
+                groundOffset: 20,    // Move up 20px
                 flipX: true
             },
             tree: {
                 src: 'assets/lottie/tree.json',
                 width: 200,
                 height: 280,
-                hitboxWidth: 50,
-                hitboxHeight: 200,
-                hitboxOffsetY: 0,
-                groundOffset: 0,
+                hitboxWidth: 80,      // Wider
+                hitboxHeight: 150,    // Shorter
+                hitboxOffsetY: 50,    // Move hitbox up
+                groundOffset: -20,     // Move down 20px
                 flipX: false
             }
         };
@@ -136,10 +136,10 @@
         const LOTTIE_DECORATIONS = {
             sun: {
                 src: 'assets/lottie/sun.json',
-                width: 100,
-                height: 100,
-                x: 700,  // Top right corner
-                y: 50
+                width: 300,           // 3x bigger
+                height: 300,
+                x: 550,               // Top right corner
+                y: -50                // Partially off screen
             }
         };
 
@@ -331,9 +331,9 @@
         const INITIAL_SPEED = 7;
         const MAX_SPEED = 14;
         const SPEED_INCREMENT = 0.002;
-        const DEBUG = true;  // Set true to see hitboxes
+        const DEBUG = false;  // Set true to see hitboxes
         const JUMP_DEBUG = false;  // Show 4 kangaroos with different jump animations
-        const SPAWN_DEBUG = true;  // Spawn camel → croc pattern for testing gaps
+        const SPAWN_DEBUG = false;  // Set true to cycle through obstacles in order
         // =====================================================
         // CROC GAP SETTINGS (tested at starting speed 7)
         // =====================================================
@@ -885,11 +885,11 @@
                 return;
             }
 
-            // Normal mode: random Lottie obstacle
-            const lottieNames = Object.keys(lottieAnimations);
+            // Normal mode: random Lottie obstacle (only from LOTTIE_OBSTACLES, not decorations/UI)
+            const obstacleNames = Object.keys(LOTTIE_OBSTACLES);
 
-            if (lottieNames.length > 0) {
-                const name = lottieNames[Math.floor(Math.random() * lottieNames.length)];
+            if (obstacleNames.length > 0) {
+                const name = obstacleNames[Math.floor(Math.random() * obstacleNames.length)];
                 const config = LOTTIE_OBSTACLES[name];
 
                 obstacles.push({
@@ -1132,26 +1132,6 @@
             ctx.font = '600 14px Poppins';
             ctx.fillText(`+${coinsCollected}`, 65, 62);
 
-            // Lottie indicator
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            roundRect(ctx, 10, 90, 180, 30, 8);
-            ctx.fill();
-            ctx.fillStyle = '#4ADE80';
-            ctx.font = '600 12px Poppins';
-            ctx.fillText(`Lottie Obstacles: ${Object.keys(lottieAnimations).length}`, 20, 110);
-
-            // Debug: show croc gap
-            if (SPAWN_DEBUG) {
-                ctx.fillStyle = 'rgba(255,0,0,0.6)';
-                roundRect(ctx, 10, 130, 200, 30, 8);
-                ctx.fill();
-                ctx.fillStyle = '#FFF';
-                ctx.font = '600 12px Poppins';
-                const gapText = CROC_GAP_PIXELS !== null
-                    ? `Croc Gap: ${CROC_GAP_PIXELS}px (fixed)`
-                    : `Croc Gap: Random (350-650 or 850+)`;
-                ctx.fillText(gapText, 20, 150);
-            }
         }
 
         function updateMenu(dt) {
