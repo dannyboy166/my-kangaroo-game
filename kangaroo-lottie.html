@@ -689,6 +689,61 @@
         let soundEnabled = true;
         let deltaTime = 0;
         let lastFrameTime = performance.now();
+        let lastHitObstacle = null;
+        let currentFunFact = '';
+
+        // === FUN FACTS ===
+        const FUN_FACTS = {
+            camel: [
+                "Camels were imported — now they rule the outback.",
+                "Camels can drink 100 litres in 10 minutes.",
+                "You got trampled by a desert beast.",
+                "Camels don't forget… and they spit.",
+                "Wild camels once caused so much damage, they started getting airlifted out."
+            ],
+            crocodile: [
+                "Crocs launch out of water like missiles.",
+                "You got chomped by a prehistoric tank.",
+                "Crocodiles have been killing things for 100 million years.",
+                "Their bite is stronger than a T-Rex.",
+                "A saltwater croc can swim 29 km in a day — you're not escaping."
+            ],
+            snake: [
+                "Australia has 20 of the world's 25 most venomous snakes.",
+                "You found the wrong kind of noodle.",
+                "Inland taipans can kill a human in under an hour. Sweet dreams!",
+                "Snakes can't blink, but that one definitely judged you."
+            ],
+            tree: [
+                "Australian gum trees drop branches without warning.",
+                "That tree wasn't feeling friendly today.",
+                "Eucalyptus trees are basically nature's fire starters.",
+                "You just got owned by a plant."
+            ],
+            emu: [
+                "Emus outran the Australian army in 1932.",
+                "Emus can sprint at 50 km/h — good luck.",
+                "Emus don't fly, but they do fight.",
+                "You just lost to a big angry bird.",
+                "Emus swallow pebbles to help them digest food."
+            ],
+            magpie: [
+                "Magpies swoop humans every spring — you're not special.",
+                "It remembered your face. And came back.",
+                "Cyclists wear zip-ties to survive magpie season.",
+                "You just got clapped by a black-and-white bird.",
+                "Swoop! You've been magpie'd."
+            ]
+        };
+
+        const OBSTACLE_EMOJIS = {
+            camel: '🐫',
+            crocodile: '🐊',
+            snake: '🐍',
+            tree: '🌳',
+            emu: '🦅',
+            magpie: '🐦'
+        };
 
         // Menu animation
         let menuKangarooY = 0;
@@ -1419,6 +1474,8 @@
 
                 if (k.x < o.x + o.width && k.x + k.width > o.x &&
                     k.y < o.y + o.height && k.y + k.height > o.y) {
+                    // Track what killed the player
+                    lastHitObstacle = obs.lottie || obs.spriteType || 'unknown';
                     return true;
                 }
             }
@@ -1608,48 +1665,133 @@
         }
 
         function drawGameOver() {
+            const centerX = CANVAS_WIDTH / 2;
+
+            // Dark overlay with blur effect
             const overlay = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
             overlay.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
-            overlay.addColorStop(1, 'rgba(15, 23, 42, 0.85)');
+            overlay.addColorStop(1, 'rgba(15, 23, 42, 0.90)');
             ctx.fillStyle = overlay;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            ctx.textAlign = 'center';
-            ctx.font = '800 42px Poppins';
-            ctx.fillStyle = '#F87171';
-            ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, 140);
+            // Main card background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            roundRect(ctx, centerX - 180, 60, 360, 480, 24);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            roundRect(ctx, centerX - 180, 60, 360, 480, 24);
+            ctx.stroke();
 
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            roundRect(ctx, CANVAS_WIDTH / 2 - 120, 170, 240, 140, 16);
+            // Game Over title with glow
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#F87171';
+            ctx.shadowBlur = 20;
+            ctx.font = '800 38px Poppins';
+            ctx.fillStyle = '#F87171';
+            ctx.fillText('GAME OVER', centerX, 115);
+            ctx.shadowBlur = 0;
+
+            // Score section
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            roundRect(ctx, centerX - 100, 135, 200, 90, 16);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.font = '400 14px Poppins';
-            ctx.fillText('SCORE', CANVAS_WIDTH / 2, 200);
-            ctx.fillStyle = '#FFF';
-            ctx.font = '800 48px Poppins';
-            ctx.fillText(Math.floor(score), CANVAS_WIDTH / 2, 255);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.font = '500 12px Poppins';
+            ctx.fillText('SCORE', centerX, 160);
 
+            ctx.fillStyle = '#FFF';
+            ctx.font = '800 42px Poppins';
+            ctx.fillText(Math.floor(score), centerX, 205);
+
+            // New best badge
             if (score >= highScore && score > 0) {
                 ctx.fillStyle = '#FBBF24';
-                ctx.font = '700 16px Poppins';
-                ctx.fillText('NEW BEST!', CANVAS_WIDTH / 2, 290);
+                ctx.font = '700 14px Poppins';
+                ctx.fillText('⭐ NEW BEST! ⭐', centerX, 230);
             }
 
-            ctx.fillStyle = '#4ADE80';
-            ctx.font = '600 18px Poppins';
-            ctx.fillText(`+${coinsCollected} coins`, CANVAS_WIDTH / 2, 360);
+            // Stats row (coins + speed)
+            const statsY = 260;
 
-            const btnGrad = ctx.createLinearGradient(CANVAS_WIDTH / 2 - 90, 400, CANVAS_WIDTH / 2 - 90, 450);
+            // Coins earned
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+            roundRect(ctx, centerX - 150, statsY, 140, 50, 12);
+            ctx.fill();
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '600 14px Poppins';
+            ctx.fillText('💰 COINS', centerX - 80, statsY + 20);
+            ctx.fillStyle = '#4ADE80';
+            ctx.font = '700 18px Poppins';
+            ctx.fillText(`+${coinsCollected}`, centerX - 80, statsY + 42);
+
+            // Max speed reached
+            ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+            roundRect(ctx, centerX + 10, statsY, 140, 50, 12);
+            ctx.fill();
+            ctx.fillStyle = '#4ADE80';
+            ctx.font = '600 14px Poppins';
+            ctx.fillText('⚡ SPEED', centerX + 80, statsY + 20);
+            ctx.fillStyle = '#FFF';
+            ctx.font = '700 18px Poppins';
+            ctx.fillText(gameSpeed.toFixed(1), centerX + 80, statsY + 42);
+
+            // Fun fact section
+            const factY = 330;
+            const emoji = OBSTACLE_EMOJIS[lastHitObstacle] || '🦘';
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            roundRect(ctx, centerX - 160, factY, 320, 100, 14);
+            ctx.fill();
+
+            ctx.fillStyle = '#FBBF24';
+            ctx.font = '700 13px Poppins';
+            ctx.fillText(`${emoji} DID YOU KNOW?`, centerX, factY + 22);
+
+            // Wrap fun fact text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.font = '400 13px Poppins';
+            const maxWidth = 280;
+            const words = currentFunFact.split(' ');
+            let line = '';
+            let lineY = factY + 48;
+            const lineHeight = 20;
+
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line + words[i] + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && i > 0) {
+                    ctx.fillText(line.trim(), centerX, lineY);
+                    line = words[i] + ' ';
+                    lineY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            ctx.fillText(line.trim(), centerX, lineY);
+
+            // Play Again button
+            const btnY = 455;
+            const btnGrad = ctx.createLinearGradient(centerX - 100, btnY, centerX - 100, btnY + 55);
             btnGrad.addColorStop(0, '#4ADE80');
             btnGrad.addColorStop(1, '#22C55E');
             ctx.fillStyle = btnGrad;
-            roundRect(ctx, CANVAS_WIDTH / 2 - 90, 400, 180, 50, 25);
+            roundRect(ctx, centerX - 100, btnY, 200, 55, 28);
             ctx.fill();
 
+            // Button shadow
+            ctx.shadowColor = 'rgba(74, 222, 128, 0.4)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetY = 5;
+            roundRect(ctx, centerX - 100, btnY, 200, 55, 28);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
             ctx.fillStyle = '#FFF';
-            ctx.font = '700 18px Poppins';
-            ctx.fillText('PLAY AGAIN', CANVAS_WIDTH / 2, 432);
+            ctx.font = '700 20px Poppins';
+            ctx.fillText('▶  PLAY AGAIN', centerX, btnY + 36);
         }
 
         // === GAME LOOP ===
@@ -1735,6 +1877,9 @@
 
             if (checkCollisions()) {
                 gameOver = true;
+                // Pick a random fun fact for the obstacle that killed the player
+                const facts = FUN_FACTS[lastHitObstacle] || FUN_FACTS.camel;
+                currentFunFact = facts[Math.floor(Math.random() * facts.length)];
                 playSound('collision');
                 playSound('gameOver');
                 playMusic('musicMenu');  // Switch to menu music
