@@ -1458,35 +1458,94 @@
 
         // === UI ===
         function drawUI() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            roundRect(ctx, CANVAS_WIDTH - 160, 10, 150, 70, 12);
+            const uiX = 16;
+            const uiY = 16;
+            const cardWidth = 140;
+            const cardGap = 12;
+
+            // Score Card
+            const scoreGrad = ctx.createLinearGradient(uiX, uiY, uiX, uiY + 70);
+            scoreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+            scoreGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+            ctx.fillStyle = scoreGrad;
+            roundRect(ctx, uiX, uiY, cardWidth, 70, 16);
             ctx.fill();
 
+            // Score border glow
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            roundRect(ctx, uiX, uiY, cardWidth, 70, 16);
+            ctx.stroke();
+
+            // Score label
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.font = '500 11px Poppins';
+            ctx.textAlign = 'left';
+            ctx.fillText('SCORE', uiX + 16, uiY + 20);
+
+            // Score value
             ctx.fillStyle = '#FFF';
-            ctx.font = '600 28px Poppins';
-            ctx.textAlign = 'right';
-            ctx.fillText(Math.floor(score), CANVAS_WIDTH - 25, 45);
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            ctx.font = '400 14px Poppins';
-            ctx.fillText(`BEST: ${Math.floor(highScore)}`, CANVAS_WIDTH - 25, 68);
+            ctx.font = '700 28px Poppins';
+            ctx.fillText(Math.floor(score), uiX + 16, uiY + 50);
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            roundRect(ctx, 10, 10, 130, 70, 12);
+            // Best score (small, right side)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.font = '500 10px Poppins';
+            ctx.textAlign = 'right';
+            ctx.fillText(`BEST ${Math.floor(highScore)}`, uiX + cardWidth - 12, uiY + 20);
+
+            // Coins Card
+            const coinY = uiY + 70 + cardGap;
+            const coinGrad = ctx.createLinearGradient(uiX, coinY, uiX, coinY + 60);
+            coinGrad.addColorStop(0, 'rgba(255, 215, 0, 0.2)');
+            coinGrad.addColorStop(1, 'rgba(255, 170, 0, 0.1)');
+            ctx.fillStyle = coinGrad;
+            roundRect(ctx, uiX, coinY, cardWidth, 60, 16);
             ctx.fill();
 
+            // Coin border
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+            ctx.lineWidth = 1;
+            roundRect(ctx, uiX, coinY, cardWidth, 60, 16);
+            ctx.stroke();
+
+            // Coin icon (golden circle with shine)
+            const coinIconX = uiX + 28;
+            const coinIconY = coinY + 30;
             ctx.fillStyle = '#FFD700';
             ctx.beginPath();
-            ctx.arc(40, 35, 15, 0, Math.PI * 2);
+            ctx.arc(coinIconX, coinIconY, 14, 0, Math.PI * 2);
             ctx.fill();
+            // Coin shine
+            ctx.fillStyle = '#FFF59D';
+            ctx.beginPath();
+            ctx.arc(coinIconX - 4, coinIconY - 4, 5, 0, Math.PI * 2);
+            ctx.fill();
+            // Coin $ symbol
+            ctx.fillStyle = '#B8860B';
+            ctx.font = '700 14px Poppins';
+            ctx.textAlign = 'center';
+            ctx.fillText('$', coinIconX, coinIconY + 5);
 
+            // Total coins
             ctx.fillStyle = '#FFF';
-            ctx.font = '700 22px Poppins';
+            ctx.font = '700 20px Poppins';
             ctx.textAlign = 'left';
-            ctx.fillText(totalCoins, 65, 42);
-            ctx.fillStyle = '#4ADE80';
-            ctx.font = '600 14px Poppins';
-            ctx.fillText(`+${coinsCollected}`, 65, 62);
+            ctx.fillText(totalCoins, uiX + 50, coinY + 28);
 
+            // Coins collected this run
+            ctx.fillStyle = '#4ADE80';
+            ctx.font = '600 13px Poppins';
+            ctx.fillText(`+${coinsCollected}`, uiX + 50, coinY + 48);
+
+            // Speed indicator (subtle bar at bottom of score card)
+            const speedBarWidth = (gameSpeed / MAX_SPEED) * (cardWidth - 24);
+            ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
+            roundRect(ctx, uiX + 12, uiY + 58, cardWidth - 24, 4, 2);
+            ctx.fill();
+            ctx.fillStyle = '#4ADE80';
+            roundRect(ctx, uiX + 12, uiY + 58, speedBarWidth, 4, 2);
+            ctx.fill();
         }
 
         function updateMenu(dt) {
