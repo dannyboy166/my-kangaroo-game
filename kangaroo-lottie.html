@@ -1716,9 +1716,27 @@
             roundRect(ctx, centerX - 70, 285, 140, 45, 12);
             ctx.fill();
 
+            // Coin icon
+            const coinX = centerX - 35;
+            const coinY = 308;
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(coinX, coinY, 14, 0, Math.PI * 2);
+            ctx.fill();
+            // Coin shine
+            ctx.fillStyle = '#FFF59D';
+            ctx.beginPath();
+            ctx.arc(coinX - 4, coinY - 4, 5, 0, Math.PI * 2);
+            ctx.fill();
+            // Coin $ symbol
+            ctx.fillStyle = '#B8860B';
+            ctx.font = '700 14px Poppins';
+            ctx.fillText('$', coinX, coinY + 5);
+
+            // Coins text
             ctx.fillStyle = '#4ADE80';
-            ctx.font = '700 20px Poppins';
-            ctx.fillText(`+${coinsCollected} coins`, centerX, 316);
+            ctx.font = '700 22px Poppins';
+            ctx.fillText(`+${coinsCollected}`, centerX + 15, 316);
 
             // Fun fact section
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
