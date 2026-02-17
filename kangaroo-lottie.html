@@ -195,8 +195,8 @@
                 src: 'assets/lottie/sun.json',
                 width: 300,           // 3x bigger
                 height: 300,
-                x: 680,               // Further into corner
-                y: -80                // More off screen
+                x: 620,               // Further into corner
+                y: -120                // More off screen
             }
         };
 
@@ -1514,6 +1514,9 @@
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             }
 
+            // Draw sun AFTER sky but BEFORE clouds
+            drawDecorations();
+
             // Cloud layer (slow parallax - 10% speed)
             if (assets.bg_cloud) {
                 const cloudScale = 0.5;
@@ -1942,7 +1945,6 @@
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
             drawBackground();
-            drawDecorations();  // Draw sun and other background lotties
             // Ground is now part of parallax background (bg_land)
 
             // Jump debug mode - show 4 kangaroos with different jump configs
