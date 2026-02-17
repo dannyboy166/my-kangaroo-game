@@ -473,8 +473,9 @@
         const GRAVITY = 1.0;
         const JUMP_FORCE = -22;
         const INITIAL_SPEED = 7;
-        const MAX_SPEED = 15;
+        const MAX_SPEED = 25;
         const SPEED_INCREMENT = 0.002;
+        const SPEED_SOFT_CAP = 15;  // After this, speed increases at decreasing rate
         const DEBUG = false;  // Set true to see hitboxes (currently only emu/magpie)
         const JUMP_DEBUG = false;  // Show 4 kangaroos with different jump animations
         const SPAWN_DEBUG = false;  // Set true to only spawn emu and magpie for testing
@@ -1668,7 +1669,15 @@
             updateObstacles(dt, pixelsPerSecond);
             updateCoins(dt, pixelsPerSecond);
 
-            gameSpeed = Math.min(MAX_SPEED, gameSpeed + SPEED_INCREMENT);
+            // Speed increases normally until SPEED_SOFT_CAP, then at decreasing rate
+            if (gameSpeed < SPEED_SOFT_CAP) {
+                gameSpeed = Math.min(SPEED_SOFT_CAP, gameSpeed + SPEED_INCREMENT);
+            } else if (gameSpeed < MAX_SPEED) {
+                // Decreasing rate: the closer to MAX_SPEED, the slower it increases
+                const remaining = MAX_SPEED - gameSpeed;
+                const factor = remaining / (MAX_SPEED - SPEED_SOFT_CAP);  // 1.0 at soft cap, 0 at max
+                gameSpeed = Math.min(MAX_SPEED, gameSpeed + SPEED_INCREMENT * factor);
+            }
             score += 6 * dt;
 
             if (checkCollisions()) {
