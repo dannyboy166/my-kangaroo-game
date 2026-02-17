@@ -51,46 +51,75 @@ A **raw Canvas + Lottie** version of the game, built without Phaser for easier L
 
 ### Tech Stack (Lottie Edition)
 - **Rendering**: Raw Canvas 2D
-- **Animations**: DotLottie Web (@lottiefiles/dotlottie-web)
+- **Lottie Libraries**:
+  - **lottie-web** for `.json` files (standard Lottie format)
+  - **DotLottie Web** for `.lottie` files (compressed format)
 - **Kangaroo**: Individual PNG frames (not sprite sheet)
-- **Obstacles**: Lottie animations (camel, crocodile on scooter)
+- **Obstacles**: Lottie animations (camel, crocodile, snake, tree)
 - **No build step**: Runs directly in browser
 
 ### File Location
 - `kangaroo-lottie.html` - Main game file (self-contained)
-- `assets/lottie/` - Lottie animation files (.lottie format)
+- `assets/lottie/` - Lottie animation files (`.json` and `.lottie` formats)
+
+### Lottie File Formats (IMPORTANT!)
+
+**Use `.json` format for best compatibility!**
+
+| Format | Library | Notes |
+|--------|---------|-------|
+| `.json` | lottie-web | ✅ Standard format, works reliably |
+| `.lottie` | DotLottie | Compressed, but can have rendering issues |
+
+When downloading from LottieFiles, choose **"Lottie JSON"** not "dotLottie".
+
+The loader auto-detects format and uses the right library:
+```javascript
+if (config.src.endsWith('.json')) {
+    // Uses lottie-web (canvas renderer)
+    lottie.loadAnimation({...})
+} else {
+    // Uses DotLottie
+    new DotLottie({...})
+}
+```
 
 ### Lottie Obstacles Configuration
 ```javascript
 const LOTTIE_OBSTACLES = {
     camel: {
-        src: 'assets/lottie/camel.lottie',
+        src: 'assets/lottie/camel.json',
         width: 200, height: 180,
-        hitboxWidth: 140, hitboxHeight: 80,
-        speedMultiplier: 1.0  // Normal speed
+        hitboxWidth: 140, hitboxHeight: 80
     },
     crocodile: {
-        src: 'assets/lottie/crocodile_scooter.lottie',
+        src: 'assets/lottie/crocodile.json',
         width: 280, height: 230,
         hitboxWidth: 72, hitboxHeight: 96,
         speedMultiplier: 1.5,  // 50% faster!
-        animationSpeed: 2.0    // Animation plays 2x
+        animationSpeed: 2.0
+    },
+    snake: {
+        src: 'assets/lottie/snake.json',
+        width: 150, height: 100,
+        hitboxWidth: 100, hitboxHeight: 50
+    },
+    tree: {
+        src: 'assets/lottie/tree.json',
+        width: 200, height: 280,
+        hitboxWidth: 50, hitboxHeight: 200
+    }
+};
+
+// Background decorations (not obstacles)
+const LOTTIE_DECORATIONS = {
+    sun: {
+        src: 'assets/lottie/sun.json',
+        width: 100, height: 100,
+        x: 700, y: 50  // Top right corner
     }
 };
 ```
-
-### Croc Gap Rules (Important!)
-The crocodile moves 1.5x faster, so spacing matters:
-
-| Gap Range | Behavior |
-|-----------|----------|
-| **350-650px** | "Double jump zone" - jump over both without landing |
-| **650-850px** | ❌ FORBIDDEN - too tricky |
-| **850-1000px** | "Landing zone" - land between, then jump croc |
-
-### Spawn Timing
-- Pairs (camel → croc) spawn every **1800-3000ms**
-- Croc gap randomly chosen from valid ranges (50/50 split)
 
 ### Physics Constants
 ```javascript
@@ -117,14 +146,14 @@ All sounds from Phaser version work:
 ```javascript
 const DEBUG = true;        // Show hitboxes
 const JUMP_DEBUG = false;  // Test 4 jump configs side-by-side
-const SPAWN_DEBUG = true;  // Force camel→croc pattern
+const SPAWN_DEBUG = true;  // Cycle through all obstacles
 ```
 
-### DotLottie Integration Notes
-- DotLottie requires canvases **in the DOM** to render
-- Hidden container: `#lottieContainer` with `opacity: 0.01`
-- Animations render to hidden canvases, then drawn to game canvas
-- Heavy animations (1000+ frames) cause performance issues
+### Lottie Integration Notes
+- Lottie canvases render in hidden container (`#lottieContainer` with `opacity: 0.01`)
+- Animations render to hidden canvases, then drawn to game canvas each frame
+- Large animations (1MB+) may affect performance (tree.json is 1.7MB)
+- Both lottie-web and DotLottie support pause/play for game over state
 
 ---
 
