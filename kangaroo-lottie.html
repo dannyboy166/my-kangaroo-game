@@ -608,8 +608,18 @@
         };
 
         const assetList = [
-            { name: 'coin', src: 'assets/images/coin/coin-64x64.png' }
+            { name: 'coin', src: 'assets/images/coin/coin-64x64.png' },
+            // Background layers
+            { name: 'bg_sky', src: 'assets/images/beach-background/game_background_2/layers/sky.png' },
+            { name: 'bg_cloud', src: 'assets/images/beach-background/game_background_1/layers/cloud.png' },
+            { name: 'bg_land', src: 'assets/images/beach-background/game_background_1/layers/land.png' }
         ];
+
+        // Background images storage
+        const bgImages = {};
+
+        // Parallax scroll positions
+        let bgScrollX = 0;
 
         function loadAssets(callback) {
             let loaded = 0;
@@ -1483,9 +1493,50 @@
         }
 
         // === BACKGROUND ===
+        function updateBackground(dt) {
+            // Update parallax scroll based on game speed
+            if (gameStarted && !gameOver) {
+                bgScrollX += gameSpeed * 60 * dt;
+            }
+        }
+
         function drawBackground() {
-            ctx.fillStyle = '#87CEEB';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y);
+            // Sky layer (static, fills canvas)
+            if (assets.bg_sky) {
+                // Scale to fill canvas height, tile horizontally
+                const skyScale = CANVAS_HEIGHT / assets.bg_sky.height;
+                const skyWidth = assets.bg_sky.width * skyScale;
+                for (let x = 0; x < CANVAS_WIDTH + skyWidth; x += skyWidth) {
+                    ctx.drawImage(assets.bg_sky, x, 0, skyWidth, CANVAS_HEIGHT);
+                }
+            } else {
+                ctx.fillStyle = '#87CEEB';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            }
+
+            // Cloud layer (slow parallax - 10% speed)
+            if (assets.bg_cloud) {
+                const cloudScale = 0.5;
+                const cloudW = assets.bg_cloud.width * cloudScale;
+                const cloudH = assets.bg_cloud.height * cloudScale;
+                const cloudScroll = (bgScrollX * 0.1) % cloudW;
+                const cloudY = 50;
+                for (let x = -cloudScroll; x < CANVAS_WIDTH + cloudW; x += cloudW) {
+                    ctx.drawImage(assets.bg_cloud, x, cloudY, cloudW, cloudH);
+                }
+            }
+
+            // Land/ground layer (full speed parallax)
+            if (assets.bg_land) {
+                const landScale = 0.6;
+                const landW = assets.bg_land.width * landScale;
+                const landH = assets.bg_land.height * landScale;
+                const landScroll = bgScrollX % landW;
+                const landY = GROUND_Y - landH + 80;  // Position so ground aligns
+                for (let x = -landScroll; x < CANVAS_WIDTH + landW; x += landW) {
+                    ctx.drawImage(assets.bg_land, x, landY, landW, landH);
+                }
+            }
         }
 
         // === DECORATIONS (background lotties like sun) ===
@@ -1820,6 +1871,7 @@
             lastObstacleTime = Date.now();
             inCluster = false;
             clusterCount = 0;
+            bgScrollX = 0;
         }
 
         function update(dt) {
@@ -1849,6 +1901,7 @@
 
             const pixelsPerSecond = gameSpeed * 60;
             kangaroo.update(dt);
+            updateBackground(dt);
             updateObstacles(dt, pixelsPerSecond);
             updateCoins(dt, pixelsPerSecond);
 
