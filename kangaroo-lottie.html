@@ -1465,16 +1465,13 @@
 
             // Score Card (left)
             const scoreX = 16;
-            const scoreGrad = ctx.createLinearGradient(scoreX, uiY, scoreX, uiY + cardHeight);
-            scoreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-            scoreGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-            ctx.fillStyle = scoreGrad;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             roundRect(ctx, scoreX, uiY, cardWidth, cardHeight, 14);
             ctx.fill();
 
-            // Score border glow
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 1;
+            // Score border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1.5;
             roundRect(ctx, scoreX, uiY, cardWidth, cardHeight, 14);
             ctx.stroke();
 
@@ -1506,16 +1503,13 @@
 
             // Coins Card (right of score)
             const coinX = scoreX + cardWidth + cardGap;
-            const coinGrad = ctx.createLinearGradient(coinX, uiY, coinX, uiY + cardHeight);
-            coinGrad.addColorStop(0, 'rgba(255, 215, 0, 0.2)');
-            coinGrad.addColorStop(1, 'rgba(255, 170, 0, 0.1)');
-            ctx.fillStyle = coinGrad;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             roundRect(ctx, coinX, uiY, cardWidth, cardHeight, 14);
             ctx.fill();
 
-            // Coin border
-            ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
-            ctx.lineWidth = 1;
+            // Coin border (golden tint)
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+            ctx.lineWidth = 1.5;
             roundRect(ctx, coinX, uiY, cardWidth, cardHeight, 14);
             ctx.stroke();
 
