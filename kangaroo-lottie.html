@@ -77,6 +77,9 @@
         const lottieAnimations = {};
         const lottieCanvases = {};
 
+        // === SPRITE SYSTEM (for emu, magpie) ===
+        const spriteFrames = {};
+
         // UI Lottie animations
         const LOTTIE_UI = {
             playButton: {
@@ -140,6 +143,44 @@
                 height: 300,
                 x: 550,               // Top right corner
                 y: -50                // Partially off screen
+            }
+        };
+
+        // Sprite-based obstacles (not Lottie)
+        const SPRITE_OBSTACLES = {
+            emu: {
+                prefix: 'ostrich_run_neck_up',
+                path: 'assets/characters/emu/brown',
+                frameCount: 10,
+                frameRate: 20,
+                width: 150,
+                height: 170,
+                hitboxWidth: 60,
+                hitboxHeight: 92,
+                hitboxOffsetX: 10,  // Move hitbox 10px right
+                hitboxOffsetY: 30,
+                groundOffset: 0,
+                flipX: false,  // Face left (toward kangaroo)
+                speedMultiplier: 1.5  // Faster than other obstacles
+            },
+            magpie: {
+                spriteSheet: 'assets/images/magpie_sheet.png',
+                frameWidth: 128,
+                frameHeight: 128,
+                frameCount: 4,
+                frameRate: 8,
+                width: 100,
+                height: 100,
+                hitboxWidth: 75,
+                hitboxHeight: 60,
+                hitboxOffsetY: 10,
+                flipX: true,  // Flip to face left (toward kangaroo)
+                isFlying: true,
+                spawnYMin: 150,
+                spawnYMax: 250,
+                swoopSpeed: 400,
+                climbSpeed: 300,
+                swoopChance: 0.5
             }
         };
 
@@ -249,6 +290,54 @@
             await Promise.all([...obstaclePromises, ...uiPromises, ...decorationPromises]);
         }
 
+        async function loadSpriteFrames() {
+            // Load emu frames (individual PNGs)
+            const emuConfig = SPRITE_OBSTACLES.emu;
+            spriteFrames.emu = [];
+            for (let i = 0; i < emuConfig.frameCount; i++) {
+                const img = new Image();
+                const frameNum = String(i).padStart(3, '0');
+                img.src = `${emuConfig.path}/${emuConfig.prefix}_${frameNum}.png`;
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = () => {
+                        console.error(`Failed to load emu frame ${i}`);
+                        resolve();
+                    };
+                });
+                spriteFrames.emu.push(img);
+            }
+            console.log(`✓ Loaded emu sprite: ${spriteFrames.emu.length} frames`);
+
+            // Load magpie sprite sheet and extract frames
+            const magpieConfig = SPRITE_OBSTACLES.magpie;
+            const sheet = new Image();
+            sheet.src = magpieConfig.spriteSheet;
+            await new Promise((resolve, reject) => {
+                sheet.onload = resolve;
+                sheet.onerror = () => {
+                    console.error('Failed to load magpie sprite sheet');
+                    resolve();
+                };
+            });
+
+            // Extract frames from sprite sheet into canvases
+            spriteFrames.magpie = [];
+            for (let i = 0; i < magpieConfig.frameCount; i++) {
+                const frameCanvas = document.createElement('canvas');
+                frameCanvas.width = magpieConfig.frameWidth;
+                frameCanvas.height = magpieConfig.frameHeight;
+                const frameCtx = frameCanvas.getContext('2d');
+                frameCtx.drawImage(sheet,
+                    i * magpieConfig.frameWidth, 0,
+                    magpieConfig.frameWidth, magpieConfig.frameHeight,
+                    0, 0, magpieConfig.frameWidth, magpieConfig.frameHeight
+                );
+                spriteFrames.magpie.push(frameCanvas);
+            }
+            console.log(`✓ Loaded magpie sprite: ${spriteFrames.magpie.length} frames`);
+        }
+
         // === AUDIO ===
         const sounds = {
             jump: new Audio('assets/audio/sfx/jump.mp3'),
@@ -331,9 +420,9 @@
         const INITIAL_SPEED = 7;
         const MAX_SPEED = 14;
         const SPEED_INCREMENT = 0.002;
-        const DEBUG = false;  // Set true to see hitboxes
+        const DEBUG = false;  // Set true to see hitboxes (currently only emu/magpie)
         const JUMP_DEBUG = false;  // Show 4 kangaroos with different jump animations
-        const SPAWN_DEBUG = false;  // Set true to cycle through obstacles in order
+        const SPAWN_DEBUG = false;  // Set true to only spawn emu and magpie for testing
         // =====================================================
         // CROC GAP SETTINGS (tested at starting speed 7)
         // =====================================================
@@ -860,38 +949,95 @@
 
         let debugSpawnIndex = 0;  // Alternates: 0=camel, 1=croc
 
+        function spawnEmu() {
+            const config = SPRITE_OBSTACLES.emu;
+            obstacles.push({
+                x: CANVAS_WIDTH + 50,
+                y: GROUND_Y - config.groundOffset,
+                width: config.width,
+                height: config.height,
+                hitboxWidth: config.hitboxWidth,
+                hitboxHeight: config.hitboxHeight,
+                hitboxOffsetX: config.hitboxOffsetX || 0,
+                hitboxOffsetY: config.hitboxOffsetY || 0,
+                speedMultiplier: config.speedMultiplier || 1.0,
+                isSprite: true,
+                spriteType: 'emu',
+                frame: 0,
+                frameTimer: 0
+            });
+        }
+
+        function spawnMagpie() {
+            const config = SPRITE_OBSTACLES.magpie;
+            const spawnY = config.spawnYMin + Math.random() * (config.spawnYMax - config.spawnYMin);
+            obstacles.push({
+                x: CANVAS_WIDTH + 50,
+                y: spawnY,
+                width: config.width,
+                height: config.height,
+                hitboxWidth: config.hitboxWidth,
+                hitboxHeight: config.hitboxHeight,
+                hitboxOffsetY: config.hitboxOffsetY || 0,
+                speedMultiplier: 1.0,
+                isSprite: true,
+                isFlying: true,
+                spriteType: 'magpie',
+                frame: 0,
+                frameTimer: 0,
+                baseY: spawnY,
+                swoopStarted: false,
+                isClimbingBack: false,
+                willSwoop: Math.random() < config.swoopChance,
+                rotation: 0
+            });
+        }
+
         function spawnObstacle() {
             if (SPAWN_DEBUG) {
-                // Debug mode: cycle through all obstacles one at a time
-                const pattern = ['camel', 'snake', 'tree', 'crocodile'];
+                // Debug mode: only emu and magpie for testing
+                const pattern = ['emu', 'magpie'];
                 const name = pattern[debugSpawnIndex % pattern.length];
-                const config = LOTTIE_OBSTACLES[name];
 
-                if (config && lottieAnimations[name]) {
-                    obstacles.push({
-                        x: CANVAS_WIDTH + 50,
-                        y: GROUND_Y - config.groundOffset,
-                        width: config.width,
-                        height: config.height,
-                        hitboxWidth: config.hitboxWidth,
-                        hitboxHeight: config.hitboxHeight,
-                        hitboxOffsetY: config.hitboxOffsetY || 0,
-                        speedMultiplier: config.speedMultiplier || 1.0,
-                        lottie: name,
-                        isLottie: true
-                    });
-                    debugSpawnIndex++;
+                if (name === 'emu') {
+                    spawnEmu();
+                } else if (name === 'magpie') {
+                    spawnMagpie();
+                } else {
+                    const config = LOTTIE_OBSTACLES[name];
+                    if (config && lottieAnimations[name]) {
+                        obstacles.push({
+                            x: CANVAS_WIDTH + 50,
+                            y: GROUND_Y - config.groundOffset,
+                            width: config.width,
+                            height: config.height,
+                            hitboxWidth: config.hitboxWidth,
+                            hitboxHeight: config.hitboxHeight,
+                            hitboxOffsetY: config.hitboxOffsetY || 0,
+                            speedMultiplier: config.speedMultiplier || 1.0,
+                            lottie: name,
+                            isLottie: true
+                        });
+                    }
                 }
+                debugSpawnIndex++;
                 return;
             }
 
-            // Normal mode: random Lottie obstacle (only from LOTTIE_OBSTACLES, not decorations/UI)
-            const obstacleNames = Object.keys(LOTTIE_OBSTACLES);
+            // Normal mode: 15% chance for magpie
+            if (Math.random() < 0.15) {
+                spawnMagpie();
+                return;
+            }
 
-            if (obstacleNames.length > 0) {
-                const name = obstacleNames[Math.floor(Math.random() * obstacleNames.length)];
+            // Otherwise spawn ground obstacle (Lottie or emu)
+            const allGroundObstacles = [...Object.keys(LOTTIE_OBSTACLES), 'emu'];
+            const name = allGroundObstacles[Math.floor(Math.random() * allGroundObstacles.length)];
+
+            if (name === 'emu') {
+                spawnEmu();
+            } else {
                 const config = LOTTIE_OBSTACLES[name];
-
                 obstacles.push({
                     x: CANVAS_WIDTH + 50,
                     y: GROUND_Y - config.groundOffset,
@@ -904,6 +1050,42 @@
                     lottie: name,
                     isLottie: true
                 });
+            }
+        }
+
+        function updateMagpieAI(magpie, dt) {
+            const config = SPRITE_OBSTACLES.magpie;
+            const SWOOP_TARGET_Y = GROUND_Y - 50;
+
+            // Check if should start swooping (based on distance to kangaroo)
+            const distToKangaroo = magpie.x - kangaroo.x;
+            if (!magpie.swoopStarted && magpie.willSwoop && distToKangaroo < 450) {
+                magpie.swoopStarted = true;
+            }
+
+            // Swooping phase - dive down
+            if (magpie.swoopStarted && !magpie.isClimbingBack) {
+                if (magpie.y < SWOOP_TARGET_Y) {
+                    magpie.y += config.swoopSpeed * dt;
+                    magpie.rotation = -Math.PI / 4;  // -45 degrees (diving)
+                } else {
+                    magpie.rotation = 0;
+                    // Start climbing when past the kangaroo
+                    if (magpie.x < kangaroo.x + 80) {
+                        magpie.isClimbingBack = true;
+                    }
+                }
+            }
+
+            // Climbing phase - return to original height
+            if (magpie.isClimbingBack) {
+                if (magpie.y > magpie.baseY) {
+                    magpie.y -= config.climbSpeed * dt;
+                    magpie.rotation = Math.PI / 6;  // +30 degrees (climbing)
+                } else {
+                    magpie.y = magpie.baseY;
+                    magpie.rotation = 0;
+                }
             }
         }
 
@@ -921,6 +1103,22 @@
                 const speedMult = obs.speedMultiplier || 1.0;
                 obs.x -= pixelsPerSecond * speedMult * dt;
 
+                // Animate sprite frames
+                if (obs.isSprite) {
+                    const config = SPRITE_OBSTACLES[obs.spriteType];
+                    obs.frameTimer += dt;
+                    const frameDelay = 1 / config.frameRate;
+                    if (obs.frameTimer >= frameDelay) {
+                        obs.frameTimer = 0;
+                        obs.frame = (obs.frame + 1) % config.frameCount;
+                    }
+                }
+
+                // Magpie swooping AI
+                if (obs.isFlying && obs.spriteType === 'magpie') {
+                    updateMagpieAI(obs, dt);
+                }
+
                 if (obs.x < -150) {
                     obstacles.splice(i, 1);
                     score += 10;
@@ -930,7 +1128,41 @@
 
         function drawObstacles() {
             obstacles.forEach(obs => {
-                if (obs.isLottie && lottieCanvases[obs.lottie]) {
+                // Draw sprite-based obstacles (emu, magpie)
+                if (obs.isSprite && spriteFrames[obs.spriteType]) {
+                    const config = SPRITE_OBSTACLES[obs.spriteType];
+                    const frameImg = spriteFrames[obs.spriteType][obs.frame];
+
+                    if (frameImg) {
+                        ctx.save();
+
+                        // Position at obstacle center
+                        ctx.translate(Math.round(obs.x), Math.round(obs.y));
+
+                        // Apply rotation (for magpie swooping)
+                        if (obs.rotation) {
+                            ctx.rotate(obs.rotation);
+                        }
+
+                        // Flip horizontally if needed
+                        if (config.flipX) {
+                            ctx.scale(-1, 1);
+                        }
+
+                        // Draw sprite - flying obstacles use center anchor, ground use bottom
+                        const groundAdjust = obs.isFlying ? -obs.height / 2 : 40 - obs.height;
+                        ctx.drawImage(frameImg,
+                            -obs.width / 2,
+                            groundAdjust,
+                            obs.width,
+                            obs.height
+                        );
+
+                        ctx.restore();
+                    }
+                }
+                // Draw Lottie-based obstacles
+                else if (obs.isLottie && lottieCanvases[obs.lottie]) {
                     const offCanvas = lottieCanvases[obs.lottie];
                     const config = LOTTIE_OBSTACLES[obs.lottie];
 
@@ -965,20 +1197,27 @@
                     ctx.restore();
                 }
 
-                // Debug: draw hitbox (adjusted for ground offset)
-                if (DEBUG) {
+                // Debug: draw hitbox (only for sprite obstacles when DEBUG is on)
+                if (DEBUG && obs.isSprite) {
                     const hbWidth = obs.hitboxWidth || obs.width - 20;
                     const hbHeight = obs.hitboxHeight || obs.height - 20;
+                    const hbOffsetX = obs.hitboxOffsetX || 0;
                     const hbOffsetY = obs.hitboxOffsetY || 0;
-                    const groundAdjust = 40;  // Match visual offset
-                    ctx.strokeStyle = '#FF0000';
+
+                    // Flying obstacles use center-based hitbox
+                    let hbX, hbY;
+                    if (obs.isFlying) {
+                        hbX = obs.x - hbWidth / 2 + hbOffsetX;
+                        hbY = obs.y - hbHeight / 2;
+                    } else {
+                        const groundAdjust = 40;
+                        hbX = obs.x - hbWidth / 2 + hbOffsetX;
+                        hbY = obs.y - hbHeight - hbOffsetY + groundAdjust;
+                    }
+
+                    ctx.strokeStyle = obs.isFlying ? '#FF00FF' : '#00FF00';  // Magenta for magpie, green for emu
                     ctx.lineWidth = 2;
-                    ctx.strokeRect(
-                        Math.round(obs.x - hbWidth / 2),
-                        Math.round(obs.y - hbHeight - hbOffsetY + groundAdjust),
-                        hbWidth,
-                        hbHeight
-                    );
+                    ctx.strokeRect(Math.round(hbX), Math.round(hbY), hbWidth, hbHeight);
                 }
             });
         }
@@ -1054,14 +1293,27 @@
             for (const obs of obstacles) {
                 const hbWidth = obs.hitboxWidth || obs.width - 20;
                 const hbHeight = obs.hitboxHeight || obs.height - 20;
+                const hbOffsetX = obs.hitboxOffsetX || 0;
                 const hbOffsetY = obs.hitboxOffsetY || 0;
-                const groundAdjust = 40;  // Match visual offset
-                const o = {
-                    x: obs.x - hbWidth / 2,
-                    y: obs.y - hbHeight - hbOffsetY + groundAdjust,
-                    width: hbWidth,
-                    height: hbHeight
-                };
+
+                // Flying obstacles use center-based hitbox, ground obstacles use bottom-anchor
+                let o;
+                if (obs.isFlying) {
+                    o = {
+                        x: obs.x - hbWidth / 2 + hbOffsetX,
+                        y: obs.y - hbHeight / 2,
+                        width: hbWidth,
+                        height: hbHeight
+                    };
+                } else {
+                    const groundAdjust = 40;  // Match visual offset
+                    o = {
+                        x: obs.x - hbWidth / 2 + hbOffsetX,
+                        y: obs.y - hbHeight - hbOffsetY + groundAdjust,
+                        width: hbWidth,
+                        height: hbHeight
+                    };
+                }
 
                 if (k.x < o.x + o.width && k.x + k.width > o.x &&
                     k.y < o.y + o.height && k.y + k.height > o.y) {
@@ -1422,6 +1674,10 @@
             // Load Lottie animations
             loadingEl.textContent = 'Loading Lottie animations...';
             await loadAllLotties();
+
+            // Load sprite-based obstacles (emu, magpie)
+            loadingEl.textContent = 'Loading sprite obstacles...';
+            await loadSpriteFrames();
 
             loadingEl.style.display = 'none';
             playMusic('musicMenu');  // Start menu music
