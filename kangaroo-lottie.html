@@ -161,7 +161,7 @@
                 hitboxOffsetY: 30,
                 groundOffset: 0,
                 flipX: false,  // Face left (toward kangaroo)
-                speedMultiplier: 1.5  // Faster than other obstacles
+                speedMultiplier: 1.35  // Faster than other obstacles
             },
             magpie: {
                 spriteSheet: 'assets/images/magpie_sheet.png',
@@ -172,7 +172,7 @@
                 width: 100,
                 height: 100,
                 hitboxWidth: 75,
-                hitboxHeight: 60,
+                hitboxHeight: 42,  // 30% smaller on y-axis
                 hitboxOffsetY: 10,
                 flipX: true,  // Flip to face left (toward kangaroo)
                 isFlying: true,
@@ -418,7 +418,7 @@
         const GRAVITY = 1.0;
         const JUMP_FORCE = -22;
         const INITIAL_SPEED = 7;
-        const MAX_SPEED = 14;
+        const MAX_SPEED = 15;
         const SPEED_INCREMENT = 0.002;
         const DEBUG = false;  // Set true to see hitboxes (currently only emu/magpie)
         const JUMP_DEBUG = false;  // Show 4 kangaroos with different jump animations
@@ -673,7 +673,14 @@
                 // Update animation frame
                 this.frameTimer += dt;
                 const anim = KANGAROO_ANIMATIONS[this.currentAnim];
-                const frameDelay = 1 / anim.frameRate;
+
+                // Scale running animation speed with game speed
+                let effectiveFrameRate = anim.frameRate;
+                if (this.currentAnim === 'moving') {
+                    const speedScale = gameSpeed / INITIAL_SPEED;
+                    effectiveFrameRate = anim.frameRate * speedScale;
+                }
+                const frameDelay = 1 / effectiveFrameRate;
 
                 if (this.frameTimer >= frameDelay) {
                     this.frameTimer = 0;
@@ -995,8 +1002,8 @@
 
         function spawnObstacle() {
             if (SPAWN_DEBUG) {
-                // Debug mode: only emu and magpie for testing
-                const pattern = ['emu', 'magpie'];
+                // Debug mode: only magpie for testing at max speed
+                const pattern = ['magpie'];
                 const name = pattern[debugSpawnIndex % pattern.length];
 
                 if (name === 'emu') {
@@ -1057,6 +1064,12 @@
             const config = SPRITE_OBSTACLES.magpie;
             const SWOOP_TARGET_Y = GROUND_Y - 50;
 
+            // Scale swoop/climb speed with game speed (faster game = faster swoop)
+            const BASE_SPEED = 7;  // Base speed for scaling (don't use INITIAL_SPEED which may change for testing)
+            const speedScale = gameSpeed / BASE_SPEED;
+            const currentSwoopSpeed = config.swoopSpeed * speedScale;
+            const currentClimbSpeed = config.climbSpeed * speedScale;
+
             // Check if should start swooping (based on distance to kangaroo)
             const distToKangaroo = magpie.x - kangaroo.x;
             if (!magpie.swoopStarted && magpie.willSwoop && distToKangaroo < 450) {
@@ -1066,7 +1079,7 @@
             // Swooping phase - dive down
             if (magpie.swoopStarted && !magpie.isClimbingBack) {
                 if (magpie.y < SWOOP_TARGET_Y) {
-                    magpie.y += config.swoopSpeed * dt;
+                    magpie.y += currentSwoopSpeed * dt;
                     magpie.rotation = -Math.PI / 4;  // -45 degrees (diving)
                 } else {
                     magpie.rotation = 0;
@@ -1080,7 +1093,7 @@
             // Climbing phase - return to original height
             if (magpie.isClimbingBack) {
                 if (magpie.y > magpie.baseY) {
-                    magpie.y -= config.climbSpeed * dt;
+                    magpie.y -= currentClimbSpeed * dt;
                     magpie.rotation = Math.PI / 6;  // +30 degrees (climbing)
                 } else {
                     magpie.y = magpie.baseY;

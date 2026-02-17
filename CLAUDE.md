@@ -55,7 +55,9 @@ A **raw Canvas + Lottie** version of the game, built without Phaser for easier L
   - **lottie-web** for `.json` files (standard Lottie format)
   - **DotLottie Web** for `.lottie` files (compressed format)
 - **Kangaroo**: Individual PNG frames (not sprite sheet)
-- **Obstacles**: Lottie animations (camel, crocodile, snake, tree)
+- **Obstacles**:
+  - Lottie animations (camel, crocodile, snake, tree)
+  - Sprite animations (emu, magpie)
 - **No build step**: Runs directly in browser
 
 ### File Location
@@ -94,20 +96,22 @@ const LOTTIE_OBSTACLES = {
     },
     crocodile: {
         src: 'assets/lottie/crocodile.json',
-        width: 280, height: 230,
-        hitboxWidth: 72, hitboxHeight: 96,
-        speedMultiplier: 1.5,  // 50% faster!
+        width: 252, height: 207,         // 10% smaller than original
+        hitboxWidth: 65, hitboxHeight: 110,
+        speedMultiplier: 1.5,            // 50% faster!
         animationSpeed: 2.0
     },
     snake: {
         src: 'assets/lottie/snake.json',
-        width: 150, height: 100,
-        hitboxWidth: 100, hitboxHeight: 50
+        width: 120, height: 80,          // 20% smaller
+        hitboxWidth: 80, hitboxHeight: 40,
+        groundOffset: 20                 // Raised 20px
     },
     tree: {
         src: 'assets/lottie/tree.json',
         width: 200, height: 280,
-        hitboxWidth: 50, hitboxHeight: 200
+        hitboxWidth: 80, hitboxHeight: 150,
+        groundOffset: -20                // Lowered 20px
     }
 };
 
@@ -115,26 +119,69 @@ const LOTTIE_OBSTACLES = {
 const LOTTIE_DECORATIONS = {
     sun: {
         src: 'assets/lottie/sun.json',
-        width: 100, height: 100,
-        x: 700, y: 50  // Top right corner
+        width: 300, height: 300,         // 3x bigger
+        x: 550, y: -50                   // Top right corner
     }
 };
 ```
+
+### Sprite-Based Obstacles (Emu & Magpie)
+These use PNG sprite animations instead of Lottie:
+
+```javascript
+const SPRITE_OBSTACLES = {
+    emu: {
+        path: 'assets/characters/emu/brown',
+        frameCount: 10, frameRate: 20,
+        width: 150, height: 170,
+        hitboxWidth: 60, hitboxHeight: 92,
+        speedMultiplier: 1.35            // Faster than other obstacles
+    },
+    magpie: {
+        spriteSheet: 'assets/images/magpie_sheet.png',
+        frameCount: 4, frameRate: 8,
+        width: 100, height: 100,
+        hitboxWidth: 75, hitboxHeight: 42,
+        isFlying: true,                  // Spawns in air
+        swoopSpeed: 400,                 // Dives at kangaroo
+        swoopChance: 0.5                 // 50% will swoop
+    }
+};
+```
+
+**Magpie AI Behavior:**
+- Spawns at Y: 150-250px (in the air)
+- 50% chance to swoop down at the kangaroo
+- Swoop triggers when 450px from kangaroo
+- Tilts -45° when diving, +30° when climbing
+- **Swoop speed scales with game speed** for fair gameplay at higher speeds
 
 ### Physics Constants
 ```javascript
 const GRAVITY = 1.0;        // Snappy feel
 const JUMP_FORCE = -22;     // Strong jump
 const INITIAL_SPEED = 7;    // Starting game speed
-const MAX_SPEED = 14;       // Cap
+const MAX_SPEED = 15;       // Cap
 ```
 
 ### Kangaroo Animations
 Uses individual PNG frames from `assets/characters/kangaroo/brown/`:
-- **moving**: 16 frames @ 20fps (running)
+- **moving**: 16 frames @ 20fps (running) - **scales with game speed!**
 - **jump**: frames 0-6 @ 20fps, holds on frame 6 (airborne)
 - **die**: 5 frames @ 10fps (death)
 - **idle**: 20 frames @ 12fps (menu)
+
+**Animation Speed Scaling:**
+The running animation speeds up as the game gets faster:
+```javascript
+// In kangaroo.update()
+if (currentAnim === 'moving') {
+    speedScale = gameSpeed / INITIAL_SPEED;
+    effectiveFrameRate = anim.frameRate * speedScale;
+}
+// At speed 7: normal (20fps)
+// At speed 15: ~2.14x faster (~43fps)
+```
 
 ### Audio
 All sounds from Phaser version work:
@@ -144,16 +191,17 @@ All sounds from Phaser version work:
 
 ### Debug Flags
 ```javascript
-const DEBUG = true;        // Show hitboxes
+const DEBUG = false;       // Show hitboxes
 const JUMP_DEBUG = false;  // Test 4 jump configs side-by-side
-const SPAWN_DEBUG = true;  // Cycle through all obstacles
+const SPAWN_DEBUG = false; // Force specific obstacle pattern
 ```
 
 ### Lottie Integration Notes
+- **Hybrid library approach**: lottie-web for .json files, DotLottie for .lottie files
 - Lottie canvases render in hidden container (`#lottieContainer` with `opacity: 0.01`)
 - Animations render to hidden canvases, then drawn to game canvas each frame
 - Large animations (1MB+) may affect performance (tree.json is 1.7MB)
-- Both lottie-web and DotLottie support pause/play for game over state
+- Both libraries support pause/play for game over state
 
 ---
 
