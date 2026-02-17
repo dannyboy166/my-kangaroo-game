@@ -1138,7 +1138,7 @@
             menuBounceTimer += dt;
             if (menuBounceTimer > 1.2) {
                 menuBounceTimer = 0;
-                menuKangarooVel = -8;
+                menuKangarooVel = -9.4;  // Adjusted jump height
             }
             menuKangarooVel += 25 * dt;
             menuKangarooY += menuKangarooVel;
@@ -1158,12 +1158,13 @@
             ctx.textAlign = 'center';
             const centerX = CANVAS_WIDTH / 2;
 
-            // Draw kangaroo on menu using idle animation (moved down)
+            // Draw kangaroo on menu using idle animation
             const idleFrames = kangarooFrames.idle;
             if (idleFrames && idleFrames.length > 0) {
                 const frame = Math.floor(menuBounceTimer * 12) % idleFrames.length;
                 const frameImg = idleFrames[frame];
-                const kY = 200 + menuKangarooY;  // Moved down from 160
+                const kY = 248 + menuKangarooY;  // Adjusted position
+                const baseW = 156, baseH = 169;  // 30% bigger (was 120x130)
                 let scaleX = 1, scaleY = 1;
                 if (menuKangarooVel < -2) { scaleX = 0.85; scaleY = 1.15; }
                 else if (menuKangarooY === 0 && menuKangarooVel === 0) { scaleX = 1.1; scaleY = 0.9; }
@@ -1173,7 +1174,7 @@
                     ctx.translate(centerX, kY);
                     ctx.scale(-1, 1);
                     ctx.drawImage(frameImg,
-                        -60 * scaleX, -130 * scaleY, 120 * scaleX, 130 * scaleY);
+                        -baseW/2 * scaleX, -baseH * scaleY, baseW * scaleX, baseH * scaleY);
                     ctx.restore();
                 }
             }
