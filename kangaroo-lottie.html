@@ -1709,7 +1709,7 @@
             if (score >= highScore && score > 0) {
                 ctx.fillStyle = '#FBBF24';
                 ctx.font = '700 14px Poppins';
-                ctx.fillText('⭐ NEW BEST! ⭐', centerX, 230);
+                ctx.fillText('NEW BEST!', centerX, 230);
             }
 
             // Stats row (coins + speed)
@@ -1721,7 +1721,7 @@
             ctx.fill();
             ctx.fillStyle = '#FFD700';
             ctx.font = '600 14px Poppins';
-            ctx.fillText('💰 COINS', centerX - 80, statsY + 20);
+            ctx.fillText('COINS', centerX - 80, statsY + 20);
             ctx.fillStyle = '#4ADE80';
             ctx.font = '700 18px Poppins';
             ctx.fillText(`+${coinsCollected}`, centerX - 80, statsY + 42);
@@ -1732,14 +1732,13 @@
             ctx.fill();
             ctx.fillStyle = '#4ADE80';
             ctx.font = '600 14px Poppins';
-            ctx.fillText('⚡ SPEED', centerX + 80, statsY + 20);
+            ctx.fillText('SPEED', centerX + 80, statsY + 20);
             ctx.fillStyle = '#FFF';
             ctx.font = '700 18px Poppins';
             ctx.fillText(gameSpeed.toFixed(1), centerX + 80, statsY + 42);
 
             // Fun fact section
             const factY = 330;
-            const emoji = OBSTACLE_EMOJIS[lastHitObstacle] || '🦘';
 
             ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
             roundRect(ctx, centerX - 160, factY, 320, 100, 14);
@@ -1747,7 +1746,7 @@
 
             ctx.fillStyle = '#FBBF24';
             ctx.font = '700 13px Poppins';
-            ctx.fillText(`${emoji} DID YOU KNOW?`, centerX, factY + 22);
+            ctx.fillText('DID YOU KNOW?', centerX, factY + 22);
 
             // Wrap fun fact text
             ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
@@ -1791,7 +1790,7 @@
 
             ctx.fillStyle = '#FFF';
             ctx.font = '700 20px Poppins';
-            ctx.fillText('▶  PLAY AGAIN', centerX, btnY + 36);
+            ctx.fillText('PLAY AGAIN', centerX, btnY + 36);
         }
 
         // === GAME LOOP ===
