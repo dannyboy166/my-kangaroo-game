@@ -21,13 +21,12 @@
             position: relative;
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(79, 172, 254, 0.15);
+            transform-origin: center center;
         }
         canvas {
             display: block;
             border-radius: 16px;
             cursor: pointer;
-            transform: translateZ(0);
-            will-change: transform;
         }
         #loading {
             position: absolute;
@@ -1862,6 +1861,26 @@
             });
         }
 
+        // === RESPONSIVE SCALING ===
+        const gameContainer = document.getElementById('gameContainer');
+
+        function scaleGame() {
+            const padding = 40;  // Padding from edges
+            const maxWidth = window.innerWidth - padding;
+            const maxHeight = window.innerHeight - padding;
+
+            // Calculate scale to fit viewport while maintaining aspect ratio
+            const scaleX = maxWidth / CANVAS_WIDTH;
+            const scaleY = maxHeight / CANVAS_HEIGHT;
+            const scale = Math.min(scaleX, scaleY, 1.4);  // Cap at 1.4x to not get too huge
+
+            gameContainer.style.transform = `scale(${scale})`;
+        }
+
+        // Scale on load and resize
+        window.addEventListener('resize', scaleGame);
+        scaleGame();
+
         // === START ===
         async function init() {
             loadingEl.textContent = 'Loading images...';
@@ -1879,6 +1898,7 @@
 
             loadingEl.style.display = 'none';
             initColorPicker();  // Initialize background color picker
+            scaleGame();  // Scale after everything loaded
             playMusic('musicMenu');  // Start menu music
             gameLoop(performance.now());
         }
