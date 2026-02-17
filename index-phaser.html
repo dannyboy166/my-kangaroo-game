@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kangaroo Hop - Phaser Version</title>
+    <!-- Google Font: Carter One -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            background: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            text-align: center;
+        }
+        canvas { 
+            border: 2px solid #3498db;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: none; /* Hidden until game loads */
+        }
+        #loading {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+        .loading-bar {
+            width: 300px;
+            height: 20px;
+            background: #34495e;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        .loading-bar-fill {
+            height: 100%;
+            background: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading">
+            <div>Loading Kangaroo Hop...</div>
+            <div class="loading-bar">
+                <div class="loading-bar-fill" id="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load Phaser from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    
+    <!-- Load the main game module -->
+    <script type="module" src="./src/main.js"></script>
+    
+    <script>
+        // Show canvas and hide loading when game starts
+        window.addEventListener('load', () => {
+            // Update loading progress
+            const progressBar = document.getElementById('loading-progress');
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        const loading = document.getElementById('loading');
+                        const canvas = document.querySelector('canvas');
+                        if (loading) loading.style.display = 'none';
+                        if (canvas) canvas.style.display = 'block';
+                    }, 500);
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
