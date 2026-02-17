@@ -1102,6 +1102,25 @@
             }
         }
 
+        // Update Lottie animation speeds based on game speed
+        function updateLottieAnimationSpeeds() {
+            const BASE_SPEED = 7;  // Base game speed for scaling
+            const speedScale = gameSpeed / BASE_SPEED;
+
+            // Update each Lottie obstacle animation speed
+            for (const [name, config] of Object.entries(LOTTIE_OBSTACLES)) {
+                const anim = lottieAnimations[name];
+                if (anim) {
+                    const baseAnimSpeed = config.animationSpeed || 1.0;
+                    const newSpeed = baseAnimSpeed * speedScale;
+                    // lottie-web uses setSpeed(), DotLottie also has setSpeed()
+                    if (typeof anim.setSpeed === 'function') {
+                        anim.setSpeed(newSpeed);
+                    }
+                }
+            }
+        }
+
         function updateObstacles(dt, pixelsPerSecond) {
             const now = Date.now();
 
@@ -1578,6 +1597,7 @@
             updateCoins(dt, pixelsPerSecond);
 
             gameSpeed = Math.min(MAX_SPEED, gameSpeed + SPEED_INCREMENT);
+            updateLottieAnimationSpeeds();  // Scale Lottie animations with game speed
             score += 6 * dt;
 
             if (checkCollisions()) {
