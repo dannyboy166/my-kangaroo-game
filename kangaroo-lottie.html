@@ -954,6 +954,10 @@
         let lastObstacleTime = 0;
         let obstacleInterval = 1500 + Math.random() * 1500;  // 1500-3000ms base spacing
 
+        // Cluster tracking (max 2 obstacles per cluster at high speed)
+        let inCluster = false;
+        let clusterCount = 0;
+
         let debugSpawnIndex = 0;  // Alternates: 0=camel, 1=croc
 
         function spawnEmu() {
@@ -1108,11 +1112,36 @@
             if (now - lastObstacleTime > obstacleInterval) {
                 spawnObstacle();
                 lastObstacleTime = now;
-                // Tighter clusters at higher speeds (jumpable together)
+
+                // Cluster logic at high speed
                 if (gameSpeed > 10) {
-                    obstacleInterval = 300 + Math.random() * 300;  // 300-600ms tight clusters
+                    if (inCluster) {
+                        // We're in a cluster, increment count
+                        clusterCount++;
+                        if (clusterCount >= 2) {
+                            // Max 2 per cluster, end cluster with normal spacing
+                            inCluster = false;
+                            clusterCount = 0;
+                            obstacleInterval = 1500 + Math.random() * 1500;
+                        } else {
+                            // Continue cluster with tight spacing
+                            obstacleInterval = 300 + Math.random() * 300;
+                        }
+                    } else {
+                        // Not in cluster - 40% chance to start one
+                        if (Math.random() < 0.4) {
+                            inCluster = true;
+                            clusterCount = 1;
+                            obstacleInterval = 300 + Math.random() * 300;  // Tight spacing for cluster
+                        } else {
+                            obstacleInterval = 1500 + Math.random() * 1500;  // Normal spacing
+                        }
+                    }
                 } else {
-                    obstacleInterval = 1500 + Math.random() * 1500;  // 1500-3000ms base spacing
+                    // Speed <= 10: always normal spacing
+                    inCluster = false;
+                    clusterCount = 0;
+                    obstacleInterval = 1500 + Math.random() * 1500;
                 }
             }
 
@@ -1550,6 +1579,8 @@
             showGameOverUI = false;
             gameOverTimer = 0;
             lastObstacleTime = Date.now();
+            inCluster = false;
+            clusterCount = 0;
         }
 
         function update(dt) {
