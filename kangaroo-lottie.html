@@ -1548,13 +1548,15 @@
             ctx.textAlign = 'right';
             ctx.fillText(`BEST ${Math.floor(highScore)}`, scoreX + cardWidth - 10, uiY + 18);
 
-            // Speed indicator bar
-            const speedBarWidth = (gameSpeed / MAX_SPEED) * (cardWidth - 20);
+            // High score progress bar
+            const progressToHighScore = highScore > 0 ? Math.min(score / highScore, 1) : 0;
+            const barWidth = progressToHighScore * (cardWidth - 20);
             ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
             roundRect(ctx, scoreX + 10, uiY + 52, cardWidth - 20, 4, 2);
             ctx.fill();
-            ctx.fillStyle = '#4ADE80';
-            roundRect(ctx, scoreX + 10, uiY + 52, speedBarWidth, 4, 2);
+            // Gold color when you've beaten high score, green otherwise
+            ctx.fillStyle = score >= highScore && highScore > 0 ? '#FBBF24' : '#4ADE80';
+            roundRect(ctx, scoreX + 10, uiY + 52, barWidth, 4, 2);
             ctx.fill();
 
             // Coins Card (right of score)
