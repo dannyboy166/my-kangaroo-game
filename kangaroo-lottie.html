@@ -1674,69 +1674,66 @@
             ctx.fillStyle = overlay;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            // Main card background (lighter, more visible)
-            ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
+            // Main card background (light)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
             roundRect(ctx, centerX - 180, 60, 360, 480, 24);
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.lineWidth = 2;
             roundRect(ctx, centerX - 180, 60, 360, 480, 24);
             ctx.stroke();
 
-            // Game Over title with glow
+            // Game Over title
             ctx.textAlign = 'center';
-            ctx.shadowColor = '#F87171';
-            ctx.shadowBlur = 20;
             ctx.font = '800 38px Poppins';
-            ctx.fillStyle = '#F87171';
+            ctx.fillStyle = '#DC2626';
             ctx.fillText('GAME OVER', centerX, 115);
-            ctx.shadowBlur = 0;
 
             // Score section
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             roundRect(ctx, centerX - 100, 135, 200, 90, 16);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.font = '500 12px Poppins';
             ctx.fillText('SCORE', centerX, 160);
 
-            ctx.fillStyle = '#FFF';
+            ctx.fillStyle = '#1e293b';
             ctx.font = '800 42px Poppins';
             ctx.fillText(Math.floor(score), centerX, 205);
 
             // New best badge
             if (score >= highScore && score > 0) {
-                ctx.fillStyle = '#FBBF24';
+                ctx.fillStyle = '#D97706';
                 ctx.font = '700 14px Poppins';
                 ctx.fillText('NEW BEST!', centerX, 230);
             }
 
             // Coins earned
             const statsY = 260;
-            ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+            ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
             roundRect(ctx, centerX - 80, statsY, 160, 50, 12);
             ctx.fill();
-            ctx.fillStyle = '#FFD700';
+            ctx.fillStyle = '#166534';
             ctx.font = '600 14px Poppins';
             ctx.fillText('COINS', centerX, statsY + 20);
-            ctx.fillStyle = '#4ADE80';
+            ctx.fillStyle = '#16a34a';
             ctx.font = '700 18px Poppins';
             ctx.fillText(`+${coinsCollected}`, centerX, statsY + 42);
 
             // Fun fact section
             const factY = 330;
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             roundRect(ctx, centerX - 160, factY, 320, 100, 14);
             ctx.fill();
 
-            ctx.fillStyle = '#FBBF24';
+            ctx.fillStyle = '#D97706';
             ctx.font = '700 13px Poppins';
             ctx.fillText('DID YOU KNOW?', centerX, factY + 22);
 
             // Wrap fun fact text
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.fillStyle = '#374151';
             ctx.font = '400 13px Poppins';
             const maxWidth = 280;
             const words = currentFunFact.split(' ');
