@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smooth Movement Test</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: monospace;
+            color: white;
+        }
+        canvas {
+            border: 2px solid #444;
+            /* Force GPU acceleration */
+            transform: translateZ(0);
+            will-change: transform;
+        }
+        #info {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="800" height="400"></canvas>
+    <div id="info">
+        <p>Testing different movement methods</p>
+        <p>Press 1-4 to switch modes</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d', {
+            alpha: false,  // Disable alpha for performance
+            desynchronized: true  // Reduce latency (if supported)
+        });
+
+        // Test modes
+        let mode = 1;
+        const modes = {
+            1: 'Delta Time (recommended)',
+            2: 'Fixed Step',
+            3: 'Raw Frame-based',
+            4: 'Interpolated'
+        };
+
+        // Box state
+        let boxX = 0;
+        const boxSpeed = 300; // pixels per second
+        const boxWidth = 60;
+        const boxHeight = 60;
+        const groundY = 320;
+
+        // Timing
+        let lastTime = performance.now();
+        let deltaTime = 0;
+        let fps = 0;
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+
+        // Fixed timestep variables
+        const FIXED_DT = 1/60;
+        let accumulator = 0;
+        let interpolatedX = 0;
+        let previousX = 0;
+
+        function update(dt) {
+            previousX = boxX;
+
+            switch(mode) {
+                case 1: // Delta time
+                    boxX += boxSpeed * dt;
+                    break;
+                case 2: // Fixed step
+                    boxX += boxSpeed * FIXED_DT;
+                    break;
+                case 3: // Raw frame-based (bad)
+                    boxX += 5; // Fixed pixels per frame
+                    break;
+                case 4: // Same as delta for physics
+                    boxX += boxSpeed * FIXED_DT;
+                    break;
+            }
+
+            // Wrap around
+            if (boxX > canvas.width + boxWidth) {
+                boxX = -boxWidth;
+                previousX = -boxWidth;
+            }
+        }
+
+        function draw(alpha) {
+            // Clear with solid color (faster than clearRect)
+            ctx.fillStyle = '#2d2d44';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ground
+            ctx.fillStyle = '#4a4a6a';
+            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+
+            // Calculate draw position
+            let drawX;
+            if (mode === 4) {
+                // Interpolate between previous and current for extra smoothness
+                drawX = previousX + (boxX - previousX) * alpha;
+            } else {
+                drawX = boxX;
+            }
+
+            // Draw box - use integer positions
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillRect(Math.round(drawX), groundY - boxHeight, boxWidth, boxHeight);
+
+            // Info panel
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(10, 10, 300, 100);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = '14px monospace';
+            ctx.fillText(`Mode ${mode}: ${modes[mode]}`, 20, 30);
+            ctx.fillText(`FPS: ${fps}`, 20, 50);
+            ctx.fillText(`Delta: ${(deltaTime * 1000).toFixed(2)}ms`, 20, 70);
+            ctx.fillText(`Box X: ${boxX.toFixed(1)} | Draw X: ${Math.round(drawX)}`, 20, 90);
+
+            // Instructions
+            ctx.fillStyle = '#888';
+            ctx.font = '12px monospace';
+            ctx.fillText('Press 1-4 to change mode', canvas.width - 180, 25);
+        }
+
+        function gameLoop(currentTime) {
+            // Calculate delta time
+            deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            // Cap delta to prevent huge jumps
+            deltaTime = Math.min(deltaTime, 0.1);
+
+            // FPS counter
+            frameCount++;
+            if (currentTime - lastFpsTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsTime = currentTime;
+            }
+
+            // Update based on mode
+            if (mode === 2 || mode === 4) {
+                // Fixed timestep with accumulator
+                accumulator += deltaTime;
+                while (accumulator >= FIXED_DT) {
+                    update(FIXED_DT);
+                    accumulator -= FIXED_DT;
+                }
+                // Calculate interpolation alpha for mode 4
+                const alpha = accumulator / FIXED_DT;
+                draw(alpha);
+            } else {
+                update(deltaTime);
+                draw(1);
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Input
+        document.addEventListener('keydown', (e) => {
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= 4) {
+                mode = num;
+                boxX = 0;
+                previousX = 0;
+                accumulator = 0;
+            }
+        });
+
+        // Start
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

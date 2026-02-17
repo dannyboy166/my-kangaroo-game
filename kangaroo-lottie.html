@@ -76,6 +76,15 @@
         const lottieAnimations = {};
         const lottieCanvases = {};
 
+        // UI Lottie animations
+        const LOTTIE_UI = {
+            playButton: {
+                src: 'assets/lottie/play_button.lottie',
+                width: 120,
+                height: 120
+            },
+        };
+
         // Define your Lottie obstacles here - easy to add more!
         const LOTTIE_OBSTACLES = {
             camel: {
@@ -147,10 +156,15 @@
         }
 
         async function loadAllLotties() {
-            const promises = Object.entries(LOTTIE_OBSTACLES).map(([name, config]) =>
+            // Load obstacle lotties
+            const obstaclePromises = Object.entries(LOTTIE_OBSTACLES).map(([name, config]) =>
                 loadLottieAnimation(name, config).catch(() => null)
             );
-            await Promise.all(promises);
+            // Load UI lotties
+            const uiPromises = Object.entries(LOTTIE_UI).map(([name, config]) =>
+                loadLottieAnimation(name, config).catch(() => null)
+            );
+            await Promise.all([...obstaclePromises, ...uiPromises]);
         }
 
         // === AUDIO ===
@@ -1009,9 +1023,8 @@
             return false;
         }
 
-        // === BACKGROUND (Simple) ===
+        // === BACKGROUND ===
         function drawBackground() {
-            // Simple sky blue
             ctx.fillStyle = '#87CEEB';
             ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y);
         }
@@ -1103,12 +1116,12 @@
             ctx.textAlign = 'center';
             const centerX = CANVAS_WIDTH / 2;
 
-            // Draw kangaroo on menu using idle animation
+            // Draw kangaroo on menu using idle animation (moved down)
             const idleFrames = kangarooFrames.idle;
             if (idleFrames && idleFrames.length > 0) {
                 const frame = Math.floor(menuBounceTimer * 12) % idleFrames.length;
                 const frameImg = idleFrames[frame];
-                const kY = 160 + menuKangarooY;
+                const kY = 200 + menuKangarooY;  // Moved down from 160
                 let scaleX = 1, scaleY = 1;
                 if (menuKangarooVel < -2) { scaleX = 0.85; scaleY = 1.15; }
                 else if (menuKangarooY === 0 && menuKangarooVel === 0) { scaleX = 1.1; scaleY = 0.9; }
@@ -1125,25 +1138,18 @@
 
             ctx.font = '800 48px Poppins';
             ctx.fillStyle = '#FFF';
-            ctx.fillText('KANGAROO', centerX, 220);
+            ctx.fillText('KANGAROO', centerX, 260);
             ctx.fillStyle = '#4ADE80';
-            ctx.fillText('HOP', centerX, 275);
+            ctx.fillText('HOP', centerX, 315);
 
-            // Lottie badge
-            ctx.fillStyle = '#FF69B4';
-            ctx.font = '600 14px Poppins';
-            ctx.fillText('LOTTIE EDITION', centerX, 300);
-
-            const btnGrad = ctx.createLinearGradient(centerX - 100, 320, centerX - 100, 375);
-            btnGrad.addColorStop(0, '#4ADE80');
-            btnGrad.addColorStop(1, '#22C55E');
-            ctx.fillStyle = btnGrad;
-            roundRect(ctx, centerX - 100, 320, 200, 55, 27);
-            ctx.fill();
-
-            ctx.fillStyle = '#FFF';
-            ctx.font = '700 20px Poppins';
-            ctx.fillText('TAP TO PLAY', centerX, 355);
+            // Draw Lottie play button
+            if (lottieCanvases['playButton']) {
+                const playCanvas = lottieCanvases['playButton'];
+                const btnSize = 140;
+                ctx.drawImage(playCanvas,
+                    0, 0, playCanvas.width, playCanvas.height,
+                    centerX - btnSize/2, 330, btnSize, btnSize);
+            }
 
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '400 13px Poppins';

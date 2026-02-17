@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kangaroo Hop - Simple Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: 'Courier New', monospace;
+        }
+        #gameContainer {
+            position: relative;
+        }
+        canvas {
+            border: 4px solid #4a4a6a;
+            border-radius: 8px;
+        }
+        #instructions {
+            position: absolute;
+            bottom: -40px;
+            width: 100%;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="game" width="800" height="300"></canvas>
+        <div id="instructions">SPACE or CLICK to jump | Double-tap for double jump</div>
+    </div>
+
+    <script>
+        // ============================================
+        // KANGAROO HOP - Simple Edition
+        // Pure HTML Canvas - No frameworks!
+        // ~250 lines of code
+        // ============================================
+
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+
+        // --- Game Constants ---
+        const GROUND_Y = 250;
+        const GRAVITY = 0.6;
+        const JUMP_FORCE = -12;
+        const DOUBLE_JUMP_FORCE = -10;
+        const GAME_SPEED_START = 6;
+        const SPEED_INCREMENT = 0.001;
+
+        // --- Game State ---
+        let gameSpeed = GAME_SPEED_START;
+        let score = 0;
+        let highScore = localStorage.getItem('kangaroo_simple_high') || 0;
+        let gameOver = false;
+        let gameStarted = false;
+
+        // --- Kangaroo ---
+        const kangaroo = {
+            x: 80,
+            y: GROUND_Y,
+            width: 40,
+            height: 50,
+            velocityY: 0,
+            onGround: true,
+            canDoubleJump: true,
+            // Animation
+            frame: 0,
+            frameTimer: 0,
+
+            jump() {
+                if (this.onGround) {
+                    this.velocityY = JUMP_FORCE;
+                    this.onGround = false;
+                    this.canDoubleJump = true;
+                } else if (this.canDoubleJump) {
+                    this.velocityY = DOUBLE_JUMP_FORCE;
+                    this.canDoubleJump = false;
+                }
+            },
+
+            update() {
+                // Gravity
+                this.velocityY += GRAVITY;
+                this.y += this.velocityY;
+
+                // Ground collision
+                if (this.y >= GROUND_Y) {
+                    this.y = GROUND_Y;
+                    this.velocityY = 0;
+                    this.onGround = true;
+                }
+
+                // Animation (toggle between 2 frames)
+                this.frameTimer++;
+                if (this.frameTimer > 6) {
+                    this.frame = this.frame === 0 ? 1 : 0;
+                    this.frameTimer = 0;
+                }
+            },
+
+            draw() {
+                ctx.fillStyle = '#D2691E'; // Brown kangaroo
+
+                // Body
+                ctx.beginPath();
+                ctx.ellipse(this.x, this.y - 25, 18, 25, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Head
+                ctx.beginPath();
+                ctx.ellipse(this.x + 15, this.y - 45, 12, 10, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ears
+                ctx.beginPath();
+                ctx.ellipse(this.x + 12, this.y - 58, 4, 8, -0.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(this.x + 20, this.y - 56, 4, 8, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Eye
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(this.x + 22, this.y - 46, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Legs (animated)
+                ctx.fillStyle = '#D2691E';
+                const legOffset = this.onGround ? (this.frame === 0 ? 5 : -5) : 10;
+                // Back leg
+                ctx.fillRect(this.x - 10, this.y - 15, 8, 15 + legOffset);
+                // Front leg
+                ctx.fillRect(this.x + 5, this.y - 15, 8, 15 - legOffset);
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(this.x - 18, this.y - 20);
+                ctx.quadraticCurveTo(this.x - 40, this.y - 30, this.x - 35, this.y - 5);
+                ctx.lineWidth = 6;
+                ctx.strokeStyle = '#D2691E';
+                ctx.stroke();
+            },
+
+            getBounds() {
+                return {
+                    x: this.x - 15,
+                    y: this.y - 50,
+                    width: 30,
+                    height: 50
+                };
+            }
+        };
+
+        // --- Obstacles ---
+        let obstacles = [];
+
+        function spawnObstacle() {
+            const types = ['rock', 'cactus', 'bird'];
+            const type = types[Math.floor(Math.random() * types.length)];
+
+            const obstacle = {
+                x: canvas.width + 50,
+                type: type,
+                width: type === 'bird' ? 30 : 25,
+                height: type === 'bird' ? 20 : (type === 'cactus' ? 45 : 30),
+                y: type === 'bird' ? GROUND_Y - 60 - Math.random() * 40 : GROUND_Y
+            };
+
+            obstacles.push(obstacle);
+        }
+
+        function updateObstacles() {
+            // Spawn new obstacles
+            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 300 - Math.random() * 200) {
+                spawnObstacle();
+            }
+
+            // Update positions
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+
+                // Remove off-screen
+                if (obstacles[i].x < -50) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                }
+            }
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obs => {
+                if (obs.type === 'rock') {
+                    // Rock
+                    ctx.fillStyle = '#666';
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x, obs.y);
+                    ctx.lineTo(obs.x - 15, obs.y);
+                    ctx.lineTo(obs.x - 10, obs.y - 30);
+                    ctx.lineTo(obs.x + 5, obs.y - 25);
+                    ctx.lineTo(obs.x + 15, obs.y);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (obs.type === 'cactus') {
+                    // Cactus
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(obs.x - 5, obs.y - 45, 10, 45);
+                    ctx.fillRect(obs.x - 15, obs.y - 35, 10, 5);
+                    ctx.fillRect(obs.x - 15, obs.y - 35, 5, 15);
+                    ctx.fillRect(obs.x + 5, obs.y - 30, 10, 5);
+                    ctx.fillRect(obs.x + 10, obs.y - 30, 5, 12);
+                } else if (obs.type === 'bird') {
+                    // Bird (magpie-ish)
+                    ctx.fillStyle = '#222';
+                    ctx.beginPath();
+                    ctx.ellipse(obs.x, obs.y, 15, 8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Wings
+                    const wingY = Math.sin(Date.now() / 50) * 5;
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x - 5, obs.y);
+                    ctx.lineTo(obs.x - 15, obs.y - 10 + wingY);
+                    ctx.lineTo(obs.x + 5, obs.y);
+                    ctx.fill();
+                }
+            });
+        }
+
+        // --- Coins ---
+        let coins = [];
+
+        function spawnCoin() {
+            if (Math.random() < 0.3) {
+                coins.push({
+                    x: canvas.width + 50,
+                    y: GROUND_Y - 40 - Math.random() * 60,
+                    size: 10,
+                    collected: false
+                });
+            }
+        }
+
+        function updateCoins() {
+            for (let i = coins.length - 1; i >= 0; i--) {
+                coins[i].x -= gameSpeed;
+
+                // Collect
+                const k = kangaroo.getBounds();
+                const c = coins[i];
+                if (!c.collected &&
+                    k.x < c.x + c.size && k.x + k.width > c.x - c.size &&
+                    k.y < c.y + c.size && k.y + k.height > c.y - c.size) {
+                    c.collected = true;
+                    score += 25;
+                }
+
+                // Remove
+                if (coins[i].x < -20 || coins[i].collected) {
+                    coins.splice(i, 1);
+                }
+            }
+        }
+
+        function drawCoins() {
+            coins.forEach(coin => {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(coin.x, coin.y, coin.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FFA500';
+                ctx.beginPath();
+                ctx.arc(coin.x, coin.y, coin.size - 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // --- Collision Detection ---
+        function checkCollision() {
+            const k = kangaroo.getBounds();
+
+            for (const obs of obstacles) {
+                const o = {
+                    x: obs.x - obs.width / 2,
+                    y: obs.y - obs.height,
+                    width: obs.width,
+                    height: obs.height
+                };
+
+                if (k.x < o.x + o.width && k.x + k.width > o.x &&
+                    k.y < o.y + o.height && k.y + k.height > o.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // --- Ground & Background ---
+        let groundOffset = 0;
+
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#E0F6FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Simple clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            const cloudX = ((800 - (score * 0.5) % 1000) + 1000) % 1000;
+            ctx.beginPath();
+            ctx.arc(cloudX, 50, 30, 0, Math.PI * 2);
+            ctx.arc(cloudX + 25, 45, 25, 0, Math.PI * 2);
+            ctx.arc(cloudX + 50, 50, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ground
+            ctx.fillStyle = '#C2956E';
+            ctx.fillRect(0, GROUND_Y, canvas.width, 50);
+
+            // Ground texture (moving dashes)
+            ctx.strokeStyle = '#A67B5B';
+            ctx.lineWidth = 2;
+            groundOffset = (groundOffset + gameSpeed) % 20;
+            for (let x = -groundOffset; x < canvas.width; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, GROUND_Y + 5);
+                ctx.lineTo(x + 10, GROUND_Y + 5);
+                ctx.stroke();
+            }
+        }
+
+        // --- UI ---
+        function drawUI() {
+            // Score
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 20px Courier New';
+            ctx.textAlign = 'right';
+            ctx.fillText(`Score: ${Math.floor(score)}`, canvas.width - 20, 30);
+            ctx.fillText(`High: ${Math.floor(highScore)}`, canvas.width - 20, 55);
+
+            // Speed indicator
+            ctx.fillStyle = '#666';
+            ctx.font = '14px Courier New';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, 20, 30);
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FFF';
+            ctx.font = 'bold 36px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('KANGAROO HOP', canvas.width / 2, 100);
+
+            ctx.font = '20px Courier New';
+            ctx.fillText('Simple Edition', canvas.width / 2, 135);
+
+            ctx.font = '18px Courier New';
+            ctx.fillText('Press SPACE or CLICK to start', canvas.width / 2, 200);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText(`High Score: ${Math.floor(highScore)}`, canvas.width / 2, 240);
+        }
+
+        function drawGameOver() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FF6B6B';
+            ctx.font = 'bold 36px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER', canvas.width / 2, 100);
+
+            ctx.fillStyle = '#FFF';
+            ctx.font = '24px Courier New';
+            ctx.fillText(`Score: ${Math.floor(score)}`, canvas.width / 2, 150);
+
+            if (score > highScore) {
+                ctx.fillStyle = '#FFD700';
+                ctx.fillText('NEW HIGH SCORE!', canvas.width / 2, 185);
+            }
+
+            ctx.fillStyle = '#FFF';
+            ctx.font = '18px Courier New';
+            ctx.fillText('Press SPACE or CLICK to restart', canvas.width / 2, 230);
+        }
+
+        // --- Game Loop ---
+        function reset() {
+            kangaroo.y = GROUND_Y;
+            kangaroo.velocityY = 0;
+            kangaroo.onGround = true;
+            kangaroo.canDoubleJump = true;
+            obstacles = [];
+            coins = [];
+            gameSpeed = GAME_SPEED_START;
+            score = 0;
+            gameOver = false;
+        }
+
+        function update() {
+            if (!gameStarted || gameOver) return;
+
+            kangaroo.update();
+            updateObstacles();
+            updateCoins();
+
+            // Spawn coins occasionally
+            if (Math.random() < 0.02) spawnCoin();
+
+            // Increase speed
+            gameSpeed += SPEED_INCREMENT;
+
+            // Check collision
+            if (checkCollision()) {
+                gameOver = true;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('kangaroo_simple_high', highScore);
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground();
+
+            if (!gameStarted) {
+                kangaroo.draw();
+                drawStartScreen();
+            } else if (gameOver) {
+                drawObstacles();
+                drawCoins();
+                kangaroo.draw();
+                drawUI();
+                drawGameOver();
+            } else {
+                drawObstacles();
+                drawCoins();
+                kangaroo.draw();
+                drawUI();
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Input ---
+        function handleInput() {
+            if (!gameStarted) {
+                gameStarted = true;
+                reset();
+            } else if (gameOver) {
+                reset();
+            } else {
+                kangaroo.jump();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                handleInput();
+            }
+        });
+
+        canvas.addEventListener('click', handleInput);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleInput();
+        });
+
+        // --- Start ---
+        gameLoop();
+    </script>
+</body>
+</html>
