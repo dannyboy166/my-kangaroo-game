@@ -38,6 +38,96 @@ This is one of **4 games** being integrated into Victor's **SASCO student/teache
 
 Kangaroo Hop is a Phaser.js browser-based endless runner game built with modern JavaScript (ES6+ modules). The game features a kangaroo jumping over obstacles, collecting coins, and using powerups in an Australian outback setting.
 
+---
+
+## Lottie Edition (kangaroo-lottie.html)
+
+A **raw Canvas + Lottie** version of the game, built without Phaser for easier Lottie integration.
+
+### Why Lottie Edition?
+- Easier integration with LottieFiles animations
+- Simpler codebase (single HTML file)
+- Better for the SASCO learning platform deployment
+
+### Tech Stack (Lottie Edition)
+- **Rendering**: Raw Canvas 2D
+- **Animations**: DotLottie Web (@lottiefiles/dotlottie-web)
+- **Kangaroo**: Individual PNG frames (not sprite sheet)
+- **Obstacles**: Lottie animations (camel, crocodile on scooter)
+- **No build step**: Runs directly in browser
+
+### File Location
+- `kangaroo-lottie.html` - Main game file (self-contained)
+- `assets/lottie/` - Lottie animation files (.lottie format)
+
+### Lottie Obstacles Configuration
+```javascript
+const LOTTIE_OBSTACLES = {
+    camel: {
+        src: 'assets/lottie/camel.lottie',
+        width: 200, height: 180,
+        hitboxWidth: 140, hitboxHeight: 80,
+        speedMultiplier: 1.0  // Normal speed
+    },
+    crocodile: {
+        src: 'assets/lottie/crocodile_scooter.lottie',
+        width: 280, height: 230,
+        hitboxWidth: 72, hitboxHeight: 96,
+        speedMultiplier: 1.5,  // 50% faster!
+        animationSpeed: 2.0    // Animation plays 2x
+    }
+};
+```
+
+### Croc Gap Rules (Important!)
+The crocodile moves 1.5x faster, so spacing matters:
+
+| Gap Range | Behavior |
+|-----------|----------|
+| **350-650px** | "Double jump zone" - jump over both without landing |
+| **650-850px** | ❌ FORBIDDEN - too tricky |
+| **850-1000px** | "Landing zone" - land between, then jump croc |
+
+### Spawn Timing
+- Pairs (camel → croc) spawn every **1800-3000ms**
+- Croc gap randomly chosen from valid ranges (50/50 split)
+
+### Physics Constants
+```javascript
+const GRAVITY = 1.0;        // Snappy feel
+const JUMP_FORCE = -22;     // Strong jump
+const INITIAL_SPEED = 7;    // Starting game speed
+const MAX_SPEED = 14;       // Cap
+```
+
+### Kangaroo Animations
+Uses individual PNG frames from `assets/characters/kangaroo/brown/`:
+- **moving**: 16 frames @ 20fps (running)
+- **jump**: frames 0-6 @ 20fps, holds on frame 6 (airborne)
+- **die**: 5 frames @ 10fps (death)
+- **idle**: 20 frames @ 12fps (menu)
+
+### Audio
+All sounds from Phaser version work:
+- jump, double_jump, land, coin_collect
+- collision, game_over, button_click
+- Menu music + game music (outback)
+
+### Debug Flags
+```javascript
+const DEBUG = true;        // Show hitboxes
+const JUMP_DEBUG = false;  // Test 4 jump configs side-by-side
+const SPAWN_DEBUG = true;  // Force camel→croc pattern
+```
+
+### DotLottie Integration Notes
+- DotLottie requires canvases **in the DOM** to render
+- Hidden container: `#lottieContainer` with `opacity: 0.01`
+- Animations render to hidden canvases, then drawn to game canvas
+- Heavy animations (1000+ frames) cause performance issues
+
+---
+
 ## Development Commands
 
 - **Start development server**: `npm start` - Launches live-server on port 8080
@@ -57,8 +147,15 @@ Kangaroo Hop is a Phaser.js browser-based endless runner game built with modern 
 my-kangaroo-game/
 ├── assets/
 │   ├── images/          # All sprite sheets and images
+│   ├── lottie/          # Lottie animations (.lottie files)
+│   │   ├── camel.lottie
+│   │   ├── crocodile_scooter.lottie
+│   │   └── play_button.lottie
+│   ├── characters/      # Individual animation frames
+│   │   └── kangaroo/brown/  # Kangaroo PNG frames
 │   └── audio/
-│       └── sfx/         # Sound effects
+│       ├── sfx/         # Sound effects
+│       └── music/       # Background music
 ├── src/
 │   ├── config/
 │   │   ├── GameConfig.js         # Central game configuration constants
@@ -85,7 +182,8 @@ my-kangaroo-game/
 │   │   ├── PurchaseConfirmPopup.js
 │   │   └── FunFactPopup.js
 │   └── main.js                   # Game initialization and config
-├── index.html                    # Entry point
+├── index.html                    # Entry point (Phaser version)
+├── kangaroo-lottie.html          # Lottie Edition (raw Canvas + Lottie)
 ├── package.json
 └── CLAUDE.md                     # This file
 ```

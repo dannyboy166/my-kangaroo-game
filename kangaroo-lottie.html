@@ -382,7 +382,18 @@
         };
 
         const assetList = [
-            { name: 'coin', src: 'assets/images/coin/coin-64x64.png' }
+            { name: 'coin', src: 'assets/images/coin/coin-64x64.png' },
+            // UI Assets
+            { name: 'btn_green', src: 'assets/images/ui/buttons/bttn_green.png' },
+            { name: 'btn_blue', src: 'assets/images/ui/buttons/bttn_blue.png' },
+            { name: 'btn_pink', src: 'assets/images/ui/buttons/bttn_pink.png' },
+            { name: 'btn_gray', src: 'assets/images/ui/buttons/bttn_gray.png' },
+            { name: 'btn_long_green', src: 'assets/images/ui/buttons/bttn_long_green.png' },
+            { name: 'panel_score', src: 'assets/images/ui/title/back_score.png' },
+            { name: 'panel_small', src: 'assets/images/ui/title/back_small_progress.png' },
+            { name: 'ribbon_green', src: 'assets/images/ui/lable/r_lable_blue.png' },
+            { name: 'ribbon_orange', src: 'assets/images/ui/lable/r_lable_orange.png' },
+            { name: 'close_btn', src: 'assets/images/ui/title/close.png' }
         ];
 
         function loadAssets(callback) {
@@ -1041,54 +1052,77 @@
 
         // === UI ===
         function drawUI() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            roundRect(ctx, CANVAS_WIDTH - 160, 10, 150, 70, 12);
-            ctx.fill();
+            // Score panel (top right)
+            if (assets.panel_score) {
+                ctx.drawImage(assets.panel_score, CANVAS_WIDTH - 170, 5, 165, 75);
+            } else {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                roundRect(ctx, CANVAS_WIDTH - 160, 10, 150, 70, 12);
+                ctx.fill();
+            }
 
             ctx.fillStyle = '#FFF';
-            ctx.font = '600 28px Poppins';
+            ctx.font = '700 32px Poppins';
             ctx.textAlign = 'right';
-            ctx.fillText(Math.floor(score), CANVAS_WIDTH - 25, 45);
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            ctx.font = '400 14px Poppins';
-            ctx.fillText(`BEST: ${Math.floor(highScore)}`, CANVAS_WIDTH - 25, 68);
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(Math.floor(score), CANVAS_WIDTH - 25, 50);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = '500 13px Poppins';
+            ctx.fillText(`BEST: ${Math.floor(highScore)}`, CANVAS_WIDTH - 25, 70);
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            roundRect(ctx, 10, 10, 130, 70, 12);
-            ctx.fill();
+            // Coin panel (top left)
+            if (assets.panel_small) {
+                ctx.drawImage(assets.panel_small, 5, 5, 140, 75);
+            } else {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                roundRect(ctx, 10, 10, 130, 70, 12);
+                ctx.fill();
+            }
 
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(40, 35, 15, 0, Math.PI * 2);
-            ctx.fill();
+            // Draw coin icon
+            if (assets.coin) {
+                ctx.drawImage(assets.coin, 0, 0, 64, 64, 18, 18, 40, 40);
+            } else {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(38, 38, 15, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             ctx.fillStyle = '#FFF';
-            ctx.font = '700 22px Poppins';
+            ctx.font = '700 24px Poppins';
             ctx.textAlign = 'left';
-            ctx.fillText(totalCoins, 65, 42);
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(totalCoins, 65, 44);
+            ctx.shadowBlur = 0;
             ctx.fillStyle = '#4ADE80';
             ctx.font = '600 14px Poppins';
-            ctx.fillText(`+${coinsCollected}`, 65, 62);
+            ctx.fillText(`+${coinsCollected}`, 65, 64);
 
-            // Lottie indicator
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            roundRect(ctx, 10, 90, 180, 30, 8);
-            ctx.fill();
-            ctx.fillStyle = '#4ADE80';
-            ctx.font = '600 12px Poppins';
-            ctx.fillText(`Lottie Obstacles: ${Object.keys(lottieAnimations).length}`, 20, 110);
+            // Debug info (only in debug mode)
+            if (DEBUG) {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                roundRect(ctx, 10, 90, 180, 30, 8);
+                ctx.fill();
+                ctx.fillStyle = '#4ADE80';
+                ctx.font = '600 11px Poppins';
+                ctx.fillText(`Lottie: ${Object.keys(lottieAnimations).length} | Speed: ${gameSpeed.toFixed(1)}`, 20, 110);
+            }
 
-            // Debug: show croc gap
-            if (SPAWN_DEBUG) {
-                ctx.fillStyle = 'rgba(255,0,0,0.6)';
-                roundRect(ctx, 10, 130, 200, 30, 8);
+            // Debug: show croc gap (only in spawn debug)
+            if (SPAWN_DEBUG && DEBUG) {
+                ctx.fillStyle = 'rgba(255,100,0,0.6)';
+                roundRect(ctx, 10, 125, 200, 25, 8);
                 ctx.fill();
                 ctx.fillStyle = '#FFF';
-                ctx.font = '600 12px Poppins';
+                ctx.font = '600 11px Poppins';
                 const gapText = CROC_GAP_PIXELS !== null
-                    ? `Croc Gap: ${CROC_GAP_PIXELS}px (fixed)`
-                    : `Croc Gap: Random (350-650 or 850+)`;
-                ctx.fillText(gapText, 20, 150);
+                    ? `Gap: ${CROC_GAP_PIXELS}px (fixed)`
+                    : `Gap: Random valid`;
+                ctx.fillText(gapText, 20, 142);
             }
         }
 
@@ -1116,17 +1150,16 @@
             ctx.textAlign = 'center';
             const centerX = CANVAS_WIDTH / 2;
 
-            // Draw kangaroo on menu using idle animation (moved down)
+            // Draw kangaroo on menu using idle animation
             const idleFrames = kangarooFrames.idle;
             if (idleFrames && idleFrames.length > 0) {
                 const frame = Math.floor(menuBounceTimer * 12) % idleFrames.length;
                 const frameImg = idleFrames[frame];
-                const kY = 200 + menuKangarooY;  // Moved down from 160
+                const kY = 200 + menuKangarooY;
                 let scaleX = 1, scaleY = 1;
                 if (menuKangarooVel < -2) { scaleX = 0.85; scaleY = 1.15; }
                 else if (menuKangarooY === 0 && menuKangarooVel === 0) { scaleX = 1.1; scaleY = 0.9; }
                 if (frameImg) {
-                    // Flip to face right
                     ctx.save();
                     ctx.translate(centerX, kY);
                     ctx.scale(-1, 1);
@@ -1136,11 +1169,24 @@
                 }
             }
 
-            ctx.font = '800 48px Poppins';
+            // Draw title ribbon behind text
+            if (assets.ribbon_orange) {
+                const ribbonW = 340;
+                const ribbonH = 100;
+                ctx.drawImage(assets.ribbon_orange, centerX - ribbonW/2, 230, ribbonW, ribbonH);
+            }
+
+            // Title text on ribbon
+            ctx.font = '800 42px Poppins';
             ctx.fillStyle = '#FFF';
-            ctx.fillText('KANGAROO', centerX, 260);
-            ctx.fillStyle = '#4ADE80';
-            ctx.fillText('HOP', centerX, 315);
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 3;
+            ctx.fillText('KANGAROO', centerX, 270);
+            ctx.fillStyle = '#FFE066';
+            ctx.fillText('HOP', centerX, 318);
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
 
             // Draw Lottie play button
             if (lottieCanvases['playButton']) {
@@ -1148,12 +1194,22 @@
                 const btnSize = 140;
                 ctx.drawImage(playCanvas,
                     0, 0, playCanvas.width, playCanvas.height,
-                    centerX - btnSize/2, 330, btnSize, btnSize);
+                    centerX - btnSize/2, 350, btnSize, btnSize);
             }
 
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            // High score display
+            if (highScore > 0) {
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                roundRect(ctx, centerX - 80, 500, 160, 40, 20);
+                ctx.fill();
+                ctx.fillStyle = '#FFD700';
+                ctx.font = '600 16px Poppins';
+                ctx.fillText(`Best: ${highScore}`, centerX, 526);
+            }
+
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.font = '400 13px Poppins';
-            ctx.fillText('SPACE or Click to jump', centerX, 560);
+            ctx.fillText('SPACE or Tap to jump', centerX, 570);
         }
 
         function drawGameOver() {
@@ -1164,41 +1220,85 @@
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
             ctx.textAlign = 'center';
-            ctx.font = '800 42px Poppins';
-            ctx.fillStyle = '#F87171';
-            ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, 140);
+            const centerX = CANVAS_WIDTH / 2;
 
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            roundRect(ctx, CANVAS_WIDTH / 2 - 120, 170, 240, 140, 16);
-            ctx.fill();
-
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.font = '400 14px Poppins';
-            ctx.fillText('SCORE', CANVAS_WIDTH / 2, 200);
+            // Game Over title with ribbon
+            if (assets.ribbon_orange) {
+                const ribbonW = 280;
+                const ribbonH = 70;
+                ctx.drawImage(assets.ribbon_orange, centerX - ribbonW/2, 95, ribbonW, ribbonH);
+            }
+            ctx.font = '800 36px Poppins';
             ctx.fillStyle = '#FFF';
-            ctx.font = '800 48px Poppins';
-            ctx.fillText(Math.floor(score), CANVAS_WIDTH / 2, 255);
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 6;
+            ctx.fillText('GAME OVER', centerX, 140);
+            ctx.shadowBlur = 0;
 
-            if (score >= highScore && score > 0) {
-                ctx.fillStyle = '#FBBF24';
-                ctx.font = '700 16px Poppins';
-                ctx.fillText('NEW BEST!', CANVAS_WIDTH / 2, 290);
+            // Score panel
+            if (assets.panel_score) {
+                ctx.drawImage(assets.panel_score, centerX - 100, 175, 200, 120);
+            } else {
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                roundRect(ctx, centerX - 120, 170, 240, 140, 16);
+                ctx.fill();
             }
 
-            ctx.fillStyle = '#4ADE80';
-            ctx.font = '600 18px Poppins';
-            ctx.fillText(`+${coinsCollected} coins`, CANVAS_WIDTH / 2, 360);
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.font = '500 14px Poppins';
+            ctx.fillText('SCORE', centerX, 210);
+            ctx.fillStyle = '#FFF';
+            ctx.font = '800 52px Poppins';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(Math.floor(score), centerX, 268);
+            ctx.shadowBlur = 0;
 
-            const btnGrad = ctx.createLinearGradient(CANVAS_WIDTH / 2 - 90, 400, CANVAS_WIDTH / 2 - 90, 450);
-            btnGrad.addColorStop(0, '#4ADE80');
-            btnGrad.addColorStop(1, '#22C55E');
-            ctx.fillStyle = btnGrad;
-            roundRect(ctx, CANVAS_WIDTH / 2 - 90, 400, 180, 50, 25);
+            // New best indicator
+            if (score >= highScore && score > 0) {
+                ctx.fillStyle = '#FFD700';
+                ctx.font = '700 18px Poppins';
+                ctx.fillText('NEW BEST!', centerX, 300);
+            }
+
+            // Coins earned
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            roundRect(ctx, centerX - 70, 330, 140, 40, 20);
             ctx.fill();
 
-            ctx.fillStyle = '#FFF';
+            // Coin icon
+            if (assets.coin) {
+                ctx.drawImage(assets.coin, 0, 0, 64, 64, centerX - 58, 335, 30, 30);
+            }
+            ctx.fillStyle = '#4ADE80';
             ctx.font = '700 18px Poppins';
-            ctx.fillText('PLAY AGAIN', CANVAS_WIDTH / 2, 432);
+            ctx.fillText(`+${coinsCollected}`, centerX + 10, 357);
+
+            // Play Again button with image
+            if (assets.btn_long_green) {
+                const btnW = 200;
+                const btnH = 60;
+                ctx.drawImage(assets.btn_long_green, centerX - btnW/2, 400, btnW, btnH);
+            } else {
+                const btnGrad = ctx.createLinearGradient(centerX - 90, 400, centerX - 90, 450);
+                btnGrad.addColorStop(0, '#4ADE80');
+                btnGrad.addColorStop(1, '#22C55E');
+                ctx.fillStyle = btnGrad;
+                roundRect(ctx, centerX - 90, 400, 180, 50, 25);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#FFF';
+            ctx.font = '700 20px Poppins';
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 4;
+            ctx.fillText('PLAY AGAIN', centerX, 437);
+            ctx.shadowBlur = 0;
+
+            // Best score reminder
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '400 14px Poppins';
+            ctx.fillText(`Best: ${highScore}`, centerX, 490);
         }
 
         // === GAME LOOP ===
