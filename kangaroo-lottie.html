@@ -1532,7 +1532,7 @@
                 const landW = assets.bg_land.width * landScale;
                 const landH = assets.bg_land.height * landScale;
                 const landScroll = bgScrollX % landW;
-                const landY = GROUND_Y - landH + 80;  // Position so ground aligns
+                const landY = CANVAS_HEIGHT - landH;  // Align to bottom of canvas
                 for (let x = -landScroll; x < CANVAS_WIDTH + landW; x += landW) {
                     ctx.drawImage(assets.bg_land, x, landY, landW, landH);
                 }
