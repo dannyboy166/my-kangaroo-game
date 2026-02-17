@@ -1667,79 +1667,76 @@
         function drawGameOver() {
             const centerX = CANVAS_WIDTH / 2;
 
-            // Dark overlay with blur effect
-            const overlay = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-            overlay.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
-            overlay.addColorStop(1, 'rgba(15, 23, 42, 0.90)');
-            ctx.fillStyle = overlay;
+            // Dark overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            // Main card background (light)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            roundRect(ctx, centerX - 180, 60, 360, 480, 24);
+            // Main card - gradient from dark blue to purple
+            const cardGrad = ctx.createLinearGradient(centerX - 180, 80, centerX + 180, 520);
+            cardGrad.addColorStop(0, 'rgba(59, 130, 246, 0.9)');   // Blue
+            cardGrad.addColorStop(1, 'rgba(147, 51, 234, 0.9)');   // Purple
+            roundRect(ctx, centerX - 180, 80, 360, 440, 24);
+            ctx.fillStyle = cardGrad;
             ctx.fill();
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+
+            // Subtle inner glow border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 2;
-            roundRect(ctx, centerX - 180, 60, 360, 480, 24);
+            roundRect(ctx, centerX - 180, 80, 360, 440, 24);
             ctx.stroke();
 
             // Game Over title
             ctx.textAlign = 'center';
-            ctx.font = '800 38px Poppins';
-            ctx.fillStyle = '#DC2626';
-            ctx.fillText('GAME OVER', centerX, 115);
+            ctx.fillStyle = '#FFF';
+            ctx.font = '800 42px Poppins';
+            ctx.fillText('GAME OVER', centerX, 135);
 
-            // Score section
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            roundRect(ctx, centerX - 100, 135, 200, 90, 16);
+            // Score card
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            roundRect(ctx, centerX - 90, 155, 180, 100, 16);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.font = '500 12px Poppins';
-            ctx.fillText('SCORE', centerX, 160);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '600 14px Poppins';
+            ctx.fillText('SCORE', centerX, 185);
 
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '800 42px Poppins';
-            ctx.fillText(Math.floor(score), centerX, 205);
+            ctx.fillStyle = '#FFF';
+            ctx.font = '800 48px Poppins';
+            ctx.fillText(Math.floor(score), centerX, 240);
 
             // New best badge
             if (score >= highScore && score > 0) {
-                ctx.fillStyle = '#D97706';
-                ctx.font = '700 14px Poppins';
-                ctx.fillText('NEW BEST!', centerX, 230);
+                ctx.fillStyle = '#FDE047';
+                ctx.font = '700 16px Poppins';
+                ctx.fillText('NEW BEST!', centerX, 270);
             }
 
-            // Coins earned
-            const statsY = 260;
-            ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
-            roundRect(ctx, centerX - 80, statsY, 160, 50, 12);
+            // Coins section
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            roundRect(ctx, centerX - 70, 285, 140, 45, 12);
             ctx.fill();
-            ctx.fillStyle = '#166534';
-            ctx.font = '600 14px Poppins';
-            ctx.fillText('COINS', centerX, statsY + 20);
-            ctx.fillStyle = '#16a34a';
-            ctx.font = '700 18px Poppins';
-            ctx.fillText(`+${coinsCollected}`, centerX, statsY + 42);
+
+            ctx.fillStyle = '#4ADE80';
+            ctx.font = '700 20px Poppins';
+            ctx.fillText(`+${coinsCollected} coins`, centerX, 316);
 
             // Fun fact section
-            const factY = 330;
-
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            roundRect(ctx, centerX - 160, factY, 320, 100, 14);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            roundRect(ctx, centerX - 160, 345, 320, 90, 14);
             ctx.fill();
 
-            ctx.fillStyle = '#D97706';
-            ctx.font = '700 13px Poppins';
-            ctx.fillText('DID YOU KNOW?', centerX, factY + 22);
+            ctx.fillStyle = '#FDE047';
+            ctx.font = '700 12px Poppins';
+            ctx.fillText('DID YOU KNOW?', centerX, 368);
 
-            // Wrap fun fact text
-            ctx.fillStyle = '#374151';
+            // Fun fact text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.font = '400 13px Poppins';
             const maxWidth = 280;
             const words = currentFunFact.split(' ');
             let line = '';
-            let lineY = factY + 48;
-            const lineHeight = 20;
+            let lineY = 392;
+            const lineHeight = 18;
 
             for (let i = 0; i < words.length; i++) {
                 const testLine = line + words[i] + ' ';
@@ -1756,25 +1753,13 @@
 
             // Play Again button
             const btnY = 455;
-            const btnGrad = ctx.createLinearGradient(centerX - 100, btnY, centerX - 100, btnY + 55);
-            btnGrad.addColorStop(0, '#4ADE80');
-            btnGrad.addColorStop(1, '#22C55E');
-            ctx.fillStyle = btnGrad;
-            roundRect(ctx, centerX - 100, btnY, 200, 55, 28);
+            ctx.fillStyle = '#4ADE80';
+            roundRect(ctx, centerX - 90, btnY, 180, 50, 25);
             ctx.fill();
-
-            // Button shadow
-            ctx.shadowColor = 'rgba(74, 222, 128, 0.4)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetY = 5;
-            roundRect(ctx, centerX - 100, btnY, 200, 55, 28);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
 
             ctx.fillStyle = '#FFF';
-            ctx.font = '700 20px Poppins';
-            ctx.fillText('PLAY AGAIN', centerX, btnY + 36);
+            ctx.font = '700 18px Poppins';
+            ctx.fillText('PLAY AGAIN', centerX, btnY + 33);
         }
 
         // === GAME LOOP ===
