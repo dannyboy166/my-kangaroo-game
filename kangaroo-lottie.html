@@ -952,7 +952,7 @@
         // === OBSTACLES (Now with Lottie support!) ===
         let obstacles = [];
         let lastObstacleTime = 0;
-        let obstacleInterval = 1800 + Math.random() * 1200;  // 1800-3000ms between pairs
+        let obstacleInterval = 1500 + Math.random() * 1500;  // 1500-3000ms base spacing
 
         let debugSpawnIndex = 0;  // Alternates: 0=camel, 1=croc
 
@@ -1108,7 +1108,12 @@
             if (now - lastObstacleTime > obstacleInterval) {
                 spawnObstacle();
                 lastObstacleTime = now;
-                obstacleInterval = 1800 + Math.random() * 1200;  // 1800-3000ms between pairs
+                // Tighter clusters at higher speeds (jumpable together)
+                if (gameSpeed > 10) {
+                    obstacleInterval = 300 + Math.random() * 300;  // 300-600ms tight clusters
+                } else {
+                    obstacleInterval = 1500 + Math.random() * 1500;  // 1500-3000ms base spacing
+                }
             }
 
             for (let i = obstacles.length - 1; i >= 0; i--) {
