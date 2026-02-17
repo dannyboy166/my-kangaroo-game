@@ -1674,12 +1674,12 @@
             ctx.fillStyle = overlay;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            // Main card background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            // Main card background (lighter, more visible)
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
             roundRect(ctx, centerX - 180, 60, 360, 480, 24);
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 2;
             roundRect(ctx, centerX - 180, 60, 360, 480, 24);
             ctx.stroke();
 
@@ -1712,30 +1712,17 @@
                 ctx.fillText('NEW BEST!', centerX, 230);
             }
 
-            // Stats row (coins + speed)
-            const statsY = 260;
-
             // Coins earned
+            const statsY = 260;
             ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
-            roundRect(ctx, centerX - 150, statsY, 140, 50, 12);
+            roundRect(ctx, centerX - 80, statsY, 160, 50, 12);
             ctx.fill();
             ctx.fillStyle = '#FFD700';
             ctx.font = '600 14px Poppins';
-            ctx.fillText('COINS', centerX - 80, statsY + 20);
+            ctx.fillText('COINS', centerX, statsY + 20);
             ctx.fillStyle = '#4ADE80';
             ctx.font = '700 18px Poppins';
-            ctx.fillText(`+${coinsCollected}`, centerX - 80, statsY + 42);
-
-            // Max speed reached
-            ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
-            roundRect(ctx, centerX + 10, statsY, 140, 50, 12);
-            ctx.fill();
-            ctx.fillStyle = '#4ADE80';
-            ctx.font = '600 14px Poppins';
-            ctx.fillText('SPEED', centerX + 80, statsY + 20);
-            ctx.fillStyle = '#FFF';
-            ctx.font = '700 18px Poppins';
-            ctx.fillText(gameSpeed.toFixed(1), centerX + 80, statsY + 42);
+            ctx.fillText(`+${coinsCollected}`, centerX, statsY + 42);
 
             // Fun fact section
             const factY = 330;
