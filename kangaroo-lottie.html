@@ -46,6 +46,42 @@
             opacity: 0.01;
             pointer-events: none;
         }
+        /* Color picker styles */
+        #colorPicker {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+        .color-label {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .color-swatches {
+            display: flex;
+            gap: 8px;
+        }
+        .color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .color-swatch:hover {
+            transform: scale(1.15);
+        }
+        .color-swatch.active {
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
     </style>
 </head>
 <body>
@@ -54,6 +90,25 @@
         <div id="loading">Loading...</div>
     </div>
     <div id="lottieContainer"></div>
+
+    <!-- Background Color Picker -->
+    <div id="colorPicker">
+        <span class="color-label">BG:</span>
+        <div class="color-swatches">
+            <button class="color-swatch active" data-color="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" style="background: linear-gradient(135deg, #1a1a2e, #0f3460);" title="Default"></button>
+            <button class="color-swatch" data-color="#7ab9f1" style="background: #7ab9f1;" title="Sky Blue"></button>
+            <button class="color-swatch" data-color="#a7f0f5" style="background: #a7f0f5;" title="Cyan"></button>
+            <button class="color-swatch" data-color="#b0acf1" style="background: #b0acf1;" title="Soft Purple"></button>
+            <button class="color-swatch" data-color="#1a1a2e" style="background: #1a1a2e;" title="Dark Navy"></button>
+            <button class="color-swatch" data-color="#f4ef7d" style="background: #f4ef7d;" title="Yellow"></button>
+            <button class="color-swatch" data-color="#cef577" style="background: #cef577;" title="Lime Green"></button>
+            <button class="color-swatch" data-color="#f2a7d0" style="background: #f2a7d0;" title="Light Pink"></button>
+            <button class="color-swatch" data-color="#d793fa" style="background: #d793fa;" title="Light Purple"></button>
+            <button class="color-swatch" data-color="#bee9c3" style="background: #bee9c3;" title="Mint Green"></button>
+            <button class="color-swatch" data-color="#ee836b" style="background: #ee836b;" title="Coral"></button>
+            <button class="color-swatch" data-color="#e56bbf" style="background: #e56bbf;" title="Bright Pink"></button>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script type="module">
@@ -1713,6 +1768,37 @@
             handleInput();
         });
 
+        // === BACKGROUND COLOR PICKER ===
+        const DEFAULT_BG = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+
+        function initColorPicker() {
+            // Load saved background color
+            const savedBg = localStorage.getItem('kangaroo_bg_color') || DEFAULT_BG;
+            document.body.style.background = savedBg;
+
+            // Mark correct swatch as active
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('active');
+                if (swatch.dataset.color === savedBg) {
+                    swatch.classList.add('active');
+                }
+            });
+
+            // Add click handlers to swatches
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const color = swatch.dataset.color;
+                    document.body.style.background = color;
+                    localStorage.setItem('kangaroo_bg_color', color);
+
+                    // Update active state
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
+                });
+            });
+        }
+
         // === START ===
         async function init() {
             loadingEl.textContent = 'Loading images...';
@@ -1729,6 +1815,7 @@
             await loadSpriteFrames();
 
             loadingEl.style.display = 'none';
+            initColorPicker();  // Initialize background color picker
             playMusic('musicMenu');  // Start menu music
             gameLoop(performance.now());
         }
